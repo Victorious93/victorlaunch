@@ -83,6 +83,9 @@ object ConfigBackupCodec {
     private val REMOTE_COMMAND_TRUE =
         Regex(""""externalControlEnabled"\s*:\s*true""")
 
+    private val CONTROLLER_FULL_TRUE =
+        Regex(""""controllerFullControl(?:Enabled)?"\s*:\s*true""")
+
     fun exportJson(prefs: LauncherPreferences): String {
         val forced = prefs.copy(externalControlEnabled = false)
         val text = json.encodeToString(JsonObject.serializer(), encode(forced))
@@ -157,6 +160,7 @@ object ConfigBackupCodec {
         // decode() always forces the flag off; inspect the raw payload so we
         // still record that a true value was ignored.
         val incomingRequestedRemote = REMOTE_COMMAND_TRUE.containsMatchIn(incomingJson)
+        val incomingRequestedControllerFull = CONTROLLER_FULL_TRUE.containsMatchIn(incomingJson)
         val incoming = decode(incomingJson)
         val merged =
             when (policy) {
@@ -186,6 +190,9 @@ object ConfigBackupCodec {
         val notes = mutableListOf<String>()
         if (incomingRequestedRemote) {
             notes.add("incoming externalControlEnabled was ignored; remote.command stays off")
+        }
+        if (incomingRequestedControllerFull) {
+            notes.add("incoming controller full-control flag was ignored; kill switch is not set by backup")
         }
         notes.add("conflictPolicy=${policy.wire}")
         if (dryRun) {

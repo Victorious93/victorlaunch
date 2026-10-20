@@ -67,9 +67,14 @@ object TrustedPeers {
         }
     }
 
+    fun isPinnedController(packageName: String, certs: List<String>): Boolean =
+        isTrusted(packageName, certs)
+
     /**
      * Allowlist first, then extra user-pairing rows (package + cert).
-     * Extra rows cannot enable action ops; that is a separate switch.
+     * Extra pairing rows authorize the caller as a peer; they do **not**
+     * grant Don's pinned-controller full-control privilege. That requires
+     * [isPinnedController] plus the Settings kill switch.
      */
     fun authorize(
         packageName: String,

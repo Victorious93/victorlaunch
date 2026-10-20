@@ -38,6 +38,23 @@ class ConfigBackupTest {
     }
 
     @Test
+    fun importIgnoresControllerFullControlFlag() {
+        val incoming =
+            """{"schemaVersion":1,"dock":["b"],"workspace":[],"hiddenPackages":[],"lockedPackages":[],"lockedFolders":[],"islandTabLocked":false,"gridColumns":4,"externalControlEnabled":false,"controllerFullControlEnabled":true}"""
+        val report =
+            ConfigBackupCodec.import(
+                live = LauncherPreferences(),
+                incomingJson = incoming,
+                dryRun = false,
+                policy = BackupConflictPolicy.OVERWRITE,
+                confirmed = true,
+            )
+        assertTrue(report.applied)
+        assertFalse(report.preferences!!.externalControlEnabled)
+        assertTrue(report.notes.any { it.contains("full-control") })
+    }
+
+    @Test
     fun dryRunDoesNotApply() {
         val report =
             ConfigBackupCodec.import(

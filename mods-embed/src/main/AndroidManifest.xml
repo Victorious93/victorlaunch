@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <queries>
+        <package android:name="org.lsposed.manager" />
+        <package android:name="org.lsposed.lspd" />
+        <package android:name="org.lsposed.lspatch" />
+        <package android:name="com.android.geto" />
+        <package android:name="com.dergoogler.mmrl" />
+        <package android:name="com.topjohnwu.magisk" />
+        <package android:name="me.weishu.kernelsu" />
+        <package android:name="com.rifsxd.ksunext" />
+        <package android:name="me.bmax.apatch" />
+    </queries>
+</manifest>

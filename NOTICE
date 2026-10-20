@@ -1,0 +1,52 @@
+VictorLaunch
+Copyright (C) 2026 Victorious / VictorLaunch authors
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version. See LICENSE.
+
+------------------------------------------------------------------------
+
+This project is designed to rebase onto Lawnchair, a GPLv3 home app
+built on Android Launcher3:
+
+  Lawnchair  https://github.com/LawnchairLauncher/lawnchair
+  License    GNU General Public License v3.0
+  Launcher3  Android Open Source Project, Apache License 2.0
+
+Lawnchair and AOSP Launcher3 source are NOT vendored in this
+repository. See docs/LAWNCHAIR_REBASE.md.
+
+Island-style work-profile isolation is implemented with public
+Android DevicePolicyManager / LauncherApps / UserManager APIs.
+The UX is inspired by:
+
+  Island   https://github.com/oasisfeng/island   GPLv3
+  Insular  (Island fork)                         GPLv3
+
+No Island or Insular source code is included.
+
+AndroidX / Jetpack / Kotlin / kotlinx.serialization are Apache 2.0.
+
+Shizuku (https://github.com/RikkaApps/Shizuku) is Apache License 2.0.
+This tree ships an embed skeleton (`shizuku-embed/`) and a client of
+the stock Shizuku app. We do not use Shizuku as the app name, do not
+use moe.shizuku.privileged.api as applicationId, and do not ship
+Shizuku launcher icons (Apache 2.0 §6 as stated by upstream).
+See shizuku-embed/LICENSE and shizuku-embed/NOTICE.
+
+LSPosed (https://github.com/LSPosed/LSPosed) is GPL-3.0.
+LSPatch (https://github.com/LSPosed/LSPatch) is GPL-3.0.
+Geto (https://github.com/JackEblan/Geto) is GPL-3.0-only.
+  Identified as Don's "Geto" at 90% confidence (com.android.geto).
+MMRL (https://github.com/MMRLApp/MMRL) is GPL-3.0.
+This tree ships embed skeletons (`mods-embed/`) and clients of the
+stock apps. Their engines are NOT vendored in this repository.
+See mods-embed/LICENSE and mods-embed/NOTICE.
+
+Network Monitor uses public Android TelephonyManager /
+TelephonyCallback APIs. No third-party radio SDK is bundled. Cell/band
+lock engines are not vendored.
+
+See THIRD_PARTY.md.

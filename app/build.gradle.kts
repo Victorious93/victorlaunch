@@ -19,14 +19,39 @@ android {
     }
 
     signingConfigs {
-        // Fixed, committed debug keystore so every debug build (local + CI)
-        // shares the same signing cert. The fleet pairs EXTERNAL_NODEs by
-        // package + cert. See keystore/README.md.
+        // Dedicated debug keystore is gitignored. CI writes it from
+        // VL_DEBUG_KEYSTORE_B64; local builds drop the same file in
+        // keystore/victorlaunch-debug.jks. If it is missing we keep
+        // AGP's default Android debug key and warn. See keystore/README.md.
         getByName("debug") {
-            storeFile = rootProject.file("keystore/victorlaunch-debug.jks")
-            storePassword = "android"
-            keyAlias = "victorlaunchdebug"
-            keyPassword = "android"
+            val dedicated = rootProject.file("keystore/victorlaunch-debug.jks")
+            val envStore = System.getenv("VL_DEBUG_STORE_FILE")
+            val store =
+                when {
+                    !envStore.isNullOrBlank() -> file(envStore)
+                    dedicated.exists() -> dedicated
+                    else -> null
+                }
+            if (store != null) {
+                require(store.isFile) { "debug keystore not found: $store" }
+                val storePasswordEnv = System.getenv("VL_DEBUG_STORE_PASSWORD")
+                val keyPasswordEnv = System.getenv("VL_DEBUG_KEY_PASSWORD")
+                require(!storePasswordEnv.isNullOrBlank()) {
+                    "VL_DEBUG_STORE_PASSWORD is required when using $store"
+                }
+                require(!keyPasswordEnv.isNullOrBlank()) {
+                    "VL_DEBUG_KEY_PASSWORD is required when using $store"
+                }
+                storeFile = store
+                storePassword = storePasswordEnv
+                keyAlias = System.getenv("VL_DEBUG_KEY_ALIAS") ?: "victorlaunchdebug"
+                keyPassword = keyPasswordEnv
+            } else {
+                logger.warn(
+                    "keystore/victorlaunch-debug.jks is missing; signing with the default Android debug key. " +
+                        "The APK will not match the published debug cert (keystore/README.md).",
+                )
+            }
         }
         // Release signing is read ONLY from environment variables / CI secrets.
         // No release keystore is ever committed to this repo.

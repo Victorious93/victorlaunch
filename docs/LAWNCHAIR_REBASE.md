@@ -18,7 +18,7 @@ under a first-time AOSP import.
 The code here is a **minimal Launcher3-style Kotlin + Compose
 launcher**: `HOME`/`DEFAULT` activity, workspace, dock, app drawer,
 work-profile Island tab. Enough to ship `applicationId
-com.victorious.launch`, a committed debug cert, and the fleet
+com.victorious.launch`, a published debug-cert SHA-256, and the fleet
 contracts.
 
 ## Plan

@@ -37,9 +37,12 @@ and is **not** universal. Cell/band lock is not written. Fleet read op:
 ./gradlew assembleDebug
 ```
 
-Debug builds sign with `keystore/victorlaunch-debug.jks` (passwords
-and cert SHA-256 in `keystore/README.md`). Release signing is
-environment-only (`VL_RELEASE_*`). Never commit a release key.
+Debug builds sign with a **gitignored** `keystore/victorlaunch-debug.jks`
+(CI: `VL_DEBUG_KEYSTORE_B64` + password secrets). The public cert
+SHA-256 is in `keystore/README.md`. If the JKS is missing, Gradle
+falls back to the default Android debug key and warns. Release signing
+is environment-only (`VL_RELEASE_*`). Never commit a keystore or its
+passwords. The old committed debug cert `1B:06:A8:…:BA:CA` is **REVOKED**.
 
 CI runs `./gradlew assembleDebug` on pulls and on `main`, and uploads
 the APK.

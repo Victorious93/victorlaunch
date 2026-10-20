@@ -1,0 +1,33 @@
+package com.victorious.launch
+
+import android.app.Application
+import com.victorious.launch.prefs.AppSettings
+import com.victorious.launch.shizuku.PrivilegedOps
+import com.victorious.launch.shizuku.ShizukuSession
+
+class VictorLaunchApp : Application() {
+    lateinit var settings: AppSettings
+        private set
+    lateinit var shizuku: ShizukuSession
+        private set
+    lateinit var privileged: PrivilegedOps
+        private set
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+        settings = AppSettings(this)
+        settings.nodeId()
+        shizuku = ShizukuSession(userEnabled = { settings.isShizukuEnabled() })
+        shizuku.start()
+        privileged = PrivilegedOps(this, settings, shizuku)
+        if (settings.isShizukuEnabled()) {
+            privileged.refreshBinding()
+        }
+    }
+
+    companion object {
+        lateinit var instance: VictorLaunchApp
+            private set
+    }
+}

@@ -1,8 +1,44 @@
 # VictorLaunch
 
-VictorLaunch is a fleet-native Android home-screen launcher for the
-Victorious / droidcommand-AI node fleet.
+Fleet-native Android home-screen launcher (`com.victorious.launch`).
 
-License: GNU General Public License v3.0. See `LICENSE`.
+VictorLaunch is the on-device hub for the Victorious / droidcommand-AI
+fleet: a HOME activity with workspace, dock and app drawer, a status
+tray that **only** reads the controller’s `node.status.get`, an Island
+work profile, and an EXTERNAL_NODE bridge.
 
-This repository is the home of `com.victorious.launch`.
+License: **GNU GPL v3.0**. See `LICENSE`, `NOTICE`, `THIRD_PARTY.md`.
+
+## Honesty
+
+This is a **minimal Launcher3-style Kotlin launcher**, not a vendored
+Lawnchair tree. Lawnchair (GPLv3) remains the intended base — see
+`docs/LAWNCHAIR_REBASE.md`. Nothing here was tested on a phone.
+
+## Build
+
+```bash
+./gradlew assembleDebug
+```
+
+Debug builds sign with `keystore/victorlaunch-debug.jks` (passwords
+and cert SHA-256 in `keystore/README.md`). Release signing is
+environment-only (`VL_RELEASE_*`). Never commit a release key.
+
+CI runs `./gradlew assembleDebug` on pulls and on `main`, and uploads
+the APK.
+
+## Docs
+
+- `docs/MANUAL.md` — user manual (also the in-app Help screen)
+- `docs/external-node.md` — Messenger bridge v1.1
+- `docs/LAWNCHAIR_REBASE.md` — why Lawnchair is not vendored yet
+- `shizuku-embed/README.md` — Shizuku client fallback + embed plan
+- `docs/specs` live upstream in [droidcommand-AI](https://github.com/Victorious93/droidcommand-AI)
+  (`STATUS_TRAY.md`, `UNIFIED_BACKUP.md`)
+
+## Privacy
+
+No `INTERNET` permission. No telemetry. Status and backup refuse
+secret-like fields. VictorLaunch never holds the fleet backup wrapping
+key.

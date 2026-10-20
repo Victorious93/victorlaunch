@@ -1,0 +1,390 @@
+package com.victorious.launch.settings
+
+import android.app.Activity
+import android.content.Intent
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.victorious.launch.core.backup.BackupConflictPolicy
+import com.victorious.launch.core.backup.ConfigBackupCodec
+import com.victorious.launch.core.backup.ImportReport
+import com.victorious.launch.VictorLaunchApp
+import com.victorious.launch.core.protocol.Protocol
+import com.victorious.launch.island.IslandCommandReceiver
+import com.victorious.launch.island.IslandManager
+import com.victorious.launch.launcher.AppCatalog
+import com.victorious.launch.prefs.AppSettings
+import com.victorious.launch.security.SigningCerts
+import com.victorious.launch.shizuku.ShizukuStarters
+import com.victorious.launch.shizuku.ShizukuStartupMode
+import com.victorious.launch.theme.Cyan
+import com.victorious.launch.theme.Magenta
+import com.victorious.launch.theme.Muted
+
+@Composable
+fun SettingsScreen(
+    settings: AppSettings,
+    catalog: AppCatalog,
+    island: IslandManager,
+    activity: Activity,
+    onHelp: () -> Unit,
+    onFleet: () -> Unit,
+    onClose: () -> Unit,
+) {
+    var external by remember { mutableStateOf(settings.isExternalControlEnabled()) }
+    var shizukuOn by remember { mutableStateOf(settings.isShizukuEnabled()) }
+    var confirmShizuku by remember { mutableStateOf(false) }
+    var islandLocked by remember { mutableStateOf(settings.launcherPreferences().islandTabLocked) }
+    var note by remember { mutableStateOf<String?>(null) }
+    var pendingImport by remember { mutableStateOf<ImportReport?>(null) }
+    val pairing = settings.pairedController()
+    val openDocument =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri == null) return@rememberLauncherForActivityResult
+            try {
+                val text = activity.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                    ?: run {
+                        note = "Could not read file"
+                        return@rememberLauncherForActivityResult
+                    }
+                pendingImport =
+                    ConfigBackupCodec.import(
+                        live = settings.launcherPreferences(),
+                        incomingJson = text,
+                        dryRun = true,
+                        policy = BackupConflictPolicy.SKIP,
+                        confirmed = false,
+                    )
+                note = "Dry-run complete. Confirm to apply."
+            } catch (e: Exception) {
+                note = e.message ?: "import failed"
+            }
+        }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Settings", color = Cyan, fontSize = 22.sp, modifier = Modifier.weight(1f))
+            TextButton(onClick = onClose) { Text("Close", color = Cyan) }
+        }
+        Section("Default launcher") {
+            Text(
+                "VictorLaunch must be the Home app to show the workspace, dock and status tray.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Button(
+                onClick = {
+                    activity.startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
+                },
+                modifier = Modifier.padding(top = 8.dp),
+            ) { Text("Open default-home settings") }
+        }
+        Section("Pair controller") {
+            Text(
+                if (pairing == null) {
+                    "Not paired. VictorLaunch will not pull status until you pair DroidCommand AI."
+                } else {
+                    "Paired with ${pairing.packageName}\nSHA-256 ${pairing.certSha256}"
+                },
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Button(
+                onClick = {
+                    val certs = SigningCerts.forPackage(activity.packageManager, Protocol.CONTROLLER_PACKAGE)
+                    if (certs.isEmpty()) {
+                        note = "DroidCommand AI is not installed"
+                    } else {
+                        settings.pairController(Protocol.CONTROLLER_PACKAGE, certs.first())
+                        note = "Paired ${Protocol.CONTROLLER_PACKAGE}"
+                    }
+                },
+                modifier = Modifier.padding(top = 8.dp),
+            ) { Text("Pair DroidCommand AI") }
+            TextButton(onClick = {
+                settings.unpairController()
+                note = "Unpaired"
+            }) { Text("Clear pairing", color = Magenta) }
+        }
+        Section("External control") {
+            Text(
+                "Off by default. When off, app.launch, layout.set and panel.open from other nodes are refused. This switch is never turned on by a backup import.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+                Text("Allow external control", color = Cyan, modifier = Modifier.weight(1f))
+                Switch(
+                    checked = external,
+                    onCheckedChange = {
+                        external = it
+                        settings.setExternalControlEnabled(it)
+                    },
+                )
+            }
+        }
+        Section("Shizuku (elevated, optional)") {
+            Text(
+                "Off by default. When you turn this on, VictorLaunch may use a Shizuku binder (stock Shizuku app today; built-in server later) for freeze/hide, usage-access grant, Island ops without being device owner, and force-stop. That is ADB-level or root-level access. Only enable it if you trust this phone and this APK.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            val snap = remember(shizukuOn, note) { VictorLaunchApp.instance.shizuku.snapshot() }
+            Text(
+                when {
+                    !shizukuOn -> "Status: disabled"
+                    !snap.binderAlive -> "Status: waiting for Shizuku binder"
+                    !snap.permissionGranted -> "Status: binder up, permission not granted"
+                    else -> "Status: ready (uid ${snap.uid})"
+                },
+                color = Cyan,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+                Text("Enable Shizuku", color = Cyan, modifier = Modifier.weight(1f))
+                Switch(
+                    checked = shizukuOn,
+                    onCheckedChange = { on ->
+                        if (on) {
+                            confirmShizuku = true
+                        } else {
+                            shizukuOn = false
+                            settings.setShizukuEnabled(false)
+                            VictorLaunchApp.instance.privileged.unbind()
+                        }
+                    },
+                )
+            }
+            OutlinedButton(
+                onClick = {
+                    VictorLaunchApp.instance.shizuku.requestPermission()
+                    note = "Requested Shizuku permission"
+                },
+                modifier = Modifier.padding(top = 8.dp),
+            ) { Text("Grant Shizuku permission") }
+            Text("Start the server", color = Magenta, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp))
+            Text(ShizukuStarters.modeHelp(ShizukuStartupMode.WIRELESS_DEBUG), color = Muted, fontSize = 12.sp)
+            TextButton(
+                onClick = {
+                    try {
+                        activity.startActivity(ShizukuStarters.wirelessDebuggingIntent())
+                    } catch (_: Exception) {
+                        activity.startActivity(ShizukuStarters.developerSettingsIntent())
+                    }
+                },
+            ) { Text("Open wireless debugging", color = Cyan) }
+            Text(ShizukuStarters.modeHelp(ShizukuStartupMode.ADB_COMMAND), color = Muted, fontSize = 12.sp)
+            Text(ShizukuStarters.modeHelp(ShizukuStartupMode.ROOT), color = Muted, fontSize = 12.sp)
+            val stock = ShizukuStarters.stockManagerIntent(activity)
+            if (stock != null) {
+                TextButton(onClick = { activity.startActivity(stock) }) { Text("Open stock Shizuku", color = Cyan) }
+            } else {
+                Text("Stock Shizuku is not installed. Install it, or wait for the embedded server.", color = Muted, fontSize = 12.sp)
+            }
+        }
+        Section("Island") {
+            Text(
+                if (island.hasWorkProfile()) {
+                    "Work profile present. Pause, resume, clone, freeze and hide prefer Shizuku when you enabled it, then DevicePolicyManager. Inspired by Island/Insular; no third-party Island source is bundled."
+                } else {
+                    "Create a managed work profile. VictorLaunch becomes the profile owner of that profile."
+                },
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Lock Island tab", color = Cyan, modifier = Modifier.weight(1f))
+                Switch(
+                    checked = islandLocked,
+                    onCheckedChange = {
+                        islandLocked = it
+                        settings.setIslandTabLocked(it)
+                    },
+                )
+            }
+            if (!island.hasWorkProfile()) {
+                Button(onClick = { activity.startActivity(island.provisionIntent()) }) {
+                    Text("Create work profile")
+                }
+            } else {
+                OutlinedButton(onClick = { island.pauseWorkProfile() }) { Text("Pause Island") }
+                OutlinedButton(onClick = { island.resumeWorkProfile() }) { Text("Resume Island") }
+            }
+            Text(
+                "To remove the work profile: Settings → Accounts (or Users) → Work → Remove work profile. If this copy is the profile owner, you can also wipe the profile from the Island screen.",
+                color = Muted,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+        Section("Lockdown") {
+            Text(
+                "Hidden apps stay out of the drawer. Locked apps, folders and the Island tab ask for BiometricPrompt first.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            val hidden = settings.launcherPreferences().hiddenPackages.toMutableSet()
+            val locked = settings.launcherPreferences().lockedPackages.toMutableSet()
+            catalog.personal().take(12).forEach { app ->
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Text(app.label, color = Cyan, modifier = Modifier.weight(1f), fontSize = 13.sp)
+                    TextButton(onClick = {
+                        if (app.packageName in hidden) hidden.remove(app.packageName) else hidden.add(app.packageName)
+                        settings.setHidden(hidden)
+                        val systemHide = app.packageName in hidden
+                        val priv = VictorLaunchApp.instance.privileged.hide(app.packageName, systemHide)
+                        note = if (priv.ok) "Hidden=$systemHide (${priv.detail})" else "Drawer hide updated; system hide: ${priv.detail}"
+                    }) { Text(if (app.packageName in hidden) "Unhide" else "Hide", color = Muted) }
+                    TextButton(onClick = {
+                        if (app.packageName in locked) locked.remove(app.packageName) else locked.add(app.packageName)
+                        settings.setLocked(locked)
+                        note = "Updated locked apps"
+                    }) { Text(if (app.packageName in locked) "Unlock" else "Lock", color = Muted) }
+                    if (island.hasWorkProfile()) {
+                        TextButton(onClick = {
+                            island.sendCommand(IslandCommandReceiver.CMD_CLONE, app.packageName)
+                            note = "Clone requested for ${app.packageName}"
+                        }) { Text("Clone", color = Magenta) }
+                    }
+                    TextButton(onClick = {
+                        note = VictorLaunchApp.instance.privileged.forceStop(app.packageName).detail
+                    }) { Text("Force stop", color = Muted) }
+                }
+            }
+            OutlinedButton(
+                onClick = {
+                    note = VictorLaunchApp.instance.privileged.grantUsageAccess(activity.packageName).detail
+                },
+                modifier = Modifier.padding(top = 8.dp),
+            ) { Text("Grant usage access to VictorLaunch (Shizuku)") }
+        }
+        Section("Backup") {
+            Text(
+                "VictorLaunch can export its own launcher preferences (dock, workspace, hidden/locked apps). It never holds the fleet wrapping key. Ask the controller to build or restore a fleet bundle.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            OutlinedButton(
+                onClick = {
+                    val json = ConfigBackupCodec.exportJson(settings.launcherPreferences())
+                    val send = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/json"
+                        putExtra(Intent.EXTRA_TEXT, json)
+                        putExtra(Intent.EXTRA_TITLE, "victorlaunch-config.json")
+                    }
+                    activity.startActivity(Intent.createChooser(send, "Export launcher preferences"))
+                },
+                modifier = Modifier.padding(top = 8.dp),
+            ) { Text("Export launcher preferences") }
+            OutlinedButton(
+                onClick = { openDocument.launch(arrayOf("application/json", "text/plain", "*/*")) },
+                modifier = Modifier.padding(top = 8.dp),
+            ) { Text("Import (dry-run then confirm)") }
+            Text(
+                "Import always dry-runs first. Confirming still forces external control off. VictorLaunch never stores the fleet wrapping key — ask DroidCommand AI to export or import the encrypted fleet bundle.",
+                color = Muted,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+        Section("Fleet apps") {
+            Text("Install/Update fleet apps is a stub until the manifest schema is frozen.", color = Muted, fontSize = 13.sp)
+            Button(onClick = onFleet, modifier = Modifier.padding(top = 8.dp)) { Text("Open stub") }
+        }
+        Section("Help") {
+            Button(onClick = onHelp) { Text("Open the manual") }
+        }
+        val currentNote = note
+        if (currentNote != null) {
+            Text(currentNote, color = Magenta, modifier = Modifier.padding(top = 12.dp))
+        }
+        if (confirmShizuku) {
+            AlertDialog(
+                onDismissRequest = { confirmShizuku = false },
+                title = { Text("Enable Shizuku?") },
+                text = {
+                    Text(
+                        "This lets VictorLaunch run freeze, hide, force-stop, usage-access grants and some Island commands as ADB (or root if you started Shizuku that way). It is off until you agree. The embedded Shizuku server is not in this build — the stock Shizuku app must be running.",
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            confirmShizuku = false
+                            shizukuOn = true
+                            settings.setShizukuEnabled(true)
+                            VictorLaunchApp.instance.privileged.refreshBinding()
+                            VictorLaunchApp.instance.shizuku.requestPermission()
+                        },
+                    ) { Text("Enable") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmShizuku = false }) { Text("Cancel") }
+                },
+            )
+        }
+        val report = pendingImport
+        if (report != null) {
+            AlertDialog(
+                onDismissRequest = { pendingImport = null },
+                title = { Text("Apply launcher backup?") },
+                text = {
+                    Text(report.notes.joinToString("\n").ifBlank { "Dry-run succeeded. External control will stay off." })
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val prefs = report.preferences?.copy(externalControlEnabled = false)
+                            if (prefs != null) {
+                                settings.applyPreferences(prefs)
+                            }
+                            settings.setExternalControlEnabled(false)
+                            external = false
+                            pendingImport = null
+                            note = "Import applied; external control remains off"
+                        },
+                    ) { Text("Apply") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingImport = null }) { Text("Cancel") }
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun Section(title: String, content: @Composable () -> Unit) {
+    Text(title, color = Magenta, fontSize = 16.sp, modifier = Modifier.padding(top = 20.dp, bottom = 6.dp))
+    content()
+}

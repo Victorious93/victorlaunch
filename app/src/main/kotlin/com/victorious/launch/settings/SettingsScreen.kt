@@ -57,6 +57,7 @@ fun SettingsScreen(
     onClose: () -> Unit,
 ) {
     var external by remember { mutableStateOf(settings.isExternalControlEnabled()) }
+    var controllerFull by remember { mutableStateOf(settings.isControllerFullControlEnabled()) }
     var shizukuOn by remember { mutableStateOf(settings.isShizukuEnabled()) }
     var confirmShizuku by remember { mutableStateOf(false) }
     var islandLocked by remember { mutableStateOf(settings.launcherPreferences().islandTabLocked) }
@@ -142,14 +143,45 @@ fun SettingsScreen(
                 note = "Unpaired"
             }) { Text("Clear pairing", color = Magenta) }
         }
-        Section("External control") {
+        Section("DroidCommand AI full control") {
             Text(
-                "Off by default. When off, app.launch, layout.set and panel.open from other nodes are refused. This switch is never turned on by a backup import.",
+                "Don’s choice: the pinned debug controller (ai.droidcommand.app + the debug SHA-256) may run app.launch, layout.set and panel.open with no on-device confirmation. This is ON by default and is a kill switch — turn it off to revoke that privilege. It is not granted to any other peer. Backup import cannot turn it on. This deviates from the fleet rule that destructive ops stay gated.",
                 color = Muted,
                 fontSize = 13.sp,
             )
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-                Text("Allow external control", color = Cyan, modifier = Modifier.weight(1f))
+                Text("Allow controller full control", color = Cyan, modifier = Modifier.weight(1f))
+                Switch(
+                    checked = controllerFull,
+                    onCheckedChange = {
+                        controllerFull = it
+                        settings.setControllerFullControlEnabled(it)
+                    },
+                )
+            }
+            val auditLines =
+                remember(note, controllerFull, external) {
+                    VictorLaunchApp.instance.actionAudit.snapshot().takeLast(5)
+                }
+            if (auditLines.isNotEmpty()) {
+                Text("Recent remote actions", color = Magenta, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+                auditLines.forEach { event ->
+                    Text(
+                        "${event.op} ${if (event.ok) "ok" else event.detail} ← ${event.sourceNodeRef}",
+                        color = Muted,
+                        fontSize = 11.sp,
+                    )
+                }
+            }
+        }
+        Section("External control (other peers)") {
+            Text(
+                "Off by default. When off, app.launch, layout.set and panel.open from non-controller peers are refused. layout.set still needs on-device confirmation even when this is on. A backup import never turns this on.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+                Text("Allow other peers", color = Cyan, modifier = Modifier.weight(1f))
                 Switch(
                     checked = external,
                     onCheckedChange = {

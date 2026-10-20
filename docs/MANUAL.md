@@ -78,7 +78,9 @@ The debug controller is **pre-pinned**:
 - package `ai.droidcommand.app`
 - SHA-256 `88:00:51:A6:D9:5D:38:DD:8D:81:E1:93:1E:17:05:48:03:87:D5:93:C3:09:43:53:99:68:E6:EF:11:A0:C8:4D`
 
-The release cert slot is **TBD** and does not authorize. Pinning does not turn on external control.
+The release cert slot is **TBD** and does not authorize.
+
+**Risk:** Don chose that this pinned debug controller has **full control** of VictorLaunch (`app.launch`, `layout.set`, `panel.open`, no confirmation). That **deviates** from the fleet rule “destructive ops always gated”. Revoke it with Settings → **Allow controller full control**. Other peers stay off and still need confirmation.
 
 1. Install DroidCommand AI (debug build) on the same phone.
 2. If that APK’s cert matches the pin, VictorLaunch binds its bridge every 15 seconds and sends `node.status.get` targeted at `controller`. No Settings tap is required.
@@ -250,11 +252,12 @@ Wallpaper is shown with `windowShowWallpaper`. VictorLaunch does not need `SET_W
 - **Envelope:** v1.1 flat fields. See `docs/external-node.md`.
 - **Always-on reads (when the caller is paired):** `capabilities.get`, `node.status.get`, `fleet.list`, `layout.get`, `installed.list`, `running.list`.
 - **Own settings:** `config.export` / `config.import` with `remoteAllowed: false`. Import `requiresConfirm: true` and supports `dryRun`.
-- **Actions:** `app.launch`, `layout.set`, `panel.open` run only if **external control** is on (it is not, by default). `layout.set` also needs on-device confirmation.
+- **Actions (pinned debug controller):** `app.launch`, `layout.set`, `panel.open` run with **no confirmation** while Settings → **Allow controller full control** is on (default ON). Don chose this; it **deviates** from the fleet rule that destructive ops stay gated. Turn the kill switch **off** to revoke it. Package+cert, replay/nonce/ttl, and an audit log still apply.
+- **Actions (every other peer):** those ops run only if **Allow other peers** is on (default **off**). `layout.set` still needs on-device confirmation. Backup import cannot turn this on.
 - **Status consumer:** `node.status.get` to **controller** every 15s.
 - **Status producer:** this process’s `node_health` only. No scraping of other packages.
 
-`remote.command` is never auto-enabled, including after backup import.
+Generic `remote.command` / other-peer external control is never auto-enabled, including after backup import. The controller kill switch is also not set by backup.
 
 ---
 
@@ -285,7 +288,10 @@ The device has no enrolled biometric or PIN. The lock then fails open so you are
 If Island exists, remove the work profile first, then uninstall `com.victorious.launch`. Android will refuse to uninstall a profile-owner admin until the profile is gone.
 
 **Can I turn on external control?**  
-Yes, explicitly, in Settings. A backup cannot turn it on for you.
+The pinned debug controller already has it (kill switch ON by default). For any other peer: yes, explicitly, under **Allow other peers**. A backup cannot turn either of those on for you.
+
+**How do I revoke the controller?**  
+Settings → **Allow controller full control** → off. Package+cert pairing and status pulls still work; action ops from the controller then follow the other-peer rules.
 
 **Shizuku says waiting for binder.**  
 The stock Shizuku server is not running. Start it (wireless debugging, adb, or root), then return. Enabling the VictorLaunch toggle does nothing by itself.

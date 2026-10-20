@@ -69,17 +69,146 @@ class BridgeDispatcherTest {
     }
 
     @Test
-    fun actionOpsFailWhenExternalControlOff() {
+    fun actionOpsFailWhenExternalControlOffForOtherPeers() {
         val d = BridgeDispatcher(host())
         val resp =
             d.handle(
                 envelope("app.launch", "33333333333333333333333333333333", extra = """"packageName":"com.android.settings""""),
-                sourceNodeRef = "ai.droidcommand.app",
+                sourceNodeRef = "com.other.node",
                 callerPaired = true,
                 externalControlEnabled = false,
+                callerIsPinnedController = false,
             )
         assertFalse(resp.ok)
         assertEquals(ErrorCategory.EXTERNAL_CONTROL_DISABLED, resp.error?.category)
+        assertEquals("app.launch", d.audit.snapshot().last().op)
+        assertFalse(d.audit.snapshot().last().ok)
+    }
+
+    @Test
+    fun pinnedControllerRunsActionsWithoutConfirmOrGenericSwitch() {
+        val d = BridgeDispatcher(host())
+        val launch =
+            d.handle(
+                envelope("app.launch", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", extra = """"packageName":"com.android.settings""""),
+                sourceNodeRef = "ai.droidcommand.app",
+                callerPaired = true,
+                externalControlEnabled = false,
+                confirmed = false,
+                callerIsPinnedController = true,
+                controllerFullControlEnabled = true,
+            )
+        assertTrue(launch.ok)
+        val layout =
+            d.handle(
+                envelope("layout.set", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", extra = """"dock":[]"""),
+                sourceNodeRef = "ai.droidcommand.app",
+                callerPaired = true,
+                externalControlEnabled = false,
+                confirmed = false,
+                callerIsPinnedController = true,
+                controllerFullControlEnabled = true,
+            )
+        assertTrue(layout.ok)
+        val panel =
+            d.handle(
+                envelope("panel.open", "cccccccccccccccccccccccccccccccc", extra = """"panel":"drawer""""),
+                sourceNodeRef = "ai.droidcommand.app",
+                callerPaired = true,
+                externalControlEnabled = false,
+                confirmed = false,
+                callerIsPinnedController = true,
+                controllerFullControlEnabled = true,
+            )
+        assertTrue(panel.ok)
+        val audited = d.audit.snapshot().map { it.op }
+        assertTrue(audited.containsAll(listOf("app.launch", "layout.set", "panel.open")))
+        assertTrue(d.audit.snapshot().all { it.ok })
+    }
+
+    @Test
+    fun killSwitchRevokesPinnedControllerActions() {
+        val d = BridgeDispatcher(host())
+        val resp =
+            d.handle(
+                envelope("layout.set", "dddddddddddddddddddddddddddddddd"),
+                sourceNodeRef = "ai.droidcommand.app",
+                callerPaired = true,
+                externalControlEnabled = false,
+                confirmed = false,
+                callerIsPinnedController = true,
+                controllerFullControlEnabled = false,
+            )
+        assertFalse(resp.ok)
+        assertEquals(ErrorCategory.EXTERNAL_CONTROL_DISABLED, resp.error?.category)
+    }
+
+    @Test
+    fun otherPeerLayoutSetStillNeedsConfirmWhenGenericSwitchOn() {
+        val d = BridgeDispatcher(host())
+        val resp =
+            d.handle(
+                envelope("layout.set", "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
+                sourceNodeRef = "com.other.node",
+                callerPaired = true,
+                externalControlEnabled = true,
+                confirmed = false,
+                callerIsPinnedController = false,
+            )
+        assertFalse(resp.ok)
+        assertEquals(ErrorCategory.CONFIRMATION_REQUIRED, resp.error?.category)
+    }
+
+    @Test
+    fun capabilitiesForPinnedControllerSkipConfirmOnActionOps() {
+        val d = BridgeDispatcher(host())
+        val resp =
+            d.handle(
+                envelope("capabilities.get", "ffffffffffffffffffffffffffffffff"),
+                sourceNodeRef = "ai.droidcommand.app",
+                callerPaired = true,
+                externalControlEnabled = false,
+                callerIsPinnedController = true,
+                controllerFullControlEnabled = true,
+            )
+        assertTrue(resp.ok)
+        val text = resp.result.toString()
+        assertTrue(
+            text.contains("\"name\":\"layout.set\",\"kind\":\"action\",\"remoteAllowed\":true,\"requiresConfirm\":false"),
+        )
+        assertTrue(
+            text.contains("\"name\":\"app.launch\",\"kind\":\"action\",\"remoteAllowed\":true,\"requiresConfirm\":false"),
+        )
+        assertTrue(
+            text.contains("\"name\":\"panel.open\",\"kind\":\"action\",\"remoteAllowed\":true,\"requiresConfirm\":false"),
+        )
+        assertTrue(
+            text.contains("\"name\":\"config.import\",\"kind\":\"action\",\"remoteAllowed\":false,\"requiresConfirm\":true"),
+        )
+    }
+
+    @Test
+    fun replayStillRejectedForPinnedController() {
+        val d = BridgeDispatcher(host())
+        val first =
+            d.handle(
+                envelope("app.launch", "12121212121212121212121212121212", extra = """"packageName":"com.android.settings""""),
+                sourceNodeRef = "ai.droidcommand.app",
+                callerPaired = true,
+                externalControlEnabled = false,
+                callerIsPinnedController = true,
+            )
+        assertTrue(first.ok)
+        val replay =
+            d.handle(
+                envelope("app.launch", "12121212121212121212121212121212", extra = """"packageName":"com.android.settings""""),
+                sourceNodeRef = "ai.droidcommand.app",
+                callerPaired = true,
+                externalControlEnabled = false,
+                callerIsPinnedController = true,
+            )
+        assertFalse(replay.ok)
+        assertEquals(ErrorCategory.REPLAY_DETECTED, replay.error?.category)
     }
 
     @Test
@@ -94,6 +223,8 @@ class BridgeDispatcherTest {
                 callerPaired = true,
                 externalControlEnabled = false,
                 confirmed = false,
+                callerIsPinnedController = true,
+                controllerFullControlEnabled = true,
             )
         assertFalse(resp.ok)
         assertEquals(ErrorCategory.CAPABILITY_OFF, resp.error?.category)
@@ -174,7 +305,7 @@ class FakeHost(
 
     override fun runningPackages(): RunningResult = running
 
-    override fun launchApp(packageName: String): Boolean = false
+    override fun launchApp(packageName: String): Boolean = true
 
-    override fun openPanel(panel: String): Boolean = false
+    override fun openPanel(panel: String): Boolean = true
 }

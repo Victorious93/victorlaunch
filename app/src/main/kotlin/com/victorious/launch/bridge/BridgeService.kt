@@ -10,10 +10,12 @@ import android.os.Looper
 import android.os.Message
 import android.os.Messenger
 import com.victorious.launch.VictorLaunchApp
+import android.util.Log
 import com.victorious.launch.core.bridge.BridgeDispatcher
 import com.victorious.launch.core.protocol.BridgeResponse
 import com.victorious.launch.core.protocol.ErrorCategory
 import com.victorious.launch.core.protocol.Protocol
+import com.victorious.launch.core.protocol.TrustedPeers
 import com.victorious.launch.launcher.AppCatalog
 import com.victorious.launch.security.SigningCerts
 
@@ -27,6 +29,7 @@ class BridgeService : Service() {
         dispatcher =
             BridgeDispatcher(
                 AndroidHost(applicationContext, settings, AppCatalog(applicationContext)),
+                audit = VictorLaunchApp.instance.actionAudit,
             )
         messenger = Messenger(IncomingHandler(Looper.getMainLooper()))
     }
@@ -43,6 +46,8 @@ class BridgeService : Service() {
             val source = pkgs.sorted().joinToString(",")
             val certs = pkgs.flatMap { SigningCerts.forPackage(packageManager, it) }
             val paired = pkgs.any { VictorLaunchApp.instance.settings.isCallerPaired(it, certs) }
+            val pinned = pkgs.any { TrustedPeers.isPinnedController(it, certs) }
+            val auditSize = dispatcher.audit.snapshot().size
             val resp =
                 try {
                     dispatcher.handle(
@@ -51,10 +56,21 @@ class BridgeService : Service() {
                         callerPaired = paired,
                         externalControlEnabled = VictorLaunchApp.instance.settings.isExternalControlEnabled(),
                         confirmed = false,
+                        callerIsPinnedController = pinned,
+                        controllerFullControlEnabled =
+                            VictorLaunchApp.instance.settings.isControllerFullControlEnabled(),
                     )
                 } catch (e: Exception) {
                     BridgeResponse.fail(null, ErrorCategory.INTERNAL, e.message ?: "internal")
                 }
+            val audited = dispatcher.audit.snapshot()
+            if (audited.size > auditSize) {
+                val event = audited.last()
+                Log.i(
+                    "VictorLaunchAudit",
+                    "${event.op} source=${event.sourceNodeRef} ok=${event.ok} ${event.detail} req=${event.requestId}",
+                )
+            }
             val out = Message.obtain(null, Protocol.MSG_RESPONSE)
             out.data =
                 Bundle().apply {

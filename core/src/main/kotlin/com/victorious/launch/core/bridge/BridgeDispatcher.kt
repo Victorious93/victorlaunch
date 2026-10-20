@@ -8,8 +8,10 @@ import com.victorious.launch.core.protocol.BridgeResponse
 import com.victorious.launch.core.protocol.Envelope
 import com.victorious.launch.core.protocol.EnvelopeCodec
 import com.victorious.launch.core.protocol.ErrorCategory
+import com.victorious.launch.core.protocol.OpKind
 import com.victorious.launch.core.protocol.Ops
 import com.victorious.launch.core.protocol.Protocol
+import com.victorious.launch.core.protocol.RemoteActionPolicy
 import com.victorious.launch.core.protocol.ReplayCheck
 import com.victorious.launch.core.protocol.ReplayGuard
 import com.victorious.launch.core.status.NodeStatusSnapshot
@@ -66,6 +68,7 @@ sealed class RunningResult {
 class BridgeDispatcher(
     private val host: LauncherHost,
     private val replayGuard: ReplayGuard = ReplayGuard(clock = { host.nowMs() }),
+    val audit: ActionAuditLog = ActionAuditLog(),
 ) {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -75,6 +78,8 @@ class BridgeDispatcher(
         callerPaired: Boolean,
         externalControlEnabled: Boolean,
         confirmed: Boolean = false,
+        callerIsPinnedController: Boolean = false,
+        controllerFullControlEnabled: Boolean = true,
     ): BridgeResponse {
         if (raw.isNullOrBlank()) {
             return BridgeResponse.fail(null, ErrorCategory.INVALID_PARAMETERS, "empty request")
@@ -109,60 +114,148 @@ class BridgeDispatcher(
             return BridgeResponse.fail(env.requestId, ErrorCategory.NOT_FOUND, "unknown targetNodeRef")
         }
         if (!callerPaired) {
-            return BridgeResponse.fail(env.requestId, ErrorCategory.NOT_PAIRED, "caller is not paired")
+            return finish(
+                env,
+                sourceNodeRef,
+                BridgeResponse.fail(env.requestId, ErrorCategory.NOT_PAIRED, "caller is not paired"),
+            )
         }
         when (val replay = replayGuard.check(sourceNodeRef, env.nonce, env.timestampMs, env.ttlMs)) {
             ReplayCheck.Ok -> Unit
             is ReplayCheck.Rejected ->
-                return BridgeResponse.fail(env.requestId, replay.category, replay.message)
+                return finish(
+                    env,
+                    sourceNodeRef,
+                    BridgeResponse.fail(env.requestId, replay.category, replay.message),
+                )
         }
         val descriptor = Ops.descriptor(env.op)
         if (descriptor == null) {
             return BridgeResponse.fail(env.requestId, ErrorCategory.UNSUPPORTED_OP, "unsupported op ${env.op}")
         }
         val isLocalUi = sourceNodeRef == self || sourceNodeRef == Protocol.PACKAGE_NAME
-        val needsExternal =
-            env.op == Ops.APP_LAUNCH || env.op == Ops.LAYOUT_SET || env.op == Ops.PANEL_OPEN
-        if (needsExternal && !externalControlEnabled && !isLocalUi) {
-            return BridgeResponse.fail(
-                env.requestId,
-                ErrorCategory.EXTERNAL_CONTROL_DISABLED,
-                "external control is off",
+        if (
+            !RemoteActionPolicy.allowsAction(
+                env.op,
+                callerIsPinnedController,
+                controllerFullControlEnabled,
+                externalControlEnabled,
+                isLocalUi,
+            )
+        ) {
+            return finish(
+                env,
+                sourceNodeRef,
+                BridgeResponse.fail(
+                    env.requestId,
+                    ErrorCategory.EXTERNAL_CONTROL_DISABLED,
+                    "external control is off",
+                ),
             )
         }
-        if (!isLocalUi && !descriptor.remoteAllowed && !needsExternal) {
-            return BridgeResponse.fail(
-                env.requestId,
-                ErrorCategory.CAPABILITY_OFF,
-                "${env.op} is not remoteAllowed",
+        if (
+            !isLocalUi &&
+            !RemoteActionPolicy.remoteAllowed(
+                env.op,
+                callerIsPinnedController,
+                controllerFullControlEnabled,
+                externalControlEnabled,
+            )
+        ) {
+            return finish(
+                env,
+                sourceNodeRef,
+                BridgeResponse.fail(
+                    env.requestId,
+                    ErrorCategory.CAPABILITY_OFF,
+                    "${env.op} is not remoteAllowed",
+                ),
             )
         }
-        if (descriptor.requiresConfirm && !env.dryRun && !confirmed) {
-            return BridgeResponse.fail(
-                env.requestId,
-                ErrorCategory.CONFIRMATION_REQUIRED,
-                "${env.op} needs on-device confirmation",
+        if (
+            RemoteActionPolicy.requiresConfirm(
+                env.op,
+                callerIsPinnedController,
+                controllerFullControlEnabled,
+            ) &&
+            !env.dryRun &&
+            !confirmed
+        ) {
+            return finish(
+                env,
+                sourceNodeRef,
+                BridgeResponse.fail(
+                    env.requestId,
+                    ErrorCategory.CONFIRMATION_REQUIRED,
+                    "${env.op} needs on-device confirmation",
+                ),
             )
         }
         return try {
-            dispatch(env, externalControlEnabled, isLocalUi)
+            finish(
+                env,
+                sourceNodeRef,
+                dispatch(
+                    env,
+                    externalControlEnabled,
+                    isLocalUi,
+                    callerIsPinnedController,
+                    controllerFullControlEnabled,
+                ),
+            )
         } catch (e: GateException) {
-            BridgeResponse.fail(env.requestId, e.category, e.message ?: e.category)
+            finish(env, sourceNodeRef, BridgeResponse.fail(env.requestId, e.category, e.message ?: e.category))
         } catch (e: ForbiddenBackupContentException) {
-            BridgeResponse.fail(env.requestId, ErrorCategory.INVALID_PARAMETERS, e.message ?: "forbidden")
+            finish(
+                env,
+                sourceNodeRef,
+                BridgeResponse.fail(env.requestId, ErrorCategory.INVALID_PARAMETERS, e.message ?: "forbidden"),
+            )
         } catch (e: Exception) {
-            BridgeResponse.fail(env.requestId, ErrorCategory.INTERNAL, e.message ?: "internal")
+            finish(
+                env,
+                sourceNodeRef,
+                BridgeResponse.fail(env.requestId, ErrorCategory.INTERNAL, e.message ?: "internal"),
+            )
         }
+    }
+
+    private fun finish(env: Envelope, sourceNodeRef: String, resp: BridgeResponse): BridgeResponse {
+        maybeAudit(env, sourceNodeRef, resp)
+        return resp
+    }
+
+    private fun maybeAudit(env: Envelope, sourceNodeRef: String, resp: BridgeResponse) {
+        val kind = Ops.descriptor(env.op)?.kind ?: return
+        if (kind != OpKind.ACTION && kind != OpKind.DESTRUCTIVE) return
+        audit.record(
+            ActionAuditEvent(
+                atMs = host.nowMs(),
+                sourceNodeRef = sourceNodeRef,
+                op = env.op,
+                requestId = env.requestId,
+                nonce = env.nonce,
+                ok = resp.ok,
+                detail = resp.error?.category ?: "ok",
+            ),
+        )
     }
 
     private fun dispatch(
         env: Envelope,
         externalControlEnabled: Boolean,
         isLocalUi: Boolean,
+        callerIsPinnedController: Boolean,
+        controllerFullControlEnabled: Boolean,
     ): BridgeResponse {
         val result =
             when (env.op) {
-                Ops.CAPABILITIES_GET -> capabilities(externalControlEnabled)
+                Ops.CAPABILITIES_GET ->
+                    capabilities(
+                        callerIsPinnedController,
+                        controllerFullControlEnabled,
+                        externalControlEnabled,
+                    )
                 Ops.NODE_STATUS_GET -> NodeStatusSnapshotCodec.encode(host.ownHealth())
                 Ops.FLEET_LIST -> fleet()
                 Ops.LAYOUT_GET -> host.layout()
@@ -170,15 +263,22 @@ class BridgeDispatcher(
                 Ops.RUNNING_LIST -> return runningResponse(env.requestId)
                 Ops.CONFIG_EXPORT -> configExport()
                 Ops.CONFIG_IMPORT -> configImport(env, isLocalUi)
-                Ops.APP_LAUNCH -> appLaunch(env, externalControlEnabled, isLocalUi)
-                Ops.LAYOUT_SET -> layoutSet(env, externalControlEnabled, isLocalUi)
-                Ops.PANEL_OPEN -> panelOpen(env, externalControlEnabled, isLocalUi)
+                Ops.APP_LAUNCH ->
+                    appLaunch(env, callerIsPinnedController, controllerFullControlEnabled, externalControlEnabled, isLocalUi)
+                Ops.LAYOUT_SET ->
+                    layoutSet(env, callerIsPinnedController, controllerFullControlEnabled, externalControlEnabled, isLocalUi)
+                Ops.PANEL_OPEN ->
+                    panelOpen(env, callerIsPinnedController, controllerFullControlEnabled, externalControlEnabled, isLocalUi)
                 else -> return BridgeResponse.fail(env.requestId, ErrorCategory.UNSUPPORTED_OP, env.op)
             }
         return BridgeResponse.ok(env.requestId, result)
     }
 
-    private fun capabilities(externalControlEnabled: Boolean): JsonObject =
+    private fun capabilities(
+        callerIsPinnedController: Boolean,
+        controllerFullControlEnabled: Boolean,
+        genericExternalControl: Boolean,
+    ): JsonObject =
         buildJsonObject {
             put("protocolMajor", Protocol.PROTOCOL_MAJOR)
             put("protocolMinor", Protocol.PROTOCOL_MINOR)
@@ -188,17 +288,23 @@ class BridgeDispatcher(
                         buildJsonObject {
                             put("name", op.name)
                             put("kind", op.kind.wire)
-                            val remote =
-                                if (op.name == Ops.APP_LAUNCH ||
-                                    op.name == Ops.LAYOUT_SET ||
-                                    op.name == Ops.PANEL_OPEN
-                                ) {
-                                    externalControlEnabled && op.remoteAllowed
-                                } else {
-                                    op.remoteAllowed
-                                }
-                            put("remoteAllowed", remote)
-                            put("requiresConfirm", op.requiresConfirm)
+                            put(
+                                "remoteAllowed",
+                                RemoteActionPolicy.remoteAllowed(
+                                    op.name,
+                                    callerIsPinnedController,
+                                    controllerFullControlEnabled,
+                                    genericExternalControl,
+                                ),
+                            )
+                            put(
+                                "requiresConfirm",
+                                RemoteActionPolicy.requiresConfirm(
+                                    op.name,
+                                    callerIsPinnedController,
+                                    controllerFullControlEnabled,
+                                ),
+                            )
                         },
                     )
                 }
@@ -284,10 +390,20 @@ class BridgeDispatcher(
 
     private fun appLaunch(
         env: Envelope,
-        externalControlEnabled: Boolean,
+        callerIsPinnedController: Boolean,
+        controllerFullControlEnabled: Boolean,
+        genericExternalControl: Boolean,
         isLocalUi: Boolean,
     ): JsonObject {
-        if (!externalControlEnabled && !isLocalUi) {
+        if (
+            !RemoteActionPolicy.allowsAction(
+                Ops.APP_LAUNCH,
+                callerIsPinnedController,
+                controllerFullControlEnabled,
+                genericExternalControl,
+                isLocalUi,
+            )
+        ) {
             throw GateException(ErrorCategory.EXTERNAL_CONTROL_DISABLED, "external control is off")
         }
         val pkg = env.params["packageName"]?.jsonPrimitive?.contentOrNull
@@ -299,10 +415,20 @@ class BridgeDispatcher(
 
     private fun layoutSet(
         env: Envelope,
-        externalControlEnabled: Boolean,
+        callerIsPinnedController: Boolean,
+        controllerFullControlEnabled: Boolean,
+        genericExternalControl: Boolean,
         isLocalUi: Boolean,
     ): JsonObject {
-        if (!externalControlEnabled && !isLocalUi) {
+        if (
+            !RemoteActionPolicy.allowsAction(
+                Ops.LAYOUT_SET,
+                callerIsPinnedController,
+                controllerFullControlEnabled,
+                genericExternalControl,
+                isLocalUi,
+            )
+        ) {
             throw GateException(ErrorCategory.EXTERNAL_CONTROL_DISABLED, "external control is off")
         }
         return host.setLayout(env.params)
@@ -310,10 +436,20 @@ class BridgeDispatcher(
 
     private fun panelOpen(
         env: Envelope,
-        externalControlEnabled: Boolean,
+        callerIsPinnedController: Boolean,
+        controllerFullControlEnabled: Boolean,
+        genericExternalControl: Boolean,
         isLocalUi: Boolean,
     ): JsonObject {
-        if (!externalControlEnabled && !isLocalUi) {
+        if (
+            !RemoteActionPolicy.allowsAction(
+                Ops.PANEL_OPEN,
+                callerIsPinnedController,
+                controllerFullControlEnabled,
+                genericExternalControl,
+                isLocalUi,
+            )
+        ) {
             throw GateException(ErrorCategory.EXTERNAL_CONTROL_DISABLED, "external control is off")
         }
         val panel = env.params["panel"]?.jsonPrimitive?.contentOrNull ?: "drawer"

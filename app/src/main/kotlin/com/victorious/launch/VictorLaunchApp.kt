@@ -1,6 +1,7 @@
 package com.victorious.launch
 
 import android.app.Application
+import com.victorious.launch.core.bridge.ActionAuditLog
 import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.shizuku.PrivilegedOps
 import com.victorious.launch.shizuku.ShizukuSession
@@ -12,6 +13,7 @@ class VictorLaunchApp : Application() {
         private set
     lateinit var privileged: PrivilegedOps
         private set
+    val actionAudit = ActionAuditLog()
 
     override fun onCreate() {
         super.onCreate()

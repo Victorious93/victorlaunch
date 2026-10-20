@@ -31,6 +31,13 @@ class AppSettings(context: Context) {
         prefs.edit().putBoolean(KEY_EXTERNAL, enabled).apply()
     }
 
+    /** Kill switch for Don's pinned-controller full control. Default ON. */
+    fun isControllerFullControlEnabled(): Boolean = prefs.getBoolean(KEY_CONTROLLER_FULL, true)
+
+    fun setControllerFullControlEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_CONTROLLER_FULL, enabled).apply()
+    }
+
     fun isShizukuEnabled(): Boolean = prefs.getBoolean(KEY_SHIZUKU, false)
 
     fun setShizukuEnabled(enabled: Boolean) {
@@ -145,6 +152,7 @@ class AppSettings(context: Context) {
         private const val PAIRING = "pairing"
         private const val KEY_NODE_ID = "node_id"
         private const val KEY_EXTERNAL = "external_control_enabled"
+        private const val KEY_CONTROLLER_FULL = "controller_full_control"
         private const val KEY_SHIZUKU = "shizuku_enabled"
         private const val KEY_DOCK = "dock"
         private const val KEY_WORKSPACE = "workspace"

@@ -37,10 +37,31 @@ bridge calls use the same allowlist.
 | `ai.droidcommand.app` | debug | `88:00:51:A6:D9:5D:38:DD:8D:81:E1:93:1E:17:05:48:03:87:D5:93:C3:09:43:53:99:68:E6:EF:11:A0:C8:4D` |
 | `ai.droidcommand.app` | release | **TBD** — slot reserved; a blank/TBD value does **not** authorize |
 
-Comparison is colon-insensitive and case-insensitive. Pinning a
-controller does **not** turn on action ops (`app.launch`,
-`layout.set`, `panel.open` stay `remoteAllowed: false` until the
-on-device external-control switch is flipped).
+Comparison is colon-insensitive and case-insensitive.
+
+### Don’s choice: pinned controller has full control
+
+This **deviates** from the fleet default that destructive ops stay
+gated. Don explicitly chose that the **pinned debug controller only**
+(`ai.droidcommand.app` + the debug cert above) has **full control** of
+VictorLaunch:
+
+- External control is **ON by default** for that caller.
+- `app.launch`, `layout.set`, and `panel.open` run with **no**
+  on-device confirmation (`layout.set` included).
+- `capabilities.get` for that caller reports `remoteAllowed: true` and
+  `requiresConfirm: false` for those three ops.
+
+Every **other** peer keeps the old defaults: external control **OFF**,
+and `layout.set` still `requiresConfirm: true` even if the generic
+“other peers” switch is later turned on.
+
+A user-visible **kill switch** in Settings (“Allow controller full
+control”) revokes the privilege. Package+cert authorization,
+replay/nonce/ttl, and an audit log of every remote action still apply.
+`config.import` / launcher backup **cannot** turn this on (or turn on
+generic external control for non-controller peers). `config.export` /
+`config.import` stay `remoteAllowed: false` even for the controller.
 
 ---
 
@@ -119,9 +140,9 @@ Returns `protocolMajor: 1`, `protocolMinor: 1`, and per-op
 | `running.list` | read | true | false |
 | `config.export` | action | **false** | false |
 | `config.import` | action | **false** | **true** |
-| `app.launch` | action | false | false |
-| `layout.set` | action | false | **true** |
-| `panel.open` | action | false | false |
+| `app.launch` | action | false (true for pinned controller) | false |
+| `layout.set` | action | false (true for pinned controller) | **true** (false for pinned controller) |
+| `panel.open` | action | false (true for pinned controller) | false |
 
 ---
 
@@ -140,19 +161,25 @@ Returns `protocolMajor: 1`, `protocolMinor: 1`, and per-op
 
 ## Action ops
 
-`app.launch`, `layout.set`, `panel.open` run **only when external
-control is ON**. It is **OFF by default**. Otherwise
-`external_control_disabled`.
+For the **pinned debug controller** (kill switch ON, Don’s choice):
+`app.launch`, `layout.set`, `panel.open` run immediately. No confirm
+sheet. This is a known deviation from “destructive ops always gated”.
 
-`layout.set` also needs on-device confirmation
-(`confirmation_required` without it).
+For **every other peer**: those ops run **only when** the generic
+external-control switch is ON. It is **OFF by default**. Otherwise
+`external_control_disabled`. `layout.set` also needs on-device
+confirmation (`confirmation_required` without it).
+
+Every remote action (including denials) is appended to an in-process
+audit log and `Log.i("VictorLaunchAudit", …)`.
 
 `config.export` / `config.import` cover **launcher preferences only**.
-A remote caller gets `capability_off` (`remoteAllowed: false`).
-`config.import` supports `params.dryRun` / envelope `dryRun`. After
-any successful import, `externalControlEnabled` is forced **false**.
-VictorLaunch may ask the controller to export/import the fleet bundle
-but does not wrap or unwrap that file.
+A remote caller — **including the controller** — gets `capability_off`
+(`remoteAllowed: false`). `config.import` supports `params.dryRun` /
+envelope `dryRun`. After any successful import, `externalControlEnabled`
+is forced **false** and any `controllerFullControl` flag in the file is
+ignored. VictorLaunch may ask the controller to export/import the fleet
+bundle but does not wrap or unwrap that file.
 
 ---
 

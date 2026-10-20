@@ -37,8 +37,7 @@ internal fun readNetworkSample(context: Context, nowMs: Long): NetworkSample? {
     var rat = NetworkRat.fromTelephonyNetworkType(tm.dataNetworkType)
     if (Build.VERSION.SDK_INT >= 30) {
         try {
-            val display = tm.telephonyDisplayInfo
-            rat = NetworkRat.fromDisplayOverride(display.overrideNetworkType, rat)
+            rat = NetworkRat.fromDisplayOverride(displayOverrideType(tm), rat)
         } catch (_: SecurityException) {
         } catch (_: Exception) {
         }
@@ -93,6 +92,14 @@ internal fun readNetworkSample(context: Context, nowMs: Long): NetworkSample? {
     )
 }
 
+@androidx.annotation.RequiresApi(30)
+private fun displayOverrideType(tm: TelephonyManager): Int {
+    val method = TelephonyManager::class.java.getMethod("getTelephonyDisplayInfo")
+    val display = method.invoke(tm) ?: return 0
+    val override = display.javaClass.getMethod("getOverrideNetworkType").invoke(display) as? Int
+    return override ?: 0
+}
+
 internal fun servingCellId(info: CellInfo): String? {
     val raw =
         when (info) {
@@ -128,6 +135,7 @@ internal fun servingCellId(info: CellInfo): String? {
     return raw?.takeIf { NetworkSample.CELL.matches(it) }
 }
 
+@Suppress("DEPRECATION")
 internal fun listenFlags(): Int {
     @Suppress("DEPRECATION")
     var flags =

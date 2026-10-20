@@ -294,7 +294,6 @@ private fun OverlayScrim(content: @Composable () -> Unit) {
     ) { content() }
 }
 
-@Composable
 private fun localRadioTile(settings: AppSettings): TrayTile {
     val domain = VictorLaunchApp.instance.network.domainStatus()
     return TrayTile(
@@ -307,6 +306,7 @@ private fun localRadioTile(settings: AppSettings): TrayTile {
     )
 }
 
+@Composable
 private fun StatusStrip(tray: PublishedTray?, note: String, radio: TrayTile?) {
     Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)) {
         Text(

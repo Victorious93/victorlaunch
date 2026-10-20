@@ -11,6 +11,8 @@
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
+    <!-- LSPatch patched-APK sideload. Android still shows the system confirm sheet. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!--
       No INTERNET permission. Status, pairing and backup talk to other on-device
@@ -20,6 +22,15 @@
     <queries>
         <package android:name="ai.droidcommand.app" />
         <package android:name="moe.shizuku.privileged.api" />
+        <package android:name="org.lsposed.manager" />
+        <package android:name="org.lsposed.lspd" />
+        <package android:name="org.lsposed.lspatch" />
+        <package android:name="com.android.geto" />
+        <package android:name="com.dergoogler.mmrl" />
+        <package android:name="com.topjohnwu.magisk" />
+        <package android:name="me.weishu.kernelsu" />
+        <package android:name="com.rifsxd.ksunext" />
+        <package android:name="me.bmax.apatch" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
@@ -101,6 +112,12 @@
                 <action android:name="com.victorious.launch.action.ISLAND_CMD" />
             </intent-filter>
         </receiver>
+
+        <activity
+            android:name=".mods.PatchedApkConfirmActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@android:style/Theme.NoDisplay" />
 
         <activity
             android:name=".island.IslandActionActivity"

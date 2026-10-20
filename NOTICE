@@ -36,4 +36,13 @@ use moe.shizuku.privileged.api as applicationId, and do not ship
 Shizuku launcher icons (Apache 2.0 §6 as stated by upstream).
 See shizuku-embed/LICENSE and shizuku-embed/NOTICE.
 
+LSPosed (https://github.com/LSPosed/LSPosed) is GPL-3.0.
+LSPatch (https://github.com/LSPosed/LSPatch) is GPL-3.0.
+Geto (https://github.com/JackEblan/Geto) is GPL-3.0-only.
+  Identified as Don's "Geto" at 90% confidence (com.android.geto).
+MMRL (https://github.com/MMRLApp/MMRL) is GPL-3.0.
+This tree ships embed skeletons (`mods-embed/`) and clients of the
+stock apps. Their engines are NOT vendored in this repository.
+See mods-embed/LICENSE and mods-embed/NOTICE.
+
 See THIRD_PARTY.md.

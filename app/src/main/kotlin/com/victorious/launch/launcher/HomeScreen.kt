@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +62,7 @@ import com.victorious.launch.core.status.TrayTile
 import com.victorious.launch.fleet.FleetInstallScreen
 import com.victorious.launch.help.HelpScreen
 import com.victorious.launch.island.IslandManager
+import com.victorious.launch.mods.ModsScreen
 import com.victorious.launch.lockdown.BiometricGate
 import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.settings.SettingsScreen
@@ -80,6 +82,7 @@ enum class Overlay {
     SETTINGS,
     HELP,
     FLEET,
+    MODS,
 }
 
 @Composable
@@ -152,6 +155,9 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                IconButton(onClick = { overlay = Overlay.MODS }) {
+                    Icon(Icons.Outlined.Extension, contentDescription = "Mods", tint = Magenta)
+                }
                 IconButton(onClick = { overlay = Overlay.HELP }) {
                     Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "Help", tint = Cyan)
                 }
@@ -206,6 +212,7 @@ fun HomeScreen(
                         activity = activity,
                         onHelp = { overlay = Overlay.HELP },
                         onFleet = { overlay = Overlay.FLEET },
+                        onMods = { overlay = Overlay.MODS },
                         onClose = { overlay = Overlay.NONE },
                     )
                 }
@@ -213,6 +220,15 @@ fun HomeScreen(
                 OverlayScrim { HelpScreen(onClose = { overlay = Overlay.NONE }) }
             Overlay.FLEET ->
                 OverlayScrim { FleetInstallScreen(onClose = { overlay = Overlay.NONE }) }
+            Overlay.MODS ->
+                OverlayScrim {
+                    ModsScreen(
+                        settings = settings,
+                        catalog = catalog,
+                        activity = activity,
+                        onClose = { overlay = Overlay.NONE },
+                    )
+                }
         }
     }
 }

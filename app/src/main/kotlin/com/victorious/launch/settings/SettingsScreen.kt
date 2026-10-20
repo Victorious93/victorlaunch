@@ -54,6 +54,7 @@ fun SettingsScreen(
     activity: Activity,
     onHelp: () -> Unit,
     onFleet: () -> Unit,
+    onMods: () -> Unit,
     onClose: () -> Unit,
 ) {
     var external by remember { mutableStateOf(settings.isExternalControlEnabled()) }
@@ -378,6 +379,14 @@ fun SettingsScreen(
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 8.dp),
             )
+        }
+        Section("Mods") {
+            Text(
+                "Off by default. LSPosed, LSPatch, Geto (JackEblan/Geto, 90% confidence) and MMRL. Each tool has a root path and a non-root path. Full engines are not vendored — this opens the stock GPLv3 apps and uses Shizuku helpers when you enabled Shizuku. Backup import cannot turn Mods on.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Button(onClick = onMods, modifier = Modifier.padding(top = 8.dp)) { Text("Open Mods") }
         }
         Section("Fleet apps") {
             Text("Install/Update fleet apps is a stub until the manifest schema is frozen.", color = Muted, fontSize = 13.sp)

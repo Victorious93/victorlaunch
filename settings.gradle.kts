@@ -17,4 +17,5 @@ dependencyResolutionManagement {
 rootProject.name = "VictorLaunch"
 include(":core")
 include(":shizuku-embed")
+include(":mods-embed")
 include(":app")

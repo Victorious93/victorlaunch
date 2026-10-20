@@ -1,9 +1,9 @@
 package com.victorious.launch.shizuku;
 
 interface IPrivilegedService {
-    String freeze(String packageName, boolean frozen);
-    String hide(String packageName, boolean hidden);
-    String forceStop(String packageName);
+    String freeze(String packageName, boolean frozen, int userId);
+    String hide(String packageName, boolean hidden, int userId);
+    String forceStop(String packageName, int userId);
     String grantUsageAccess(String packageName);
     String createManagedProfile(String name);
     String quietMode(int userId, boolean quiet);

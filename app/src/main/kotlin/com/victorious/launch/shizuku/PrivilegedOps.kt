@@ -12,12 +12,19 @@ data class PrivilegedResult(val ok: Boolean, val detail: String)
 /**
  * Binds a Shizuku UserService only after the user has enabled Shizuku
  * in Settings and granted the binder permission.
+ *
+ * [Shizuku.bindUserService] is asynchronous and its callback typically
+ * arrives on the main thread, so we never block waiting for it (that
+ * would deadlock). The first tap after enable may return a "binding"
+ * message; [refreshBinding] is also invoked from [ShizukuSession] binder
+ * listeners so a follow-up tap sees the service.
  */
 class PrivilegedOps(
     private val context: Context,
     private val settings: AppSettings,
     private val session: ShizukuSession,
 ) {
+    @Volatile
     private var service: IPrivilegedService? = null
 
     private val args: Shizuku.UserServiceArgs =
@@ -25,7 +32,7 @@ class PrivilegedOps(
             .daemon(false)
             .processNameSuffix("priv")
             .debuggable(false)
-            .version(1)
+            .version(2)
 
     private val connection =
         object : ServiceConnection {
@@ -59,14 +66,14 @@ class PrivilegedOps(
         service = null
     }
 
-    fun freeze(packageName: String, frozen: Boolean): PrivilegedResult =
-        call("freeze") { it.freeze(packageName, frozen) }
+    fun freeze(packageName: String, frozen: Boolean, userId: Int = 0): PrivilegedResult =
+        call("freeze") { it.freeze(packageName, frozen, userId) }
 
-    fun hide(packageName: String, hidden: Boolean): PrivilegedResult =
-        call("hide") { it.hide(packageName, hidden) }
+    fun hide(packageName: String, hidden: Boolean, userId: Int = 0): PrivilegedResult =
+        call("hide") { it.hide(packageName, hidden, userId) }
 
-    fun forceStop(packageName: String): PrivilegedResult =
-        call("force-stop") { it.forceStop(packageName) }
+    fun forceStop(packageName: String, userId: Int = 0): PrivilegedResult =
+        call("force-stop") { it.forceStop(packageName, userId) }
 
     fun grantUsageAccess(packageName: String): PrivilegedResult =
         call("usage-access") { it.grantUsageAccess(packageName) }
@@ -84,10 +91,21 @@ class PrivilegedOps(
         if (!settings.isShizukuEnabled()) {
             return PrivilegedResult(false, "Shizuku is off (Settings → Shizuku)")
         }
+        val snap = session.snapshot()
+        if (!snap.ready) {
+            return PrivilegedResult(
+                false,
+                when {
+                    !snap.binderAlive -> "Shizuku binder is not running. Start it (wireless debugging, adb, or root)."
+                    !snap.permissionGranted -> "Shizuku permission not granted"
+                    else -> "Shizuku is not ready"
+                },
+            )
+        }
         refreshBinding()
         val svc = service
         if (svc == null) {
-            return PrivilegedResult(false, "Shizuku UserService not bound for $op")
+            return PrivilegedResult(false, "Shizuku UserService binding… try $op again")
         }
         return try {
             val detail = body(svc)

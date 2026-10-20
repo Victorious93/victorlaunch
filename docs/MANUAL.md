@@ -169,12 +169,14 @@ Pull interval: 15 seconds, controller only. Empty / unknown tiles mean “we hav
 
 When Shizuku is **enabled, bound, and permitted**:
 
-- **Hide** in Lockdown also runs `pm disable-user` (system hide, not just the drawer filter).
-- **Force stop** runs `am force-stop`.
+- **Hide** in Lockdown also runs `pm disable-user --user <id>` (system hide, not just the drawer filter).
+- **Freeze / Unfreeze** run `pm suspend` / `pm unsuspend` (personal profile, plus Island freeze when a work profile exists).
+- **Force stop** runs `am force-stop --user <id>`.
 - **Grant usage access** runs `appops set … GET_USAGE_STATS allow`.
 - Island **clone / freeze / pause** prefer these shell calls, then fall back to DevicePolicyManager if Shizuku is off.
+- **Create Island via Shizuku** runs `pm create-user --managed` so you can get a work profile **without** being device owner. That user is not automatically a VictorLaunch profile-owner; DPM clone/freeze still needs the provisioning flow.
 
-If Shizuku is off, those buttons tell you so. They do not pretend it worked.
+The first tap after enabling Shizuku may say the UserService is still binding. Tap again. If Shizuku is off, those buttons tell you so. They do not pretend it worked.
 
 ### Island: clone, freeze, unfreeze, hide
 

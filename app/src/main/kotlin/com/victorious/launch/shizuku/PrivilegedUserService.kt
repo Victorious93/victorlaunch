@@ -13,14 +13,14 @@ class PrivilegedUserService : IPrivilegedService.Stub {
     @Suppress("unused")
     constructor(context: Context)
 
-    override fun freeze(packageName: String, frozen: Boolean): String =
-        run(PrivilegedCommands.freeze(packageName, frozen))
+    override fun freeze(packageName: String, frozen: Boolean, userId: Int): String =
+        run(PrivilegedCommands.freeze(packageName, frozen, userId))
 
-    override fun hide(packageName: String, hidden: Boolean): String =
-        run(PrivilegedCommands.hide(packageName, hidden))
+    override fun hide(packageName: String, hidden: Boolean, userId: Int): String =
+        run(PrivilegedCommands.hide(packageName, hidden, userId))
 
-    override fun forceStop(packageName: String): String =
-        run(PrivilegedCommands.forceStop(packageName))
+    override fun forceStop(packageName: String, userId: Int): String =
+        run(PrivilegedCommands.forceStop(packageName, userId))
 
     override fun grantUsageAccess(packageName: String): String =
         run(PrivilegedCommands.grantUsageAccess(packageName))

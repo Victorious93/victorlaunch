@@ -38,6 +38,7 @@ import com.victorious.launch.island.IslandManager
 import com.victorious.launch.launcher.AppCatalog
 import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.security.SigningCerts
+import com.victorious.launch.shizuku.EmbeddedShizukuServer
 import com.victorious.launch.shizuku.ShizukuStarters
 import com.victorious.launch.shizuku.ShizukuStartupMode
 import com.victorious.launch.theme.Cyan
@@ -196,10 +197,13 @@ fun SettingsScreen(
             Text(ShizukuStarters.modeHelp(ShizukuStartupMode.WIRELESS_DEBUG), color = Muted, fontSize = 12.sp)
             TextButton(
                 onClick = {
+                    val embedded = EmbeddedShizukuServer.start(ShizukuStartupMode.WIRELESS_DEBUG)
                     try {
                         activity.startActivity(ShizukuStarters.wirelessDebuggingIntent())
+                        note = embedded.detail
                     } catch (_: Exception) {
                         activity.startActivity(ShizukuStarters.developerSettingsIntent())
+                        note = embedded.detail
                     }
                 },
             ) { Text("Open wireless debugging", color = Cyan) }
@@ -236,6 +240,12 @@ fun SettingsScreen(
                 Button(onClick = { activity.startActivity(island.provisionIntent()) }) {
                     Text("Create work profile")
                 }
+                OutlinedButton(
+                    onClick = {
+                        note = VictorLaunchApp.instance.privileged.createManagedProfile("Island").detail
+                    },
+                    modifier = Modifier.padding(top = 8.dp),
+                ) { Text("Create Island via Shizuku (no device owner)") }
             } else {
                 OutlinedButton(onClick = { island.pauseWorkProfile() }) { Text("Pause Island") }
                 OutlinedButton(onClick = { island.resumeWorkProfile() }) { Text("Resume Island") }
@@ -270,11 +280,25 @@ fun SettingsScreen(
                         settings.setLocked(locked)
                         note = "Updated locked apps"
                     }) { Text(if (app.packageName in locked) "Unlock" else "Lock", color = Muted) }
+                    TextButton(onClick = {
+                        note = VictorLaunchApp.instance.privileged.freeze(app.packageName, true).detail
+                    }) { Text("Freeze", color = Muted) }
+                    TextButton(onClick = {
+                        note = VictorLaunchApp.instance.privileged.freeze(app.packageName, false).detail
+                    }) { Text("Unfreeze", color = Muted) }
                     if (island.hasWorkProfile()) {
                         TextButton(onClick = {
                             island.sendCommand(IslandCommandReceiver.CMD_CLONE, app.packageName)
                             note = "Clone requested for ${app.packageName}"
                         }) { Text("Clone", color = Magenta) }
+                        TextButton(onClick = {
+                            island.sendCommand(IslandCommandReceiver.CMD_FREEZE, app.packageName)
+                            note = "Island freeze requested for ${app.packageName}"
+                        }) { Text("Island freeze", color = Magenta) }
+                        TextButton(onClick = {
+                            island.sendCommand(IslandCommandReceiver.CMD_UNFREEZE, app.packageName)
+                            note = "Island unfreeze requested for ${app.packageName}"
+                        }) { Text("Island thaw", color = Magenta) }
                     }
                     TextButton(onClick = {
                         note = VictorLaunchApp.instance.privileged.forceStop(app.packageName).detail

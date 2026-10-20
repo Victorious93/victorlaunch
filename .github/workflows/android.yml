@@ -37,10 +37,14 @@ jobs:
             SDKM=$(ls -1d "${ANDROID_HOME:-$SDK}"/cmdline-tools/bin/sdkmanager 2>/dev/null | tail -n1)
           fi
           yes | "$SDKM" --licenses > /dev/null || true
-          "$SDKM" --install "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+          "$SDKM" --install "platforms;android-35" "build-tools;35.0.0" "build-tools;34.0.0" "platform-tools"
+          echo "sdk.dir=${ANDROID_HOME:-$SDK}" > local.properties
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (core)
+        run: ./gradlew :core:test --stacktrace
 
       - name: Assemble debug APK
         run: ./gradlew assembleDebug --stacktrace

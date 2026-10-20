@@ -60,7 +60,7 @@ class IslandManager(private val context: Context) {
             } catch (_: Exception) {
                 return false
             }
-        return ops.quietMode(user.identifier, quiet).ok
+        return ops.quietMode(userIdOf(user), quiet).ok
     }
 
     fun isQuietMode(): Boolean {
@@ -95,13 +95,13 @@ class IslandManager(private val context: Context) {
             } catch (_: Exception) {
                 return PrivilegedResult(false, "Shizuku not initialised")
             }
-        val user = workProfile()?.identifier ?: 0
+        val user = workProfile()?.let { userIdOf(it) } ?: 0
         return when (cmd) {
             IslandCommandReceiver.CMD_CLONE -> ops.installExisting(packageName, user)
-            IslandCommandReceiver.CMD_FREEZE -> ops.freeze(packageName, true)
-            IslandCommandReceiver.CMD_UNFREEZE -> ops.freeze(packageName, false)
-            IslandCommandReceiver.CMD_HIDE -> ops.hide(packageName, true)
-            IslandCommandReceiver.CMD_UNHIDE -> ops.hide(packageName, false)
+            IslandCommandReceiver.CMD_FREEZE -> ops.freeze(packageName, true, user)
+            IslandCommandReceiver.CMD_UNFREEZE -> ops.freeze(packageName, false, user)
+            IslandCommandReceiver.CMD_HIDE -> ops.hide(packageName, true, user)
+            IslandCommandReceiver.CMD_UNHIDE -> ops.hide(packageName, false, user)
             else -> PrivilegedResult(false, "unknown cmd")
         }
     }

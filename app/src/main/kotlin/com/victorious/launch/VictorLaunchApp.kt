@@ -18,9 +18,13 @@ class VictorLaunchApp : Application() {
         instance = this
         settings = AppSettings(this)
         settings.nodeId()
-        shizuku = ShizukuSession(userEnabled = { settings.isShizukuEnabled() })
-        shizuku.start()
+        shizuku =
+            ShizukuSession(
+                userEnabled = { settings.isShizukuEnabled() },
+                onChanged = { privileged.refreshBinding() },
+            )
         privileged = PrivilegedOps(this, settings, shizuku)
+        shizuku.start()
         if (settings.isShizukuEnabled()) {
             privileged.refreshBinding()
         }

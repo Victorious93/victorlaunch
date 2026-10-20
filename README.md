@@ -15,6 +15,12 @@ This is a **minimal Launcher3-style Kotlin launcher**, not a vendored
 Lawnchair tree. Lawnchair (GPLv3) remains the intended base — see
 `docs/LAWNCHAIR_REBASE.md`. Nothing here was tested on a phone.
 
+Shizuku: this tree ships an **embed skeleton** (`shizuku-embed/`) plus a
+**client of the stock Shizuku app**. The native starter, pairing UI, and
+in-process server are **not** vendored. Privileged freeze/hide/force-stop
+and Island shell ops are real command builders + a Shizuku `UserService`,
+gated behind an explicit Settings toggle. See `shizuku-embed/README.md`.
+
 ## Build
 
 ```bash

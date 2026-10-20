@@ -23,6 +23,10 @@ class ShizukuSession(
         Shizuku.addBinderReceivedListener(binderReceived)
         Shizuku.addBinderDeadListener(binderDead)
         Shizuku.addRequestPermissionResultListener(permissionListener)
+        try {
+            if (Shizuku.pingBinder()) onChanged()
+        } catch (_: Exception) {
+        }
     }
 
     fun stop() {

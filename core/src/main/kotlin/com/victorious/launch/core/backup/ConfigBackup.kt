@@ -80,6 +80,9 @@ object ConfigBackupCodec {
             """(?i)(password|api[_-]?key|api[_-]?token|token|secret|code[_-]?word|whitelist|signing[_-]?key|private[_-]?key|keystore|twilio|authToken|numberPool)""",
         )
 
+    private val REMOTE_COMMAND_TRUE =
+        Regex(""""externalControlEnabled"\s*:\s*true""")
+
     fun exportJson(prefs: LauncherPreferences): String {
         val forced = prefs.copy(externalControlEnabled = false)
         val text = json.encodeToString(JsonObject.serializer(), encode(forced))
@@ -151,6 +154,9 @@ object ConfigBackupCodec {
         policy: BackupConflictPolicy,
         confirmed: Boolean,
     ): ImportReport {
+        // decode() always forces the flag off; inspect the raw payload so we
+        // still record that a true value was ignored.
+        val incomingRequestedRemote = REMOTE_COMMAND_TRUE.containsMatchIn(incomingJson)
         val incoming = decode(incomingJson)
         val merged =
             when (policy) {
@@ -178,7 +184,7 @@ object ConfigBackupCodec {
             }.copy(externalControlEnabled = false)
 
         val notes = mutableListOf<String>()
-        if (incoming.externalControlEnabled) {
+        if (incomingRequestedRemote) {
             notes.add("incoming externalControlEnabled was ignored; remote.command stays off")
         }
         notes.add("conflictPolicy=${policy.wire}")

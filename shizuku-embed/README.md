@@ -49,3 +49,16 @@ launcher icons). Doing that rebase plus keeping CI at
 
 Until then, install stock Shizuku, enable the toggle in
 VictorLaunch Settings, grant the Shizuku permission prompt.
+
+## Real vs stubbed in this module
+
+| Piece | Status |
+|---|---|
+| Apache LICENSE + NOTICE, no Shizuku name/icons/`applicationId` | Real |
+| `:shizuku-embed` Gradle module + `ShizukuProvider` in the app | Real |
+| Client against stock Shizuku (`dev.rikka.shizuku:api` 13.1.5) | Real |
+| Gate: Settings toggle, confirm dialog, backup cannot enable | Real |
+| Startup mode *docs* + open wireless-debug / stock manager | Real |
+| `PrivilegedCommands` (`pm suspend`, `disable-user`, `am force-stop`, `appops GET_USAGE_STATS`, `pm create-user --managed`, `install-existing`) | Real (unit-tested strings) |
+| `PrivilegedUserService` running those commands as uid 2000/0 | Real code, **not device-tested** |
+| Native starter binary, AdbMdns pairing sheet, in-process server | **Stub** (`starter/`, `server/`, `manager/` READMEs; `EmbeddedShizukuServer.isEmbedded() == false`) |

@@ -28,8 +28,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Apps
-import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -153,7 +153,7 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = { overlay = Overlay.HELP }) {
-                    Icon(Icons.Outlined.HelpOutline, contentDescription = "Help", tint = Cyan)
+                    Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "Help", tint = Cyan)
                 }
                 IconButton(onClick = { overlay = Overlay.SETTINGS }) {
                     Icon(Icons.Outlined.Settings, contentDescription = "Settings", tint = Cyan)
@@ -183,7 +183,10 @@ fun HomeScreen(
                     islandLocked = settings.launcherPreferences().islandTabLocked,
                     onTab = { next ->
                         if (next == 1 && settings.launcherPreferences().islandTabLocked) {
-                            biometric.prompt("Unlock Island") { drawerTab = 1 }
+                            biometric.prompt(
+                                title = "Unlock Island",
+                                onOk = { drawerTab = 1 },
+                            )
                         } else {
                             drawerTab = next
                         }
@@ -222,7 +225,10 @@ private fun gatedLaunch(
 ) {
     val locked = settings.launcherPreferences().lockedPackages.contains(app.packageName)
     if (locked) {
-        biometric.prompt("Unlock ${app.label}") { catalog.launch(app) }
+        biometric.prompt(
+            title = "Unlock ${app.label}",
+            onOk = { catalog.launch(app) },
+        )
     } else {
         catalog.launch(app)
     }
@@ -293,13 +299,12 @@ private fun StatusChip(tile: TrayTile) {
             StatusTrayState.OFF -> "off"
         }
     val accent =
-        when {
-            tile.state == StatusTrayState.UNKNOWN -> Muted
-            tile.freshness == Freshness.STALE -> StaleAmber
-            tile.state == StatusTrayState.OK -> Cyan
-            tile.state == StatusTrayState.DEGRADED -> StaleAmber
-            tile.state == StatusTrayState.DOWN -> Color(0xFFFF6B8A)
-            tile.state == StatusTrayState.OFF -> Muted
+        when (tile.state) {
+            StatusTrayState.UNKNOWN -> Muted
+            StatusTrayState.OK -> if (tile.freshness == Freshness.STALE) StaleAmber else Cyan
+            StatusTrayState.DEGRADED -> StaleAmber
+            StatusTrayState.DOWN -> Color(0xFFFF6B8A)
+            StatusTrayState.OFF -> Muted
         }
     Surface(shape = RoundedCornerShape(14.dp), color = Tile) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp).width(110.dp)) {

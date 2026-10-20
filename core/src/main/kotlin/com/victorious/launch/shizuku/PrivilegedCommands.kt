@@ -5,23 +5,30 @@ package com.victorious.launch.shizuku
  * Pure strings — no Android types — so they can be unit-tested.
  */
 object PrivilegedCommands {
-    fun freeze(packageName: String, frozen: Boolean): List<String> {
+    fun freeze(packageName: String, frozen: Boolean, userId: Int = 0): List<String> {
         requirePackage(packageName)
-        return if (frozen) listOf("pm", "suspend", packageName) else listOf("pm", "unsuspend", packageName)
-    }
-
-    fun hide(packageName: String, hidden: Boolean): List<String> {
-        requirePackage(packageName)
-        return if (hidden) {
-            listOf("pm", "disable-user", "--user", "0", packageName)
+        requireUser(userId)
+        return if (frozen) {
+            listOf("pm", "suspend", "--user", userId.toString(), packageName)
         } else {
-            listOf("pm", "enable", "--user", "0", packageName)
+            listOf("pm", "unsuspend", "--user", userId.toString(), packageName)
         }
     }
 
-    fun forceStop(packageName: String): List<String> {
+    fun hide(packageName: String, hidden: Boolean, userId: Int = 0): List<String> {
         requirePackage(packageName)
-        return listOf("am", "force-stop", packageName)
+        requireUser(userId)
+        return if (hidden) {
+            listOf("pm", "disable-user", "--user", userId.toString(), packageName)
+        } else {
+            listOf("pm", "enable", "--user", userId.toString(), packageName)
+        }
+    }
+
+    fun forceStop(packageName: String, userId: Int = 0): List<String> {
+        requirePackage(packageName)
+        requireUser(userId)
+        return listOf("am", "force-stop", "--user", userId.toString(), packageName)
     }
 
     fun grantUsageAccess(packageName: String): List<String> {
@@ -30,23 +37,27 @@ object PrivilegedCommands {
     }
 
     fun createManagedProfile(name: String): List<String> {
-        val safe = name.ifBlank { "Island" }.replace(Regex("[^A-Za-z0-9 _-]"), "")
+        val safe = name.ifBlank { "Island" }.replace(Regex("[^A-Za-z0-9_-]"), "").ifBlank { "Island" }
         return listOf("pm", "create-user", "--profileOf", "0", "--managed", safe)
     }
 
     fun quietMode(userId: Int, quiet: Boolean): List<String> {
-        require(userId >= 0) { "userId" }
+        requireUser(userId)
         return if (quiet) listOf("am", "stop-user", "-f", userId.toString())
         else listOf("am", "start-user", userId.toString())
     }
 
     fun installExisting(packageName: String, userId: Int): List<String> {
         requirePackage(packageName)
-        require(userId >= 0) { "userId" }
+        requireUser(userId)
         return listOf("pm", "install-existing", "--user", userId.toString(), packageName)
     }
 
     private fun requirePackage(packageName: String) {
         require(packageName.matches(Regex("^[A-Za-z0-9._]+$"))) { "invalid packageName" }
+    }
+
+    private fun requireUser(userId: Int) {
+        require(userId >= 0) { "userId" }
     }
 }

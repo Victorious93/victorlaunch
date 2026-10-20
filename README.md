@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="victorlaunch logo" width="200">
+</p>
+
 # VictorLaunch
 
 VictorLaunch is a fleet-native Android home-screen launcher for the

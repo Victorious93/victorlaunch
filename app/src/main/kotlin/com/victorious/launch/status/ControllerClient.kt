@@ -11,6 +11,7 @@ import android.os.Looper
 import android.os.Message
 import android.os.Messenger
 import com.victorious.launch.core.protocol.Protocol
+import com.victorious.launch.core.protocol.TrustedPeers
 import com.victorious.launch.core.status.NodeStatusSnapshot
 import com.victorious.launch.core.status.NodeStatusSnapshotCodec
 import com.victorious.launch.prefs.AppSettings
@@ -43,16 +44,12 @@ class ControllerClient(
     }
 
     fun controllerCertMatches(): Boolean {
-        val pairing = settings.pairedController() ?: return false
-        if (pairing.packageName != Protocol.CONTROLLER_PACKAGE) return false
         val certs = SigningCerts.forPackage(context.packageManager, Protocol.CONTROLLER_PACKAGE)
-        return certs.any { it.equals(pairing.certSha256, ignoreCase = true) }
+        return TrustedPeers.authorize(Protocol.CONTROLLER_PACKAGE, certs, settings.extraPairings())
     }
 
     suspend fun pullSnapshots(): PullResult {
         if (!controllerInstalled()) return PullResult.MissingController
-        val pairing = settings.pairedController() ?: return PullResult.NotPaired
-        if (pairing.packageName != Protocol.CONTROLLER_PACKAGE) return PullResult.NotPaired
         if (!controllerCertMatches()) return PullResult.Unauthorized
         return bindAndRequest()
     }

@@ -2,9 +2,10 @@
 
 Status: **documented contract**. The inbound Messenger service and the
 JVM dispatcher exist in this tree so `node.status.get` /
-`capabilities.get` / `config.export|import` can be real. Live pairing
-against a device and a running DroidCommand AI controller is
-**unverified**.
+`capabilities.get` / `config.export|import` can be real. The debug
+controller is **pinned** in `TrustedPeers` so a matching
+`ai.droidcommand.app` install can bind without a Settings tap. Live
+traffic against a running controller is **unverified**.
 
 Aligned with droidcommand-AI `docs/specs/REMOTE_CONTROL.md` as frozen
 in PRs **#233** and **#234** (envelope v1.1).
@@ -23,6 +24,23 @@ in PRs **#233** and **#234** (envelope v1.1).
 
 Authorization is **package + signing certificate** of
 `Message.sendingUid`. Never a phone number, keyword, or payload field.
+
+### Pinned controller (trusted-peer allowlist)
+
+The outbound status pull binds `ai.droidcommand.app` /
+`ai.droidcommand.app.action.BRIDGE` only when that APK’s signing cert
+matches a pinned row (or an extra Settings pairing row). Inbound
+bridge calls use the same allowlist.
+
+| Package | Kind | SHA-256 |
+|---|---|---|
+| `ai.droidcommand.app` | debug | `88:00:51:A6:D9:5D:38:DD:8D:81:E1:93:1E:17:05:48:03:87:D5:93:C3:09:43:53:99:68:E6:EF:11:A0:C8:4D` |
+| `ai.droidcommand.app` | release | **TBD** — slot reserved; a blank/TBD value does **not** authorize |
+
+Comparison is colon-insensitive and case-insensitive. Pinning a
+controller does **not** turn on action ops (`app.launch`,
+`layout.set`, `panel.open` stay `remoteAllowed: false` until the
+on-device external-control switch is flipped).
 
 ---
 

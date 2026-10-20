@@ -11,6 +11,7 @@ import com.victorious.launch.core.bridge.PairedNode
 import com.victorious.launch.core.bridge.RunningResult
 import com.victorious.launch.core.bridge.ownNodeHealth
 import com.victorious.launch.core.protocol.ErrorCategory
+import com.victorious.launch.core.protocol.TrustedPeers
 import com.victorious.launch.core.status.NodeStatusSnapshot
 import com.victorious.launch.launcher.AppCatalog
 import com.victorious.launch.prefs.AppSettings
@@ -72,8 +73,16 @@ class AndroidHost(
     }
 
     override fun fleetPairs(): List<PairedNode> {
-        val pairing = settings.pairedController() ?: return emptyList()
-        return listOf(PairedNode(pairing.packageName, pairing.certSha256))
+        val out = linkedMapOf<String, PairedNode>()
+        TrustedPeers.ALL.filter { it.pinned }.forEach { peer ->
+            val cert = peer.certSha256 ?: return@forEach
+            out[TrustedPeers.normalize(peer.packageName + cert)] = PairedNode(peer.packageName, cert)
+        }
+        settings.pairedController()?.let { row ->
+            out[TrustedPeers.normalize(row.packageName + row.certSha256)] =
+                PairedNode(row.packageName, row.certSha256)
+        }
+        return out.values.toList()
     }
 
     override fun runningPackages(): RunningResult {

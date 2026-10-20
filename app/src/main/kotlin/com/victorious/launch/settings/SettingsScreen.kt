@@ -33,6 +33,7 @@ import com.victorious.launch.core.backup.ConfigBackupCodec
 import com.victorious.launch.core.backup.ImportReport
 import com.victorious.launch.VictorLaunchApp
 import com.victorious.launch.core.protocol.Protocol
+import com.victorious.launch.core.protocol.TrustedPeers
 import com.victorious.launch.island.IslandCommandReceiver
 import com.victorious.launch.island.IslandManager
 import com.victorious.launch.launcher.AppCatalog
@@ -111,10 +112,15 @@ fun SettingsScreen(
         }
         Section("Pair controller") {
             Text(
-                if (pairing == null) {
-                    "Not paired. VictorLaunch will not pull status until you pair DroidCommand AI."
-                } else {
-                    "Paired with ${pairing.packageName}\nSHA-256 ${pairing.certSha256}"
+                buildString {
+                    append("Pinned debug controller ${TrustedPeers.CONTROLLER_PACKAGE}\n")
+                    append("SHA-256 ${TrustedPeers.CONTROLLER_DEBUG_CERT_SHA256}\n")
+                    append("Release cert: TBD (not trusted until filled in).\n")
+                    if (pairing == null) {
+                        append("No extra pairing row. Status pulls if the installed APK matches the debug pin.")
+                    } else {
+                        append("Extra pairing: ${pairing.packageName}\nSHA-256 ${pairing.certSha256}")
+                    }
                 },
                 color = Muted,
                 fontSize = 13.sp,

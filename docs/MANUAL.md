@@ -71,14 +71,20 @@ To pause or resume the profile: **Pause Island** / **Resume Island** (Quiet mode
 
 ### 4. Pair to the controller
 
-Status tiles stay empty until VictorLaunch is paired with DroidCommand AI **by package + signing certificate**.
+Status tiles stay empty until VictorLaunch can **authorize** DroidCommand AI **by package + signing certificate**.
 
-1. Install DroidCommand AI on the same phone.
-2. Settings → **Pair controller** → **Pair DroidCommand AI**.
-3. VictorLaunch records `ai.droidcommand.app` and that APK’s SHA-256 cert.
-4. Every 15 seconds it binds the controller’s bridge and sends `node.status.get` targeted at `controller`.
+The debug controller is **pre-pinned**:
 
-If the app is not installed, the cert does not match, or the bridge is not exported, the tray tells you that. It still does not fill in fake Mesh/VPN/SMS rows.
+- package `ai.droidcommand.app`
+- SHA-256 `88:00:51:A6:D9:5D:38:DD:8D:81:E1:93:1E:17:05:48:03:87:D5:93:C3:09:43:53:99:68:E6:EF:11:A0:C8:4D`
+
+The release cert slot is **TBD** and does not authorize. Pinning does not turn on external control.
+
+1. Install DroidCommand AI (debug build) on the same phone.
+2. If that APK’s cert matches the pin, VictorLaunch binds its bridge every 15 seconds and sends `node.status.get` targeted at `controller`. No Settings tap is required.
+3. Settings → **Pair controller** can still record an extra pairing row (same package, whatever cert is installed).
+
+If the app is not installed, the cert does not match the pin (or extra pairing), or the bridge is not exported, the tray tells you that. It still does not fill in fake Mesh/VPN/SMS rows.
 
 ![Pairing](screenshots/04-pair-controller.png)
 *Placeholder: Settings pairing section showing package + SHA-256.*

@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.victorious.launch.core.backup.LauncherPreferences
 import com.victorious.launch.core.backup.WorkspaceItem
 import com.victorious.launch.core.protocol.Protocol
+import com.victorious.launch.core.protocol.TrustedPeers
 import java.security.SecureRandom
 import org.json.JSONArray
 import org.json.JSONObject
@@ -97,10 +98,13 @@ class AppSettings(context: Context) {
         pairing.edit().clear().apply()
     }
 
-    fun isCallerPaired(packageName: String, certs: List<String>): Boolean {
-        val row = pairedController() ?: return false
-        return row.packageName == packageName && certs.any { it.equals(row.certSha256, ignoreCase = true) }
+    fun extraPairings(): List<Pair<String, String>> {
+        val row = pairedController() ?: return emptyList()
+        return listOf(row.packageName to row.certSha256)
     }
+
+    fun isCallerPaired(packageName: String, certs: List<String>): Boolean =
+        TrustedPeers.authorize(packageName, certs, extraPairings())
 
     private fun stringList(key: String): List<String> {
         val raw = prefs.getString(key, null) ?: return emptyList()

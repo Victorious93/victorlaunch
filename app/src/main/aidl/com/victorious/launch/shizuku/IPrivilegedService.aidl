@@ -12,5 +12,9 @@ interface IPrivilegedService {
     String listAdbModules();
     String packagePath(String packageName);
     String installRootModule(String kind, String zipPath);
+    String setAllowedNetworkTypes(long bitmask);
+    String setAllowed2g(boolean allowed);
+    String setPreferredNetworkMode(int mode);
+    String radioRecover();
     void destroy();
 }

@@ -34,11 +34,13 @@ object Ops {
     const val RUNNING_LIST = "running.list"
     const val APP_LAUNCH = "app.launch"
     const val PANEL_OPEN = "panel.open"
+    const val NETWORK_STATUS = "network.status"
 
     val ALL: List<OpDescriptor> =
         listOf(
             OpDescriptor(CAPABILITIES_GET, OpKind.READ, remoteAllowed = true, requiresConfirm = false),
             OpDescriptor(NODE_STATUS_GET, OpKind.READ, remoteAllowed = true, requiresConfirm = false),
+            OpDescriptor(NETWORK_STATUS, OpKind.READ, remoteAllowed = true, requiresConfirm = false),
             OpDescriptor(FLEET_LIST, OpKind.READ, remoteAllowed = true, requiresConfirm = false),
             OpDescriptor(LAYOUT_GET, OpKind.READ, remoteAllowed = true, requiresConfirm = false),
             OpDescriptor(INSTALLED_LIST, OpKind.READ, remoteAllowed = true, requiresConfirm = false),

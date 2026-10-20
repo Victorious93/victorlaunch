@@ -89,6 +89,9 @@ object ConfigBackupCodec {
     private val MODS_TRUE =
         Regex("""(?i)"[^"]*mods[^"]*"\s*:\s*true""")
 
+    private val NETWORK_TRUE =
+        Regex("""(?i)"[^"]*network[^"]*"\s*:\s*true""")
+
     fun exportJson(prefs: LauncherPreferences): String {
         val forced = prefs.copy(externalControlEnabled = false)
         val text = json.encodeToString(JsonObject.serializer(), encode(forced))
@@ -165,6 +168,7 @@ object ConfigBackupCodec {
         val incomingRequestedRemote = REMOTE_COMMAND_TRUE.containsMatchIn(incomingJson)
         val incomingRequestedControllerFull = CONTROLLER_FULL_TRUE.containsMatchIn(incomingJson)
         val incomingRequestedMods = MODS_TRUE.containsMatchIn(incomingJson)
+        val incomingRequestedNetwork = NETWORK_TRUE.containsMatchIn(incomingJson)
         val incoming = decode(incomingJson)
         val merged =
             when (policy) {
@@ -200,6 +204,9 @@ object ConfigBackupCodec {
         }
         if (incomingRequestedMods) {
             notes.add("incoming Mods flags were ignored; Mods stays off until enabled on the device")
+        }
+        if (incomingRequestedNetwork) {
+            notes.add("incoming Network Monitor flags were ignored; the monitor stays off until enabled on the device")
         }
         notes.add("conflictPolicy=${policy.wire}")
         if (dryRun) {

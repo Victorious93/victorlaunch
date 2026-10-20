@@ -45,4 +45,8 @@ This tree ships embed skeletons (`mods-embed/`) and clients of the
 stock apps. Their engines are NOT vendored in this repository.
 See mods-embed/LICENSE and mods-embed/NOTICE.
 
+Network Monitor uses public Android TelephonyManager /
+TelephonyCallback APIs. No third-party radio SDK is bundled. Cell/band
+lock engines are not vendored.
+
 See THIRD_PARTY.md.

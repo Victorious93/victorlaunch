@@ -57,6 +57,30 @@ class AppSettings(context: Context) {
         prefs.edit().putBoolean(modKey(tool), enabled).apply()
     }
 
+    fun isNetworkMonitorEnabled(): Boolean = prefs.getBoolean(KEY_NET_MONITOR, false)
+
+    fun setNetworkMonitorEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_NET_MONITOR, enabled).apply()
+    }
+
+    fun isNetworkBlock2g(): Boolean = prefs.getBoolean(KEY_NET_BLOCK_2G, false)
+
+    fun setNetworkBlock2g(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_NET_BLOCK_2G, enabled).apply()
+    }
+
+    fun isNetworkLockLteNr(): Boolean = prefs.getBoolean(KEY_NET_LOCK_LTE_NR, false)
+
+    fun setNetworkLockLteNr(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_NET_LOCK_LTE_NR, enabled).apply()
+    }
+
+    fun isNetworkAutoRecover(): Boolean = prefs.getBoolean(KEY_NET_AUTO_RECOVER, false)
+
+    fun setNetworkAutoRecover(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_NET_AUTO_RECOVER, enabled).apply()
+    }
+
     fun launcherPreferences(): LauncherPreferences =
         LauncherPreferences(
             dock = stringList(KEY_DOCK),
@@ -168,6 +192,10 @@ class AppSettings(context: Context) {
         private const val KEY_CONTROLLER_FULL = "controller_full_control"
         private const val KEY_SHIZUKU = "shizuku_enabled"
         private const val KEY_MODS_MASTER = "mods_master_enabled"
+        private const val KEY_NET_MONITOR = "network_monitor_enabled"
+        private const val KEY_NET_BLOCK_2G = "network_block_2g"
+        private const val KEY_NET_LOCK_LTE_NR = "network_lock_lte_nr"
+        private const val KEY_NET_AUTO_RECOVER = "network_auto_recover"
 
         private fun modKey(tool: ModsTool): String = "mods_tool_${tool.id}"
         private const val KEY_DOCK = "dock"

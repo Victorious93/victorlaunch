@@ -53,6 +53,8 @@ interface LauncherHost {
     fun launchApp(packageName: String): Boolean
 
     fun openPanel(panel: String): Boolean
+
+    fun networkStatus(): JsonObject
 }
 
 data class InstalledApp(val packageName: String, val label: String, val userSerial: Long)
@@ -257,6 +259,7 @@ class BridgeDispatcher(
                         externalControlEnabled,
                     )
                 Ops.NODE_STATUS_GET -> NodeStatusSnapshotCodec.encode(host.ownHealth())
+                Ops.NETWORK_STATUS -> host.networkStatus()
                 Ops.FLEET_LIST -> fleet()
                 Ops.LAYOUT_GET -> host.layout()
                 Ops.INSTALLED_LIST -> installed()
@@ -461,7 +464,17 @@ class BridgeDispatcher(
 
 class GateException(val category: String, message: String) : Exception(message)
 
-fun ownNodeHealth(nodeId: String, nowMs: Long, detail: String? = "launcher process alive"): NodeStatusSnapshot =
+fun ownNodeHealth(
+    nodeId: String,
+    nowMs: Long,
+    detail: String? = "launcher process alive",
+    network: StatusTrayDomainStatus =
+        StatusTrayDomainStatus(
+            name = StatusTrayDomain.NETWORK,
+            state = StatusTrayState.OFF,
+            detail = "monitor off",
+        ),
+): NodeStatusSnapshot =
     NodeStatusSnapshot(
         nodeId = nodeId,
         packageName = Protocol.PACKAGE_NAME,
@@ -474,5 +487,6 @@ fun ownNodeHealth(nodeId: String, nowMs: Long, detail: String? = "launcher proce
                     state = StatusTrayState.OK,
                     detail = detail,
                 ),
+                network,
             ),
     )

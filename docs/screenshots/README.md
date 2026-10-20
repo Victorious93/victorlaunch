@@ -7,3 +7,5 @@ screenshot.
 
 `14-mods.png` is reserved for the gated Mods screen (LSPosed, LSPatch,
 Geto, MMRL). Do not commit a mock-up that pretends to be a device photo.
+
+`15-network.png` is reserved for the gated Network Monitor screen.

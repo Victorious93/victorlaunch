@@ -228,7 +228,7 @@ See `mods-embed/README.md` for the later-PR embed plan.
 
 ### Status tray
 
-Tiles: **Mesh**, **VPN**, **Browser proxy**, **VictorSMS**, **Paired-node count**.
+Tiles: **Network** (this phone’s radio, from the local monitor), **Mesh**, **VPN**, **Browser proxy**, **VictorSMS**, **Paired-node count**.
 
 | Age of a snapshot | What you see |
 |---|---|
@@ -240,6 +240,65 @@ Pull interval: 15 seconds, controller only. Empty / unknown tiles mean “we hav
 
 ![Status tray](screenshots/08-status-tray.png)
 *Placeholder: five tiles; some “no data”, none showing invented OK.*
+
+### Network Monitor (optional, off by default)
+
+Home → **cell-tower icon**, or Settings → **Network Monitor**. Everything stays **off** until you enable it and grant **phone state** + **fine location**. Backup import cannot turn it on. History and cell IDs stay on this phone. There is no telemetry and no `INTERNET`. Nothing here was tested on a device.
+
+**This is not a universal IMSI-catcher detector.** An unexpected drop to 2G/GSM is a *heuristic* that can also be rural coverage, a carrier fallback, or airplane-mode recovery.
+
+#### What it monitors
+
+On Android 12+ it registers a `TelephonyCallback` (display info, signal, cell info, service state, data state). Older APIs use `PhoneStateListener`. It records:
+
+- RAT: 5G NR, NR-NSA, LTE / LTE-CA, 3G, 2G/GSM
+- RSRP / RSRQ / SINR when the serving cell reports them
+- Serving cell ID (MCC-MNC-CID / NCI) — not IMSI/IMEI
+- Registered / data-connection state
+
+#### Alerts
+
+| Alert | Meaning |
+|---|---|
+| `unexpected_2g` | Was 3G+ and landed on 2G/GSM. Treat as suspicious, not proof. |
+| `downgrade` | Generation dropped (NR→LTE, LTE→3G, …) without landing on 2G. |
+| `sudden_cell_change` | Serving cell ID changed while RSRP was still usable. Handover is often normal. |
+| `signal_drop` | RSRP fell by 12 dB or more between samples. |
+
+The home-screen **Network** tile is **this phone**, not a scrape of Mesh/VPN. `node.status.get` includes a `network` domain. Paired controllers can also call **`network.status`** for the richer JSON (RAT, signal, last alerts, limits).
+
+#### Prevent drops — non-root
+
+A normal app **cannot** lock the preferred network type. Android 12+ `TelephonyManager.setAllowedNetworkTypesForReason` needs `MODIFY_PHONE_STATE` (shell/root via Shizuku, or a carrier privilege).
+
+Without Shizuku:
+
+1. **Open Allow 2G / operator settings** — SIM / network-operator screen. Flip **Allow 2G** off if the OEM shows it (Pixel/AOSP Android 14+; many OEMs hide or rename it).
+2. **Preferred network / wireless settings** — set LTE/NR preferred if the OEM exposes it.
+3. **Sticky-network hint:** stay on LTE/NR when the carrier allows it. Do not roam onto GSM “for coverage” on a phone you care about.
+4. **Wi-Fi fallback:** if you see 2G, turn Wi-Fi on and use it instead of the fake-looking cell.
+
+#### Prevent drops — root / Shizuku
+
+When the monitor is on **and** Shizuku is ready:
+
+- **Block 2G** writes `settings put global allowed_2g 0` and `enable_2g 0`, then tries `setAllowedNetworkTypesForReason`.
+- **Lock LTE/NR only** uses bitmask LTE+LTE_CA+NR and `preferred_network_mode=23` (`NT_MODE_NR_LTE` on AOSP). **Samsung and other OEMs use different integers** — the modem may ignore this.
+- **Auto-recover** (optional) toggles airplane mode via `cmd connectivity airplane-mode` / settings / broadcast when a drop or 2G alert fires, with a 60s cooldown and at most 3 attempts per 10 minutes. It **drops the current call**.
+- **Toggle radio now** does the same recover once, after confirm.
+
+**Cell/band lock is not written.** Qualcomm NV / `at+qnwlock` / Samsung debug are modem-specific and easy to brick. The command builder refuses to run them.
+
+#### Per-device limits
+
+- No SIM / Wi-Fi-only tablet: RAT stays `none`.
+- Location toggle off: cell ID and some signal fields are missing even with the permission granted.
+- Dual-SIM: this build reads the default data subscription only.
+- MVNOs and OEM “smart 5G” switches can downgrade without a fake BTS.
+- `preferred_network_mode` and Allow 2G are **not** the same across Pixel, Samsung, Xiaomi, and carrier-branded firmware.
+
+![Network Monitor](screenshots/15-network.png)
+*Placeholder: enable switch, current RAT, alert list, lock toggles.*
 
 ### Shizuku-powered freeze, hide, force-stop
 
@@ -310,6 +369,8 @@ VictorLaunch does **not** request `INTERNET`. There is no telemetry.
 | Exported `BRIDGE` service | So the controller (and other paired nodes) can send newline-delimited JSON. Callers are authorized by **package + cert**, not by a payload field. |
 | `ShizukuProvider` (`INTERACT_ACROSS_USERS_FULL` on the provider) | Lets the stock (or future embedded) Shizuku server hand us a binder. No extra runtime permission dialog from Android itself; Shizuku has its own grant prompt. |
 | `REQUEST_INSTALL_PACKAGES` | LSPatch **Install patched APK**. Android still shows the system confirm sheet. Unknown-sources must be allowed for this app. |
+| `READ_PHONE_STATE` | Network Monitor RAT / data state. Runtime-granted. Off until you enable the monitor. |
+| `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` | Serving-cell ID and some signal fields. Runtime-granted. Cell info is blocked by the OS without this. |
 
 Wallpaper is shown with `windowShowWallpaper`. VictorLaunch does not need `SET_WALLPAPER` to display the current wallpaper.
 
@@ -319,12 +380,12 @@ Wallpaper is shown with `windowShowWallpaper`. VictorLaunch does not need `SET_W
 
 - **Inbound action:** `com.victorious.launch.action.BRIDGE` (Messenger, `what=1` request / `2` response).
 - **Envelope:** v1.1 flat fields. See `docs/external-node.md`.
-- **Always-on reads (when the caller is paired):** `capabilities.get`, `node.status.get`, `fleet.list`, `layout.get`, `installed.list`, `running.list`.
+- **Always-on reads (when the caller is paired):** `capabilities.get`, `node.status.get`, `network.status`, `fleet.list`, `layout.get`, `installed.list`, `running.list`.
 - **Own settings:** `config.export` / `config.import` with `remoteAllowed: false`. Import `requiresConfirm: true` and supports `dryRun`.
 - **Actions (pinned debug controller):** `app.launch`, `layout.set`, `panel.open` run with **no confirmation** while Settings → **Allow controller full control** is on (default ON). Don chose this; it **deviates** from the fleet rule that destructive ops stay gated. Turn the kill switch **off** to revoke it. Package+cert, replay/nonce/ttl, and an audit log still apply.
 - **Actions (every other peer):** those ops run only if **Allow other peers** is on (default **off**). `layout.set` still needs on-device confirmation. Backup import cannot turn this on.
 - **Status consumer:** `node.status.get` to **controller** every 15s.
-- **Status producer:** this process’s `node_health` only. No scraping of other packages.
+- **Status producer:** this process’s `node_health` plus `network` when the monitor is enabled. No scraping of other packages. `network.status` is the richer on-device radio JSON.
 
 Generic `remote.command` / other-peer external control is never auto-enabled, including after backup import. The controller kill switch is also not set by backup.
 
@@ -380,6 +441,15 @@ Allow unknown sources for VictorLaunch (Mods → Unknown-sources permission), th
 **Geto grant failed.**  
 Enable Shizuku, grant its permission, and install `com.android.geto`. Root or ADB can `pm grant WRITE_SECURE_SETTINGS`; a normal app cannot.
 
+**Network tile says off / no data.**  
+Enable Network Monitor and grant phone + location. Turn the system location toggle on. Wi-Fi-only devices have no serving cell.
+
+**Block 2G / LTE lock did nothing.**  
+A normal app cannot change that. Enable Shizuku (or root), tap **Apply lock now**, and still expect OEM ignore. Use the system Allow 2G screen as the fallback.
+
+**Is unexpected 2G an IMSI catcher?**  
+No claim. It is a heuristic. Rural GSM, carrier fallback, and a fake BTS can look the same from these APIs.
+
 ---
 
 ## Privacy
@@ -392,6 +462,7 @@ Enable Shizuku, grant its permission, and install `com.android.geto`. Root or AD
 - The wrapping key for the fleet bundle never enters this app.
 - The Shizuku enable flag is **not** part of launcher backup JSON.
 - Mods master/per-tool flags are **not** part of launcher backup JSON. Import ignores any Mods keys.
+- Network Monitor flags and cell-ID history are **not** part of launcher backup JSON and never leave the device. Import ignores Network Monitor keys.
 
 ---
 

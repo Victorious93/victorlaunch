@@ -9,10 +9,12 @@ import com.victorious.launch.core.bridge.InstalledApp
 import com.victorious.launch.core.bridge.LauncherHost
 import com.victorious.launch.core.bridge.PairedNode
 import com.victorious.launch.core.bridge.RunningResult
+import com.victorious.launch.VictorLaunchApp
 import com.victorious.launch.core.bridge.ownNodeHealth
 import com.victorious.launch.core.protocol.ErrorCategory
 import com.victorious.launch.core.protocol.TrustedPeers
 import com.victorious.launch.core.status.NodeStatusSnapshot
+import com.victorious.launch.network.NetworkStatusCodec
 import com.victorious.launch.launcher.AppCatalog
 import com.victorious.launch.prefs.AppSettings
 import kotlinx.serialization.json.JsonArray
@@ -31,8 +33,20 @@ class AndroidHost(
 
     override fun nowMs(): Long = System.currentTimeMillis()
 
-    override fun ownHealth(): NodeStatusSnapshot =
-        ownNodeHealth(settings.nodeId(), nowMs(), detail = "launcher process alive")
+    override fun ownHealth(): NodeStatusSnapshot {
+        val network =
+            try {
+                VictorLaunchApp.instance.network.domainStatus()
+            } catch (_: Exception) {
+                NetworkStatusCodec.domainStatus(
+                    enabled = settings.isNetworkMonitorEnabled(),
+                    permissionsReady = false,
+                    sample = null,
+                    latestAlert = null,
+                )
+            }
+        return ownNodeHealth(settings.nodeId(), nowMs(), detail = "launcher process alive", network = network)
+    }
 
     override fun preferences(): LauncherPreferences = settings.launcherPreferences()
 
@@ -108,5 +122,13 @@ class AndroidHost(
     override fun launchApp(packageName: String): Boolean = catalog.launchPackage(packageName)
 
     override fun openPanel(panel: String): Boolean =
-        panel == "drawer" || panel == "island" || panel == "settings" || panel == "help"
+        panel == "drawer" || panel == "island" || panel == "settings" || panel == "help" ||
+            panel == "mods" || panel == "network"
+
+    override fun networkStatus(): JsonObject =
+        try {
+            VictorLaunchApp.instance.network.snapshotJson()
+        } catch (_: Exception) {
+            NetworkStatusCodec.disabledJson()
+        }
 }

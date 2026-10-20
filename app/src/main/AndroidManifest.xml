@@ -7,6 +7,10 @@
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <!-- Optional: running.list. The OS only grants this from Settings. -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"

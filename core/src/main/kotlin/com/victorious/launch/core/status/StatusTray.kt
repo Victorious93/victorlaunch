@@ -18,6 +18,7 @@ enum class StatusTrayDomain {
     VPN,
     BROWSER,
     SMS,
+    NETWORK,
     NODE_HEALTH,
     OTHER,
     ;
@@ -29,6 +30,7 @@ enum class StatusTrayDomain {
                 VPN -> "vpn"
                 BROWSER -> "browser"
                 SMS -> "sms"
+                NETWORK -> "network"
                 NODE_HEALTH -> "node_health"
                 OTHER -> "other"
             }
@@ -40,6 +42,7 @@ enum class StatusTrayDomain {
                 "vpn" -> VPN
                 "browser" -> BROWSER
                 "sms" -> SMS
+                "network" -> NETWORK
                 "node_health" -> NODE_HEALTH
                 "other" -> OTHER
                 else -> OTHER
@@ -146,6 +149,7 @@ class StatusTrayAggregator(
                 tile("vpn", StatusTrayDomain.VPN, kept, nowMs),
                 tile("browser", StatusTrayDomain.BROWSER, kept, nowMs),
                 tile("sms", StatusTrayDomain.SMS, kept, nowMs),
+                tile("network", StatusTrayDomain.NETWORK, kept, nowMs),
             )
         return PublishedTray(
             snapshots = kept,

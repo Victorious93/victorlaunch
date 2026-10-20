@@ -46,7 +46,24 @@ jobs:
       - name: Unit tests (core)
         run: ./gradlew :core:test --stacktrace
 
+      - name: Decode debug keystore
+        env:
+          VL_DEBUG_KEYSTORE_B64: ${{ secrets.VL_DEBUG_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${VL_DEBUG_KEYSTORE_B64}" ]; then
+            echo "GitHub secret VL_DEBUG_KEYSTORE_B64 is not set"
+            exit 1
+          fi
+          mkdir -p keystore
+          printf '%s' "$VL_DEBUG_KEYSTORE_B64" | base64 -d > keystore/victorlaunch-debug.jks
+          test -s keystore/victorlaunch-debug.jks
+
       - name: Assemble debug APK
+        env:
+          VL_DEBUG_STORE_PASSWORD: ${{ secrets.VL_DEBUG_STORE_PASSWORD }}
+          VL_DEBUG_KEY_ALIAS: ${{ secrets.VL_DEBUG_KEY_ALIAS }}
+          VL_DEBUG_KEY_PASSWORD: ${{ secrets.VL_DEBUG_KEY_PASSWORD }}
         run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload debug APK

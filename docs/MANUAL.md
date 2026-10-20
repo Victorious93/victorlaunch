@@ -38,7 +38,7 @@ VictorLaunch also answers `node.status.get` for **itself** (`node_health`), so t
 
 ### 1. Install the debug build
 
-CI and `./gradlew assembleDebug` sign with the committed debug keystore. The SHA-256 of that cert is in `keystore/README.md`. Release builds are signed only from environment secrets; there is no release key in this tree.
+CI and matching local debug builds sign with a **gitignored** debug keystore. CI decodes it from GitHub secrets (`VL_DEBUG_KEYSTORE_B64` and the password secrets). Locally, put `keystore/victorlaunch-debug.jks` and export `VL_DEBUG_*`. If the file is missing, Gradle falls back to the default Android debug key and warns — that APK will not match the published cert. The current debug certificate SHA-256 is in `keystore/README.md`. The old committed cert `1B:06:A8:…:BA:CA` is **REVOKED**. History is not rewritten. Release builds are signed only from environment secrets; there is no release key in this tree.
 
 Install the APK, then open VictorLaunch.
 

@@ -25,6 +25,13 @@ in PRs **#233** and **#234** (envelope v1.1).
 Authorization is **package + signing certificate** of
 `Message.sendingUid`. Never a phone number, keyword, or payload field.
 
+VictorLaunch’s **own** debug APK cert (what other fleet nodes pin for
+`com.victorious.launch`) is published as a SHA-256 only — see
+`keystore/README.md`. The keystore and passwords are not in this tree.
+The previously committed debug cert
+`1B:06:A8:9E:7F:F5:BA:21:C9:A4:F8:F1:F0:4F:95:E5:62:78:A1:22:18:AD:37:33:28:CE:E7:83:1D:4F:BA:CA`
+is **REVOKED**. Git history still contains that JKS; do not trust it.
+
 ### Pinned controller (trusted-peer allowlist)
 
 The outbound status pull binds `ai.droidcommand.app` /

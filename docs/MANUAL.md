@@ -127,6 +127,74 @@ Re-run after every reboot until a server is embedded.
 ![Shizuku settings](screenshots/13-shizuku.png)
 *Placeholder: enable switch, status line, three startup modes.*
 
+### 6. Mods (optional, off by default)
+
+Mods is a **gated** screen for four GPLv3 tools. VictorLaunch does **not** vendor their engines (Zygisk, APK rewriter, Geto UI, MMRL WebUI). It detects the **stock apps**, opens them, and uses Shizuku/root **command builders** when you already enabled Shizuku. Each item has a **root** path and a **non-root** path.
+
+**It stays off until you turn it on.** Master switch, then a per-tool switch, each with a confirm dialog. Backup import cannot turn Mods on.
+
+1. Home → **Mods** (puzzle icon) or Settings → **Mods**.
+2. Enable **Mods**, read the warning, confirm.
+3. Enable the tool you want, confirm its risks.
+4. Install the stock app if it is missing, then use **Open stock …**.
+
+Nothing on this screen was tested on a device.
+
+#### LSPosed (GPLv3, github.com/LSPosed/LSPosed)
+
+Stock packages: `org.lsposed.manager`, `org.lsposed.lspd`.
+
+| Path | What this build does |
+|---|---|
+| **Root / Zygisk** | List `/data/adb/modules` via Shizuku/root, detect names containing `lsposed` / `zygisk_lsposed` / `riru_lsposed`, open the stock manager so you can enable modules and scopes there. |
+| **Non-root** | LSPosed needs Zygisk/Riru. Use **LSPatch** instead. If the manager APK is installed it can still be opened. |
+
+**Risks:** Xposed modules run inside other apps. A bad module can steal data or break the system. Reboot to undo. Never install a module you do not trust. In-process Zygisk and the manager’s module/scope API are **not** embedded (`mods-embed/lsposed/` is a skeleton).
+
+#### LSPatch (GPLv3, github.com/LSPosed/LSPatch)
+
+Stock package: `org.lsposed.lspatch`.
+
+| Path | What this build does |
+|---|---|
+| **Root** | Same patcher hand-off as non-root, or install LSPosed as a Magisk/KernelSU module via MMRL. |
+| **Non-root** | Pick a target app, resolve its APK path with Shizuku `pm path`, open stock LSPatch to patch, then **Install patched APK** so Android’s system installer asks you to confirm. |
+
+`lspatch.jar` is **not** vendored. This APK never silent-installs. You must allow unknown sources for VictorLaunch (`REQUEST_INSTALL_PACKAGES`).
+
+**Risks:** Patched APKs resign the app. Play Integrity / banking apps may refuse them. Uninstall the patched package to undo. Confirm every install.
+
+#### Geto (identified as JackEblan/Geto)
+
+Don wrote **“Geto”** with no URL. This tree treats that as **[JackEblan/Geto](https://github.com/JackEblan/Geto)** (`com.android.geto`, **GPL-3.0-only**). **Confidence: 90%.** It is the well-known Android app that applies per-app `WRITE_SECURE_SETTINGS` (developer options, animations, and similar) and sits next to LSPosed / LSPatch / MMRL on a Shizuku or rooted phone. Don did not paste a repository URL, so this is not 100%. Unrelated “GETO” acronyms were rejected.
+
+| Path | What this build does |
+|---|---|
+| **Root** | `pm grant com.android.geto android.permission.WRITE_SECURE_SETTINGS` via `su`/Shizuku-as-root, then open Geto. |
+| **Non-root** | The same grant through Shizuku (ADB). Without Shizuku, only a hand-off to the stock app. |
+
+Geto’s settings engine is **not** vendored (`mods-embed/geto/` is a skeleton).
+
+**Risks:** `WRITE_SECURE_SETTINGS` can hide developer options and change global settings. A banking app may still detect other signals. Revoke the grant in App permissions / appops.
+
+#### MMRL (GPLv3, github.com/MMRLApp/MMRL)
+
+Stock package: `com.dergoogler.mmrl`. License checked: **GPL-3.0**.
+
+| Path | What this build does |
+|---|---|
+| **Root** | Open MMRL to browse/install Magisk, KernelSU, and APatch modules. Optional **Install zip via Magisk / KernelSU / APatch** copies a zip you pick and runs `magisk --install-module`, `ksud module install`, or `apd module install` **only after you confirm**. Not auto-run. |
+| **Non-root** | **Read-only:** a static list of well-known repo **names** (this APK has no `INTERNET` and does not download). Hand-off to stock MMRL, which itself needs root to install. |
+
+MMRL’s WebUI and repo fetch are **not** vendored (`mods-embed/mmrl/` is a skeleton).
+
+**Risks:** Magisk/KernelSU/APatch modules modify the system at boot. A bad zip can bootloop. Keep a recovery path.
+
+See `mods-embed/README.md` for the later-PR embed plan.
+
+![Mods screen](screenshots/14-mods.png)
+*Placeholder: master switch off, four tool cards, stock-app hand-off buttons.*
+
 ---
 
 ## Features, step by step
@@ -241,6 +309,7 @@ VictorLaunch does **not** request `INTERNET`. There is no telemetry.
 | `BIND_DEVICE_ADMIN` (on the admin receiver) | Required so Android can make VictorLaunch the profile owner of the Island work profile. |
 | Exported `BRIDGE` service | So the controller (and other paired nodes) can send newline-delimited JSON. Callers are authorized by **package + cert**, not by a payload field. |
 | `ShizukuProvider` (`INTERACT_ACROSS_USERS_FULL` on the provider) | Lets the stock (or future embedded) Shizuku server hand us a binder. No extra runtime permission dialog from Android itself; Shizuku has its own grant prompt. |
+| `REQUEST_INSTALL_PACKAGES` | LSPatch **Install patched APK**. Android still shows the system confirm sheet. Unknown-sources must be allowed for this app. |
 
 Wallpaper is shown with `windowShowWallpaper`. VictorLaunch does not need `SET_WALLPAPER` to display the current wallpaper.
 
@@ -299,6 +368,18 @@ The stock Shizuku server is not running. Start it (wireless debugging, adb, or r
 **Force-stop / system hide did nothing.**  
 Shizuku is off, the permission was denied, or the UserService failed to bind. The drawer hide still applies locally.
 
+**Mods buttons say enable first.**  
+Master switch **and** that tool’s switch must both be on. They default off and are not set by backup import.
+
+**Open stock LSPosed / LSPatch / Geto / MMRL does nothing.**  
+The stock GPLv3 app is not installed. This APK is a client + skeleton, not a full embed.
+
+**Install patched APK never appears.**  
+Allow unknown sources for VictorLaunch (Mods → Unknown-sources permission), then pick an APK. The system installer must still be confirmed. The rewriter is not in this APK.
+
+**Geto grant failed.**  
+Enable Shizuku, grant its permission, and install `com.android.geto`. Root or ADB can `pm grant WRITE_SECURE_SETTINGS`; a normal app cannot.
+
 ---
 
 ## Privacy
@@ -310,6 +391,7 @@ Shizuku is off, the permission was denied, or the UserService failed to bind. Th
 - Android cloud backup of pairing prefs is excluded.
 - The wrapping key for the fleet bundle never enters this app.
 - The Shizuku enable flag is **not** part of launcher backup JSON.
+- Mods master/per-tool flags are **not** part of launcher backup JSON. Import ignores any Mods keys.
 
 ---
 

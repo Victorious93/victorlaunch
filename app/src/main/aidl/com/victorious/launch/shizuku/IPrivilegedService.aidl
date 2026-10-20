@@ -8,5 +8,9 @@ interface IPrivilegedService {
     String createManagedProfile(String name);
     String quietMode(int userId, boolean quiet);
     String installExisting(String packageName, int userId);
+    String grantWriteSecureSettings(String packageName);
+    String listAdbModules();
+    String packagePath(String packageName);
+    String installRootModule(String kind, String zipPath);
     void destroy();
 }

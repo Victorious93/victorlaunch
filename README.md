@@ -21,6 +21,11 @@ in-process server are **not** vendored. Privileged freeze/hide/force-stop
 and Island shell ops are real command builders + a Shizuku `UserService`,
 gated behind an explicit Settings toggle. See `shizuku-embed/README.md`.
 
+Mods: a gated **Mods** screen for LSPosed, LSPatch, Geto, and MMRL
+(all GPLv3). Full engines are **not** vendored (`mods-embed/` skeletons
++ stock-app clients). Geto is identified as JackEblan/Geto
+(`com.android.geto`) at **90% confidence**. See `mods-embed/README.md`.
+
 ## Build
 
 ```bash
@@ -40,6 +45,7 @@ the APK.
 - `docs/external-node.md` — Messenger bridge v1.1
 - `docs/LAWNCHAIR_REBASE.md` — why Lawnchair is not vendored yet
 - `shizuku-embed/README.md` — Shizuku client fallback + embed plan
+- `mods-embed/README.md` — LSPosed / LSPatch / Geto / MMRL skeletons + plan
 - `docs/specs` live upstream in [droidcommand-AI](https://github.com/Victorious93/droidcommand-AI)
   (`STATUS_TRAY.md`, `UNIFIED_BACKUP.md`)
 

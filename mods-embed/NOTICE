@@ -1,0 +1,26 @@
+VictorLaunch mods-embed
+Copyright (C) 2026 Victorious / VictorLaunch authors
+
+This directory is a **skeleton** for in-tree forks/embeds of four
+GPLv3 projects. Their source is NOT vendored in this PR. Stock apps
+are launched by package name. Keep this NOTICE and LICENSE when the
+full trees land.
+
+LSPosed  https://github.com/LSPosed/LSPosed   GPL-3.0
+  Planned: Zygisk module + manager (do not keep a conflicting
+  applicationId). Skeleton: lsposed/
+
+LSPatch  https://github.com/LSPosed/LSPatch   GPL-3.0
+  Planned: on-device patcher (lspatch.jar + native).
+  Stock manager: org.lsposed.lspatch. Skeleton: lspatch/
+
+Geto     https://github.com/JackEblan/Geto    GPL-3.0-only
+  Identified as Don's "Geto" (high confidence): F-Droid
+  com.android.geto — apply per-app secure settings.
+  Skeleton: geto/
+
+MMRL     https://github.com/MMRLApp/MMRL      GPL-3.0
+  Magisk / KernelSU / APatch module manager.
+  Stock app: com.dergoogler.mmrl. Skeleton: mmrl/
+
+See README.md for the embed plan and what is stubbed.

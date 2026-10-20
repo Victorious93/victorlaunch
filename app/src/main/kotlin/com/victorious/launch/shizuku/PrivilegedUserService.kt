@@ -1,6 +1,9 @@
 package com.victorious.launch.shizuku
 
 import android.content.Context
+import com.victorious.launch.mods.ModsCommands
+import com.victorious.launch.mods.RootModuleInstallRequest
+import com.victorious.launch.mods.RootModuleKind
 
 /**
  * Runs in a Shizuku UserService process as ADB (uid 2000) or root (uid 0).
@@ -33,6 +36,20 @@ class PrivilegedUserService : IPrivilegedService.Stub {
 
     override fun installExisting(packageName: String, userId: Int): String =
         run(PrivilegedCommands.installExisting(packageName, userId))
+
+    override fun grantWriteSecureSettings(packageName: String): String =
+        run(ModsCommands.grantWriteSecureSettings(packageName))
+
+    override fun listAdbModules(): String = run(ModsCommands.listAdbModules())
+
+    override fun packagePath(packageName: String): String = run(ModsCommands.packagePath(packageName))
+
+    override fun installRootModule(kind: String, zipPath: String): String {
+        val parsed = RootModuleKind.fromId(kind) ?: return "error: unknown root kind"
+        val err = RootModuleInstallRequest(parsed, zipPath).validate()
+        if (err != null) return "error: $err"
+        return run(ModsCommands.installModule(parsed, zipPath))
+    }
 
     override fun destroy() {
         System.exit(0)

@@ -88,6 +88,7 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":shizuku-embed"))
+    implementation(project(":mods-embed"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)

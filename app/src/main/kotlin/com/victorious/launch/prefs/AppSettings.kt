@@ -6,6 +6,7 @@ import com.victorious.launch.core.backup.LauncherPreferences
 import com.victorious.launch.core.backup.WorkspaceItem
 import com.victorious.launch.core.protocol.Protocol
 import com.victorious.launch.core.protocol.TrustedPeers
+import com.victorious.launch.mods.ModsTool
 import java.security.SecureRandom
 import org.json.JSONArray
 import org.json.JSONObject
@@ -42,6 +43,18 @@ class AppSettings(context: Context) {
 
     fun setShizukuEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_SHIZUKU, enabled).apply()
+    }
+
+    fun isModsMasterEnabled(): Boolean = prefs.getBoolean(KEY_MODS_MASTER, false)
+
+    fun setModsMasterEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_MODS_MASTER, enabled).apply()
+    }
+
+    fun isModEnabled(tool: ModsTool): Boolean = prefs.getBoolean(modKey(tool), false)
+
+    fun setModEnabled(tool: ModsTool, enabled: Boolean) {
+        prefs.edit().putBoolean(modKey(tool), enabled).apply()
     }
 
     fun launcherPreferences(): LauncherPreferences =
@@ -154,6 +167,9 @@ class AppSettings(context: Context) {
         private const val KEY_EXTERNAL = "external_control_enabled"
         private const val KEY_CONTROLLER_FULL = "controller_full_control"
         private const val KEY_SHIZUKU = "shizuku_enabled"
+        private const val KEY_MODS_MASTER = "mods_master_enabled"
+
+        private fun modKey(tool: ModsTool): String = "mods_tool_${tool.id}"
         private const val KEY_DOCK = "dock"
         private const val KEY_WORKSPACE = "workspace"
         private const val KEY_HIDDEN = "hidden"

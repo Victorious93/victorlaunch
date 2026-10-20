@@ -4,6 +4,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.ServiceConnection
 import android.os.IBinder
+import com.victorious.launch.mods.ModsGate
+import com.victorious.launch.mods.ModsTool
+import com.victorious.launch.mods.RootModuleKind
 import com.victorious.launch.prefs.AppSettings
 import rikka.shizuku.Shizuku
 
@@ -32,7 +35,7 @@ class PrivilegedOps(
             .daemon(false)
             .processNameSuffix("priv")
             .debuggable(false)
-            .version(2)
+            .version(4)
 
     private val connection =
         object : ServiceConnection {
@@ -86,6 +89,29 @@ class PrivilegedOps(
 
     fun installExisting(packageName: String, userId: Int): PrivilegedResult =
         call("install-existing") { it.installExisting(packageName, userId) }
+
+    fun grantWriteSecureSettings(packageName: String): PrivilegedResult =
+        gated(ModsTool.GETO, "grant-secure-settings") { it.grantWriteSecureSettings(packageName) }
+
+    fun listAdbModules(): PrivilegedResult =
+        gated(ModsTool.LSPOSED, "list-adb-modules") { it.listAdbModules() }
+
+    fun packagePath(packageName: String): PrivilegedResult =
+        gated(ModsTool.LSPATCH, "package-path") { it.packagePath(packageName) }
+
+    fun installRootModule(kind: RootModuleKind, zipPath: String): PrivilegedResult =
+        gated(ModsTool.MMRL, "install-root-module") { it.installRootModule(kind.id, zipPath) }
+
+    private fun gated(
+        tool: ModsTool,
+        op: String,
+        body: (IPrivilegedService) -> String,
+    ): PrivilegedResult {
+        if (!ModsGate.canUse(settings.isModsMasterEnabled(), settings.isModEnabled(tool))) {
+            return PrivilegedResult(false, "Enable Mods and ${tool.title} first")
+        }
+        return call(op, body)
+    }
 
     private fun call(op: String, body: (IPrivilegedService) -> String): PrivilegedResult {
         if (!settings.isShizukuEnabled()) {

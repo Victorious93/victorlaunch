@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.CellTower
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
@@ -62,7 +63,9 @@ import com.victorious.launch.core.status.TrayTile
 import com.victorious.launch.fleet.FleetInstallScreen
 import com.victorious.launch.help.HelpScreen
 import com.victorious.launch.island.IslandManager
+import com.victorious.launch.VictorLaunchApp
 import com.victorious.launch.mods.ModsScreen
+import com.victorious.launch.network.NetworkScreen
 import com.victorious.launch.lockdown.BiometricGate
 import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.settings.SettingsScreen
@@ -83,6 +86,7 @@ enum class Overlay {
     HELP,
     FLEET,
     MODS,
+    NETWORK,
 }
 
 @Composable
@@ -100,12 +104,14 @@ fun HomeScreen(
     var islandApps by remember { mutableStateOf(catalog.island()) }
     var tray by remember { mutableStateOf<PublishedTray?>(null) }
     var trayNote by remember { mutableStateOf("Waiting for the controller") }
+    var radio by remember { mutableStateOf<TrayTile?>(null) }
     val aggregator = remember { StatusTrayAggregator() }
 
     LaunchedEffect(Unit) {
         while (true) {
             apps = catalog.personal()
             islandApps = catalog.island()
+            radio = localRadioTile(settings)
             when (val pull = controller.pullSnapshots()) {
                 is PullResult.Ok -> {
                     tray = aggregator.publish(pull.snapshots)
@@ -149,12 +155,15 @@ fun HomeScreen(
                 .navigationBarsPadding()
                 .padding(horizontal = 16.dp),
         ) {
-            StatusStrip(tray, trayNote)
+            StatusStrip(tray, trayNote, radio)
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                IconButton(onClick = { overlay = Overlay.NETWORK }) {
+                    Icon(Icons.Outlined.CellTower, contentDescription = "Network Monitor", tint = Cyan)
+                }
                 IconButton(onClick = { overlay = Overlay.MODS }) {
                     Icon(Icons.Outlined.Extension, contentDescription = "Mods", tint = Magenta)
                 }
@@ -213,6 +222,7 @@ fun HomeScreen(
                         onHelp = { overlay = Overlay.HELP },
                         onFleet = { overlay = Overlay.FLEET },
                         onMods = { overlay = Overlay.MODS },
+                        onNetwork = { overlay = Overlay.NETWORK },
                         onClose = { overlay = Overlay.NONE },
                     )
                 }
@@ -225,6 +235,14 @@ fun HomeScreen(
                     ModsScreen(
                         settings = settings,
                         catalog = catalog,
+                        activity = activity,
+                        onClose = { overlay = Overlay.NONE },
+                    )
+                }
+            Overlay.NETWORK ->
+                OverlayScrim {
+                    NetworkScreen(
+                        settings = settings,
                         activity = activity,
                         onClose = { overlay = Overlay.NONE },
                     )
@@ -276,8 +294,20 @@ private fun OverlayScrim(content: @Composable () -> Unit) {
     ) { content() }
 }
 
+private fun localRadioTile(settings: AppSettings): TrayTile {
+    val domain = VictorLaunchApp.instance.network.domainStatus()
+    return TrayTile(
+        id = "radio",
+        domain = domain.name,
+        state = domain.state,
+        detail = domain.detail,
+        freshness = if (settings.isNetworkMonitorEnabled()) Freshness.FRESH else Freshness.EXPIRED,
+        nodeId = settings.nodeId(),
+    )
+}
+
 @Composable
-private fun StatusStrip(tray: PublishedTray?, note: String) {
+private fun StatusStrip(tray: PublishedTray?, note: String, radio: TrayTile?) {
     Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)) {
         Text(
             "VictorLaunch",
@@ -287,7 +317,10 @@ private fun StatusStrip(tray: PublishedTray?, note: String) {
         )
         Text(note, color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp, bottom = 8.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val tiles = tray?.tiles.orEmpty()
+            if (radio != null) {
+                item(key = "radio") { StatusChip(radio) }
+            }
+            val tiles = tray?.tiles.orEmpty().filterNot { it.id == "network" }
             items(tiles, key = { it.id }) { tile -> StatusChip(tile) }
             item {
                 CountChip(tray?.pairedNodeCount ?: 0, tray)
@@ -304,6 +337,7 @@ private fun StatusChip(tile: TrayTile) {
             "vpn" -> "VPN"
             "browser" -> "Browser proxy"
             "sms" -> "VictorSMS"
+            "network", "radio" -> "Network"
             else -> tile.id
         }
     val stateText =

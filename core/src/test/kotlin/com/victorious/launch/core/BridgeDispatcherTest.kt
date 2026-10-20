@@ -10,6 +10,7 @@ import com.victorious.launch.core.bridge.ownNodeHealth
 import com.victorious.launch.core.protocol.ErrorCategory
 import com.victorious.launch.core.protocol.Protocol
 import com.victorious.launch.core.status.NodeStatusSnapshot
+import com.victorious.launch.network.NetworkStatusCodec
 import kotlinx.serialization.json.JsonObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -50,6 +51,7 @@ class BridgeDispatcherTest {
         assertTrue(resp.ok)
         val text = resp.result.toString()
         assertTrue(text.contains("node.status.get"))
+        assertTrue(text.contains("network.status"))
         assertTrue(text.contains("config.import"))
         assertTrue(text.contains("\"protocolMinor\":1"))
     }
@@ -273,7 +275,24 @@ class BridgeDispatcherTest {
             )
         assertTrue(resp.ok)
         assertTrue(resp.result.toString().contains("node_health"))
+        assertTrue(resp.result.toString().contains("network"))
         assertTrue(resp.result.toString().contains(Protocol.PACKAGE_NAME))
+    }
+
+    @Test
+    fun networkStatusIsAPairedReadOp() {
+        val d = BridgeDispatcher(host())
+        val resp =
+            d.handle(
+                envelope("network.status", "88888888888888888888888888888888"),
+                sourceNodeRef = "ai.droidcommand.app",
+                callerPaired = true,
+                externalControlEnabled = false,
+            )
+        assertTrue(resp.ok)
+        val text = resp.result.toString()
+        assertTrue(text.contains("\"enabled\":false"))
+        assertTrue(text.contains("limits"))
     }
 }
 
@@ -308,4 +327,6 @@ class FakeHost(
     override fun launchApp(packageName: String): Boolean = true
 
     override fun openPanel(panel: String): Boolean = true
+
+    override fun networkStatus(): JsonObject = NetworkStatusCodec.disabledJson()
 }

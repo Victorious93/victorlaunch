@@ -2,6 +2,7 @@ package com.victorious.launch
 
 import android.app.Application
 import com.victorious.launch.core.bridge.ActionAuditLog
+import com.victorious.launch.network.NetworkMonitorController
 import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.shizuku.PrivilegedOps
 import com.victorious.launch.shizuku.ShizukuSession
@@ -12,6 +13,8 @@ class VictorLaunchApp : Application() {
     lateinit var shizuku: ShizukuSession
         private set
     lateinit var privileged: PrivilegedOps
+        private set
+    lateinit var network: NetworkMonitorController
         private set
     val actionAudit = ActionAuditLog()
 
@@ -26,9 +29,13 @@ class VictorLaunchApp : Application() {
                 onChanged = { privileged.refreshBinding() },
             )
         privileged = PrivilegedOps(this, settings, shizuku)
+        network = NetworkMonitorController(this, settings, privileged, shizuku)
         shizuku.start()
         if (settings.isShizukuEnabled()) {
             privileged.refreshBinding()
+        }
+        if (settings.isNetworkMonitorEnabled()) {
+            network.start()
         }
     }
 

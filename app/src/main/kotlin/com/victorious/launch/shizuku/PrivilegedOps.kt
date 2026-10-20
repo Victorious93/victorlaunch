@@ -35,7 +35,7 @@ class PrivilegedOps(
             .daemon(false)
             .processNameSuffix("priv")
             .debuggable(false)
-            .version(4)
+            .version(5)
 
     private val connection =
         object : ServiceConnection {
@@ -101,6 +101,34 @@ class PrivilegedOps(
 
     fun installRootModule(kind: RootModuleKind, zipPath: String): PrivilegedResult =
         gated(ModsTool.MMRL, "install-root-module") { it.installRootModule(kind.id, zipPath) }
+
+    fun setAllowedNetworkTypes(bitmask: Long): PrivilegedResult {
+        if (!settings.isNetworkMonitorEnabled()) {
+            return PrivilegedResult(false, "Enable Network Monitor first")
+        }
+        return call("allowed-network-types") { it.setAllowedNetworkTypes(bitmask) }
+    }
+
+    fun setAllowed2g(allowed: Boolean): PrivilegedResult {
+        if (!settings.isNetworkMonitorEnabled()) {
+            return PrivilegedResult(false, "Enable Network Monitor first")
+        }
+        return call("allowed-2g") { it.setAllowed2g(allowed) }
+    }
+
+    fun setPreferredNetworkMode(mode: Int): PrivilegedResult {
+        if (!settings.isNetworkMonitorEnabled()) {
+            return PrivilegedResult(false, "Enable Network Monitor first")
+        }
+        return call("preferred-network-mode") { it.setPreferredNetworkMode(mode) }
+    }
+
+    fun radioRecover(): PrivilegedResult {
+        if (!settings.isNetworkMonitorEnabled()) {
+            return PrivilegedResult(false, "Enable Network Monitor first")
+        }
+        return call("radio-recover") { it.radioRecover() }
+    }
 
     private fun gated(
         tool: ModsTool,

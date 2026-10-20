@@ -55,6 +55,7 @@ fun SettingsScreen(
     onHelp: () -> Unit,
     onFleet: () -> Unit,
     onMods: () -> Unit,
+    onNetwork: () -> Unit,
     onClose: () -> Unit,
 ) {
     var external by remember { mutableStateOf(settings.isExternalControlEnabled()) }
@@ -379,6 +380,14 @@ fun SettingsScreen(
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 8.dp),
             )
+        }
+        Section("Network Monitor") {
+            Text(
+                "Off by default. TelephonyCallback / PhoneStateListener for RAT, signal, cell ID. Alerts on 2G drops, downgrades, sudden cell changes. Lock 2G/LTE-NR via Shizuku when the OEM allows it; otherwise open system settings. Backup import cannot turn this on. Not universal.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Button(onClick = onNetwork, modifier = Modifier.padding(top = 8.dp)) { Text("Open Network Monitor") }
         }
         Section("Mods") {
             Text(

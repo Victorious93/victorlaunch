@@ -134,6 +134,7 @@ Returns `protocolMajor: 1`, `protocolMinor: 1`, and per-op
 |---|---|---|---|
 | `capabilities.get` | read | true | false |
 | `node.status.get` | read | true | false |
+| `network.status` | read | true | false |
 | `fleet.list` | read | true | false |
 | `layout.get` | read | true | false |
 | `installed.list` | read | true | false |
@@ -154,8 +155,11 @@ Returns `protocolMajor: 1`, `protocolMinor: 1`, and per-op
 - `installed.list` — `LauncherApps` across profiles.
 - `running.list` — usage stats. Without `PACKAGE_USAGE_STATS` granted:
   error category `permission`. If the API is missing: `not_available`.
-- `node.status.get` — this process only (`node_health`). Never a scrape
-  of Mesh/VPN/SMS.
+- `node.status.get` — this process (`node_health`, plus `network` when
+  the Network Monitor is enabled). Never a scrape of Mesh/VPN/SMS.
+- `network.status` — on-device radio JSON (RAT, RSRP/RSRQ/SINR, cell
+  ID, alerts). `enabled: false` when the monitor is off. Limits string
+  is always present. Not a lock confirmation.
 
 ---
 

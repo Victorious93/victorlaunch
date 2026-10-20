@@ -26,6 +26,11 @@ Mods: a gated **Mods** screen for LSPosed, LSPatch, Geto, and MMRL
 + stock-app clients). Geto is identified as JackEblan/Geto
 (`com.android.geto`) at **90% confidence**. See `mods-embed/README.md`.
 
+Network Monitor: gated `TelephonyCallback` / `PhoneStateListener` for
+RAT, signal, cell ID, and 2G-drop alerts. RAT lock needs Shizuku/root
+and is **not** universal. Cell/band lock is not written. Fleet read op:
+`network.status`.
+
 ## Build
 
 ```bash

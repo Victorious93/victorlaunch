@@ -73,6 +73,22 @@ class ConfigBackupTest {
     }
 
     @Test
+    fun importIgnoresNetworkMonitorFlags() {
+        val incoming =
+            """{"schemaVersion":1,"dock":["b"],"workspace":[],"hiddenPackages":[],"lockedPackages":[],"lockedFolders":[],"islandTabLocked":false,"gridColumns":4,"externalControlEnabled":false,"networkMonitorEnabled":true}"""
+        val report =
+            ConfigBackupCodec.import(
+                live = LauncherPreferences(),
+                incomingJson = incoming,
+                dryRun = false,
+                policy = BackupConflictPolicy.OVERWRITE,
+                confirmed = true,
+            )
+        assertTrue(report.applied)
+        assertTrue(report.notes.any { it.contains("Network Monitor") })
+    }
+
+    @Test
     fun dryRunDoesNotApply() {
         val report =
             ConfigBackupCodec.import(

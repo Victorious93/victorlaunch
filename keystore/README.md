@@ -18,7 +18,7 @@ GitHub Actions secrets:
 | `VL_DEBUG_KEYSTORE_B64` | Base64 of `victorlaunch-debug.jks` |
 | `VL_DEBUG_STORE_PASSWORD` | Store password |
 | `VL_DEBUG_KEY_ALIAS` | Key alias (`victorlaunchdebug`) |
-| `VL_DEBUG_KEY_PASSWORD` | Key password |
+| `VL_DEBUG_KEY_PASSWORD` | Key password (must equal the store password; PKCS12 does not support a distinct key password) |
 
 ## Local builds
 

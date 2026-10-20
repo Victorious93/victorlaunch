@@ -1,0 +1,20 @@
+Shizuku (https://github.com/RikkaApps/Shizuku)
+Copyright (C) RikkaW / RikkaApps
+
+Licensed under the Apache License, Version 2.0.
+See LICENSE in this directory.
+
+This module is VictorLaunch's planned in-tree fork/embed of the
+Shizuku server, starter, and manager — plus a client that talks to
+the stock Shizuku app until that embed lands.
+
+Apache License 2.0 §6 (from upstream README), obeyed here:
+
+- We do not ship Shizuku's mipmap launcher icons.
+- This app is named VictorLaunch, applicationId
+  com.victorious.launch — never moe.shizuku.privileged.api.
+- We do not declare moe.shizuku.manager.permission.* permissions.
+
+Shizuku-API (https://github.com/RikkaApps/Shizuku-API) is consumed
+as the Maven artifacts `dev.rikka.shizuku:api` and
+`dev.rikka.shizuku:provider` (Apache-2.0 / MIT per that repo).

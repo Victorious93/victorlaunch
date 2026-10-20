@@ -1,0 +1,4 @@
+*.jks binary
+*.png binary
+gradlew text eol=lf
+gradlew.bat text eol=crlf

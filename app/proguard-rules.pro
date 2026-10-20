@@ -1,0 +1,6 @@
+-keepattributes *Annotation*, InnerClasses
+-dontwarn org.jetbrains.annotations.**
+-keep class com.victorious.launch.** { *; }
+-keep class com.victorious.launch.shizuku.PrivilegedUserService { *; }
+-keep class com.victorious.launch.shizuku.IPrivilegedService { *; }
+-keep class rikka.shizuku.** { *; }

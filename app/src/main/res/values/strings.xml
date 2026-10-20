@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VictorLaunch</string>
+    <string name="device_admin_label">VictorLaunch Island</string>
+    <string name="device_admin_description">Creates and manages the work profile used as the Island. VictorLaunch becomes the profile owner of that profile so it can clone, freeze, hide, pause, and resume apps inside it.</string>
+    <string name="accessibility_app_icon">Application icon</string>
+</resources>

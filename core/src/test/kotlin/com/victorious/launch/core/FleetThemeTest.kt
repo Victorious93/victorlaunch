@@ -162,6 +162,14 @@ class FleetThemeTest {
                 extraPins = emptyMap(),
             ),
         )
+        assertFalse(
+            "bare ai.rootforge.os must not inherit the .debug pin",
+            FleetThemeAccess.canRead(
+                "ai.rootforge.os",
+                listOf(FleetThemeConsumers.ROOTFORGE_DEBUG_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
     }
 
     @Test
@@ -170,6 +178,7 @@ class FleetThemeTest {
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.MANGO, FleetThemeConsumers.MANGO_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.VICTORYPED, FleetThemeConsumers.VICTORYPED_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.TASKBAR, FleetThemeConsumers.TASKBAR_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.ROOTFORGE_DEBUG, FleetThemeConsumers.ROOTFORGE_DEBUG_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_DEBUG))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_RELEASE))
     }

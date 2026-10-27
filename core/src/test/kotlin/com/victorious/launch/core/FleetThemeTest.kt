@@ -191,6 +191,7 @@ class FleetThemeTest {
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.KEYBOARD_DEBUG, FleetThemeConsumers.KEYBOARD_DEBUG_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.SPOOF, FleetThemeConsumers.SPOOF_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.PENTESTSWARM, FleetThemeConsumers.PENTESTSWARM_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.EDLCOMMANDER, FleetThemeConsumers.EDLCOMMANDER_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_DEBUG))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_RELEASE))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.CONTROLLER, FleetThemeConsumers.CONTROLLER_DEBUG))
@@ -323,6 +324,31 @@ class FleetThemeTest {
             TrustedPeers.isPinnedController(
                 FleetThemeConsumers.PENTESTSWARM,
                 listOf(FleetThemeConsumers.PENTESTSWARM_CERT),
+            ),
+        )
+    }
+
+    @Test
+    fun edlcommanderThemePinIsReadOnly() {
+        assertTrue(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.EDLCOMMANDER,
+                listOf(FleetThemeConsumers.EDLCOMMANDER_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.EDLCOMMANDER,
+                listOf(WRONG_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.EDLCOMMANDER, FleetThemeConsumers.EDLCOMMANDER_CERT))
+        assertFalse(
+            TrustedPeers.isPinnedController(
+                FleetThemeConsumers.EDLCOMMANDER,
+                listOf(FleetThemeConsumers.EDLCOMMANDER_CERT),
             ),
         )
     }

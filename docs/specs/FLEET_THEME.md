@@ -219,6 +219,7 @@ another reason), or remote-control ops (`app.launch` / `layout.set` /
 | `ai.droidcommand.app` | `88:00:51:A6:D9:5D:38:DD:8D:81:E1:93:1E:17:05:48:03:87:D5:93:C3:09:43:53:99:68:E6:EF:11:A0:C8:4D` | Theme-read entry matching the existing controller debug pin. Bridge pairing, full-control, and the kill switch are **unchanged**. |
 | `com.victorious.spoof` | `A4:84:62:2B:7E:86:E1:D9:F8:04:56:6E:B7:89:2D:EE:3C:64:EB:8E:B9:13:9E:04:25:BC:65:F3:EF:D0:FF:EE` | Theme-read only |
 | `ai.pentestswarm.companion` | `5E:3A:B1:23:1F:7E:DA:18:78:B8:FF:D8:9E:AC:B1:F7:2E:EB:66:AF:3D:BA:2E:01:33:51:24:68:42:23:30:C7` | Theme-read only |
+| `ai.edlcommander.companion` | `E5:60:B6:92:BD:E6:51:9E:B7:CB:B5:2C:E4:DC:91:5A:19:E4:41:A0:1A:5D:03:68:82:71:AC:99:78:8A:58:C8` | Theme-read only |
 
 Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 

@@ -164,7 +164,32 @@ class AppSettings(context: Context) {
         return buildList {
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                add(WorkspaceItem(o.getString("packageName"), o.optInt("x"), o.optInt("y")))
+                val kind = o.optString("kind", WorkspaceItem.KIND_APP)
+                val pkg = o.optString("packageName", "")
+                if (kind == WorkspaceItem.KIND_APP && pkg.isBlank()) continue
+                val children = o.optJSONArray("children")
+                add(
+                    WorkspaceItem(
+                        packageName = pkg,
+                        x = o.optInt("x"),
+                        y = o.optInt("y"),
+                        kind = kind,
+                        page = o.optInt("page"),
+                        folderId = o.optString("folderId").ifBlank { null },
+                        title = o.optString("title").ifBlank { null },
+                        children =
+                            if (children == null) {
+                                emptyList()
+                            } else {
+                                buildList {
+                                    for (c in 0 until children.length()) add(children.getString(c))
+                                }
+                            },
+                        widgetId = if (o.has("widgetId")) o.optInt("widgetId") else null,
+                        spanX = o.optInt("spanX", 1),
+                        spanY = o.optInt("spanY", 1),
+                    ),
+                )
             }
         }
     }
@@ -172,14 +197,28 @@ class AppSettings(context: Context) {
     private fun encodeWorkspace(items: List<WorkspaceItem>): String {
         val arr = JSONArray()
         items.forEach { item ->
-            arr.put(
+            val obj =
                 JSONObject()
                     .put("packageName", item.packageName)
                     .put("x", item.x)
-                    .put("y", item.y),
-            )
+                    .put("y", item.y)
+                    .put("kind", item.kind)
+                    .put("page", item.page)
+                    .put("spanX", item.spanX)
+                    .put("spanY", item.spanY)
+            if (item.folderId != null) obj.put("folderId", item.folderId)
+            if (item.title != null) obj.put("title", item.title)
+            if (item.children.isNotEmpty()) obj.put("children", JSONArray(item.children))
+            if (item.widgetId != null) obj.put("widgetId", item.widgetId)
+            arr.put(obj)
         }
         return arr.toString()
+    }
+
+    fun iconPackPackage(): String? = prefs.getString(KEY_ICON_PACK, null)?.ifBlank { null }
+
+    fun setIconPackPackage(packageName: String?) {
+        prefs.edit().putString(KEY_ICON_PACK, packageName.orEmpty()).apply()
     }
 
     data class Pairing(val packageName: String, val certSha256: String)
@@ -207,5 +246,6 @@ class AppSettings(context: Context) {
         private const val KEY_GRID = "grid"
         private const val KEY_PAIRED_PKG = "controller_package"
         private const val KEY_PAIRED_CERT = "controller_cert_sha256"
+        private const val KEY_ICON_PACK = "icon_pack_package"
     }
 }

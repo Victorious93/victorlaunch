@@ -37,6 +37,7 @@ import com.victorious.launch.core.protocol.TrustedPeers
 import com.victorious.launch.island.IslandCommandReceiver
 import com.victorious.launch.island.IslandManager
 import com.victorious.launch.launcher.AppCatalog
+import com.victorious.launch.launcher.IconPackManager
 import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.security.SigningCerts
 import com.victorious.launch.shizuku.EmbeddedShizukuServer
@@ -99,6 +100,38 @@ fun SettingsScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Settings", color = Cyan, fontSize = 22.sp, modifier = Modifier.weight(1f))
             TextButton(onClick = onClose) { Text("Close", color = Cyan) }
+        }
+        Section("Home (Lawnchair lineage)") {
+            Text(
+                "Paged workspace, folders, AppWidgetHost widgets, swipe-up drawer, swipe-down search, and ADW/GO/Nova icon packs. This is not a vendored Lawnchair AOSP tree — see docs/LAWNCHAIR_REBASE.md.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            val packs = remember { IconPackManager(activity.packageManager).installedPacks() }
+            val selected = settings.iconPackPackage()
+            Text(
+                if (selected == null) "Icon pack: system icons" else "Icon pack: $selected",
+                color = Cyan,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            TextButton(
+                onClick = {
+                    settings.setIconPackPackage(null)
+                    note = "Using system icons"
+                },
+            ) { Text("System icons", color = Muted) }
+            packs.forEach { pack ->
+                TextButton(
+                    onClick = {
+                        settings.setIconPackPackage(pack.packageName)
+                        note = "Icon pack ${pack.label}"
+                    },
+                ) { Text(pack.label, color = Cyan) }
+            }
+            if (packs.isEmpty()) {
+                Text("No ADW/GO/Nova icon packs installed.", color = Muted, fontSize = 12.sp)
+            }
         }
         Section("Default launcher") {
             Text(

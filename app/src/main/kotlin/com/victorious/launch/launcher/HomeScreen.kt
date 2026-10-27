@@ -53,7 +53,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.victorious.launch.core.backup.WorkspaceItem
 import com.victorious.launch.core.status.Freshness
 import com.victorious.launch.core.status.PublishedTray
 import com.victorious.launch.core.status.StatusFreshness
@@ -97,9 +96,13 @@ fun HomeScreen(
     controller: ControllerClient,
     biometric: BiometricGate,
     activity: Activity,
+    iconPack: IconPackManager,
+    widgets: WidgetHostHolder,
 ) {
     var overlay by remember { mutableStateOf(Overlay.NONE) }
     var drawerTab by remember { mutableStateOf(0) }
+    var searchFocused by remember { mutableStateOf(false) }
+    var layoutRev by remember { mutableStateOf(0) }
     var apps by remember { mutableStateOf(catalog.personal()) }
     var islandApps by remember { mutableStateOf(catalog.island()) }
     var tray by remember { mutableStateOf<PublishedTray?>(null) }
@@ -174,44 +177,66 @@ fun HomeScreen(
                     Icon(Icons.Outlined.Settings, contentDescription = "Settings", tint = Cyan)
                 }
             }
-            WorkspaceGrid(
-                modifier = Modifier.weight(1f),
+            LawnchairWorkspace(
                 settings = settings,
                 apps = apps,
+                catalog = catalog,
+                iconPack = iconPack,
+                widgets = widgets,
+                activity = activity,
+                layoutRev = layoutRev,
                 onLaunch = { app -> gatedLaunch(settings, biometric, app, catalog) },
-                onPin = { app -> pinToWorkspace(settings, app) },
-            )
-            DockRow(
-                settings = settings,
-                apps = apps,
-                onLaunch = { app -> gatedLaunch(settings, biometric, app, catalog) },
-                onOpenDrawer = { overlay = Overlay.DRAWER },
+                onOpenDrawer = {
+                    searchFocused = false
+                    overlay = Overlay.DRAWER
+                },
+                onOpenSearch = {
+                    searchFocused = true
+                    overlay = Overlay.DRAWER
+                },
             )
         }
         when (overlay) {
             Overlay.NONE -> Unit
             Overlay.DRAWER ->
-                DrawerOverlay(
-                    apps = apps,
-                    islandApps = islandApps,
-                    tab = drawerTab,
-                    islandLocked = settings.launcherPreferences().islandTabLocked,
-                    onTab = { next ->
-                        if (next == 1 && settings.launcherPreferences().islandTabLocked) {
-                            biometric.prompt(
-                                title = "Unlock Island",
-                                onOk = { drawerTab = 1 },
-                            )
-                        } else {
-                            drawerTab = next
-                        }
-                    },
-                    onLaunch = { app -> gatedLaunch(settings, biometric, app, catalog) },
-                    onPinDock = { app -> pinToDock(settings, app) },
-                    onClose = { overlay = Overlay.NONE },
-                    island = island,
-                    activity = activity,
-                )
+                OverlayScrim {
+                    AllAppsDrawer(
+                        apps = apps,
+                        islandApps = islandApps,
+                        tab = drawerTab,
+                        islandLocked = settings.launcherPreferences().islandTabLocked,
+                        searchFocused = searchFocused,
+                        catalog = catalog,
+                        iconPack = iconPack,
+                        iconPackPackage = settings.iconPackPackage(),
+                        onTab = { next ->
+                            if (next == 1 && settings.launcherPreferences().islandTabLocked) {
+                                biometric.prompt(
+                                    title = "Unlock Island",
+                                    onOk = { drawerTab = 1 },
+                                )
+                            } else {
+                                drawerTab = next
+                            }
+                        },
+                        onLaunch = { app -> gatedLaunch(settings, biometric, app, catalog) },
+                        onPinWorkspace = { app ->
+                            pinToWorkspace(settings, app)
+                            layoutRev++
+                        },
+                        onPinDock = { app ->
+                            pinToDock(settings, app)
+                            layoutRev++
+                        },
+                        onCreateFolder = { app ->
+                            createFolderFromApp(settings, app)
+                            layoutRev++
+                        },
+                        onClose = { overlay = Overlay.NONE },
+                        island = island,
+                        activity = activity,
+                    )
+                }
             Overlay.SETTINGS ->
                 OverlayScrim {
                     SettingsScreen(
@@ -265,23 +290,6 @@ private fun gatedLaunch(
         )
     } else {
         catalog.launch(app)
-    }
-}
-
-private fun pinToDock(settings: AppSettings, app: LaunchableApp) {
-    val dock = settings.launcherPreferences().dock.toMutableList()
-    if (app.packageName !in dock) {
-        if (dock.size >= 5) dock.removeAt(0)
-        dock.add(app.packageName)
-        settings.setDock(dock)
-    }
-}
-
-private fun pinToWorkspace(settings: AppSettings, app: LaunchableApp) {
-    val ws = settings.launcherPreferences().workspace.toMutableList()
-    if (ws.none { it.packageName == app.packageName }) {
-        ws.add(WorkspaceItem(app.packageName, ws.size % 4, ws.size / 4))
-        settings.setWorkspace(ws)
     }
 }
 
@@ -385,190 +393,3 @@ private fun CountChip(count: Int, tray: PublishedTray?) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun WorkspaceGrid(
-    modifier: Modifier,
-    settings: AppSettings,
-    apps: List<LaunchableApp>,
-    onLaunch: (LaunchableApp) -> Unit,
-    onPin: (LaunchableApp) -> Unit,
-) {
-    val hidden = settings.launcherPreferences().hiddenPackages.toSet()
-    val pinned =
-        settings.launcherPreferences().workspace.mapNotNull { item ->
-            apps.firstOrNull { it.packageName == item.packageName && it.packageName !in hidden }
-        }
-    if (pinned.isEmpty()) {
-        Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Text(
-                "Long-press an app in the drawer to pin it here.",
-                color = Muted,
-                modifier = Modifier.padding(24.dp),
-            )
-        }
-        return
-    }
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(settings.launcherPreferences().gridColumns.coerceIn(3, 6)),
-        modifier = modifier,
-        contentPadding = PaddingValues(8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        items(pinned, key = { it.component }) { app ->
-            AppCell(app, onClick = { onLaunch(app) }, onLong = { onPin(app) })
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun DockRow(
-    settings: AppSettings,
-    apps: List<LaunchableApp>,
-    onLaunch: (LaunchableApp) -> Unit,
-    onOpenDrawer: () -> Unit,
-) {
-    val hidden = settings.launcherPreferences().hiddenPackages.toSet()
-    val dock =
-        settings.launcherPreferences().dock.mapNotNull { pkg ->
-            apps.firstOrNull { it.packageName == pkg && pkg !in hidden }
-        }
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-        shape = RoundedCornerShape(28.dp),
-        color = Tile,
-    ) {
-        Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            dock.take(5).forEach { app ->
-                AppCell(app, compact = true, onClick = { onLaunch(app) }, onLong = {})
-            }
-            IconButton(onClick = onOpenDrawer) {
-                Icon(Icons.Outlined.Apps, contentDescription = "App drawer", tint = Cyan)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun AppCell(
-    app: LaunchableApp,
-    compact: Boolean = false,
-    onClick: () -> Unit,
-    onLong: () -> Unit,
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier =
-            Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .combinedClickable(onClick = onClick, onLongClick = onLong)
-                .padding(6.dp)
-                .then(if (compact) Modifier.width(64.dp) else Modifier),
-    ) {
-        Box(
-            Modifier
-                .size(if (compact) 44.dp else 52.dp)
-                .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(Cyan.copy(alpha = 0.35f), Magenta.copy(alpha = 0.35f)))),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(app.label.take(1), color = Color.White, fontWeight = FontWeight.Bold)
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(
-            app.label,
-            color = Color.White,
-            fontSize = 11.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-@Composable
-private fun DrawerOverlay(
-    apps: List<LaunchableApp>,
-    islandApps: List<LaunchableApp>,
-    tab: Int,
-    islandLocked: Boolean,
-    onTab: (Int) -> Unit,
-    onLaunch: (LaunchableApp) -> Unit,
-    onPinDock: (LaunchableApp) -> Unit,
-    onClose: () -> Unit,
-    island: IslandManager,
-    activity: Activity,
-) {
-    OverlayScrim {
-        Column(Modifier.fillMaxSize().statusBarsPadding().padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Apps", color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                TextButton(onClick = onClose) { Text("Close", color = Cyan) }
-            }
-            Row {
-                TextButton(onClick = { onTab(0) }) {
-                    Text("Personal", color = if (tab == 0) Cyan else Muted)
-                }
-                TextButton(onClick = { onTab(1) }) {
-                    Text("Island", color = if (tab == 1) Magenta else Muted)
-                }
-            }
-            if (tab == 1) {
-                IslandHeader(island, activity)
-            }
-            val shown = if (tab == 0) apps else islandApps
-            if (tab == 1 && islandLocked && islandApps.isEmpty()) {
-                Text("Island tab is locked. Authenticate to open it.", color = Muted)
-            }
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(4),
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(shown, key = { it.component }) { app ->
-                    AppCell(app, onClick = { onLaunch(app) }, onLong = { onPinDock(app) })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun IslandHeader(island: IslandManager, activity: Activity) {
-    Column(Modifier.padding(bottom = 8.dp)) {
-        val has = island.hasWorkProfile()
-        Text(
-            if (has) {
-                if (island.isQuietMode()) "Island is paused" else "Island work profile is running"
-            } else {
-                "No work profile yet"
-            },
-            color = Muted,
-            fontSize = 12.sp,
-        )
-        Row {
-            if (!has) {
-                TextButton(
-                    onClick = {
-                        activity.startActivity(island.provisionIntent())
-                    },
-                ) { Text("Create Island", color = Magenta) }
-            } else {
-                TextButton(onClick = { island.pauseWorkProfile() }) { Text("Pause", color = Muted) }
-                TextButton(onClick = { island.resumeWorkProfile() }) { Text("Resume", color = Cyan) }
-            }
-            TextButton(
-                onClick = {
-                    activity.startActivity(Intent(Settings.ACTION_SYNC_SETTINGS))
-                },
-            ) { Text("System settings", color = Muted) }
-        }
-    }
-}

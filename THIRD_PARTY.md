@@ -7,8 +7,8 @@ rebased) remains GPL v3.0.
 
 | Project | License | Notes |
 |---|---|---|
-| [Lawnchair](https://github.com/LawnchairLauncher/lawnchair) | GPL-3.0 | Planned rebase. Not copied into this tree. |
-| Android Launcher3 (AOSP) | Apache-2.0 | Lawnchair’s upstream. Not copied. |
+| [Lawnchair](https://github.com/LawnchairLauncher/lawnchair) | GPL-3.0 | Intended rebase. Not copied. This tree ships a Launcher3-lineage workspace (pages, folders, AppWidgetHost, icon-pack intents, gestures) instead. |
+| Android Launcher3 (AOSP) | Apache-2.0 | Lawnchair’s upstream. Not copied. Public `AppWidgetHost` / `LauncherApps` APIs only. |
 
 ## Concept credit (no source copied)
 

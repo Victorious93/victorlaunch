@@ -201,9 +201,24 @@ See `mods-embed/README.md` for the later-PR embed plan.
 
 ### Home workspace
 
-- The grid shows apps you pinned. Long-press an app in the drawer to pin it.
+VictorLaunch’s home is a **Lawnchair-lineage** workspace (Launcher3
+ideas: pages, dock, folders, widgets, icon packs, gestures). It is
+**not** a vendored Lawnchair APK. Quickstep recents are not included.
+
+- Swipe **up** to open the app drawer. Swipe **down** to focus search.
+- Swipe **left / right** (or the pager) for extra pages.
+- Long-press an app in the drawer → pin to workspace, pin to dock, or
+  start a **folder** (needs one other pinned app).
+- Tap the widget button to bind a system `AppWidget` (Android may ask
+  for bind permission). [Likely] some providers need a configure
+  activity that can fail.
+- Settings → **Home (Lawnchair lineage)** picks an ADW / GO / Nova
+  icon pack when one is installed; otherwise system icons.
 - Hidden apps (Settings → Lockdown) do not appear.
 - Locked apps prompt **BiometricPrompt** (or the device PIN) before they open.
+
+[Certain] the workspace compiles in this tree. [Guessing] gestures and
+widget bind on a phone — nothing here was device-tested.
 
 ![Workspace](screenshots/05-workspace.png)
 *Placeholder: pinned icons on the wallpaper.*

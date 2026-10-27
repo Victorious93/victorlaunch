@@ -35,8 +35,10 @@ License: **GNU GPL v3.0**. See `LICENSE`, `NOTICE`, `THIRD_PARTY.md`.
 
 ## Honesty
 
-This is a **minimal Launcher3-style Kotlin launcher**, not a vendored
-Lawnchair tree. Lawnchair (GPLv3) remains the intended base — see
+This is a **Lawnchair-lineage Kotlin launcher** (paged workspace,
+folders, AppWidgetHost widgets, ADW/GO/Nova icon packs, swipe
+gestures), **not** a vendored Lawnchair AOSP tree. Quickstep recents
+and the full Lawnchair 14/15/16 import are still outstanding — see
 `docs/LAWNCHAIR_REBASE.md`. Nothing here was tested on a phone.
 
 Shizuku: this tree ships an **embed skeleton** (`shizuku-embed/`) plus a

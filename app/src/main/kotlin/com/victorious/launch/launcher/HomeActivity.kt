@@ -10,6 +10,8 @@ import com.victorious.launch.status.ControllerClient
 import com.victorious.launch.theme.VictorLaunchTheme
 
 class HomeActivity : FragmentActivity() {
+    private lateinit var widgets: WidgetHostHolder
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val settings = VictorLaunchApp.instance.settings
@@ -17,6 +19,9 @@ class HomeActivity : FragmentActivity() {
         val island = IslandManager(this)
         val client = ControllerClient(this, settings)
         val gate = BiometricGate(this)
+        val iconPack = IconPackManager(packageManager)
+        widgets = WidgetHostHolder(this)
+        widgets.start()
         setContent {
             VictorLaunchTheme {
                 HomeScreen(
@@ -26,8 +31,17 @@ class HomeActivity : FragmentActivity() {
                     controller = client,
                     biometric = gate,
                     activity = this,
+                    iconPack = iconPack,
+                    widgets = widgets,
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        if (this::widgets.isInitialized) {
+            widgets.stop()
+        }
+        super.onDestroy()
     }
 }

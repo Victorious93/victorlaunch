@@ -169,6 +169,7 @@ class FleetThemeTest {
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.MESH, FleetThemeConsumers.MESH_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.MANGO, FleetThemeConsumers.MANGO_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.VICTORYPED, FleetThemeConsumers.VICTORYPED_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.TASKBAR, FleetThemeConsumers.TASKBAR_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_DEBUG))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_RELEASE))
     }

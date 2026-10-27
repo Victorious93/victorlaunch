@@ -151,6 +151,7 @@ another reason), or remote-control ops (`app.launch` / `layout.set` /
 | `com.victorious.mesh` | `F4:C9:25:B8:E8:0B:55:AB:83:E6:04:13:EE:49:86:57:DF:85:03:BB:30:D8:1F:9F:17:43:F2:2B:F5:36:B9:F4` | Theme-read only |
 | `com.victorious.mango` | `08:02:D9:4C:BB:CB:C3:F8:0C:9D:2F:C5:30:57:9E:5B:BD:E2:26:AC:7C:40:F4:52:31:0C:A1:0A:DA:EC:FE:55` | Theme-read only |
 | `com.victorious.victoryped` | `63:AA:41:BB:C5:0A:06:27:A0:4F:55:96:F1:11:12:E0:36:E4:51:B5:9F:4C:26:0F:AB:FB:92:E1:78:D2:F0:79` | Theme-read only |
+| `com.victorious.taskbar` | `4F:58:A5:C5:75:93:5E:10:3B:1F:73:C0:7A:D2:E0:0A:FF:64:57:76:27:71:1B:77:96:79:37:D5:FC:3B:C2:92` | Theme-read only |
 
 Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 

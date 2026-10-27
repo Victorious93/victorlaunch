@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.CellTower
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -62,6 +63,7 @@ import com.victorious.launch.core.status.TrayTile
 import com.victorious.launch.fleet.FleetInstallScreen
 import com.victorious.launch.help.HelpScreen
 import com.victorious.launch.island.IslandManager
+import com.victorious.launch.island.IslandScreen
 import com.victorious.launch.VictorLaunchApp
 import com.victorious.launch.mods.ModsScreen
 import com.victorious.launch.network.NetworkScreen
@@ -88,6 +90,7 @@ enum class Overlay {
     FLEET,
     MODS,
     NETWORK,
+    ISLAND,
 }
 
 @Composable
@@ -168,6 +171,9 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                IconButton(onClick = { overlay = Overlay.ISLAND }) {
+                    Icon(Icons.Outlined.WorkOutline, contentDescription = "Island", tint = Magenta)
+                }
                 IconButton(onClick = { overlay = Overlay.NETWORK }) {
                     Icon(Icons.Outlined.CellTower, contentDescription = "Network Monitor", tint = Cyan)
                 }
@@ -239,6 +245,7 @@ fun HomeScreen(
                         onClose = { overlay = Overlay.NONE },
                         island = island,
                         activity = activity,
+                        onOpenIsland = { overlay = Overlay.ISLAND },
                     )
                 }
             Overlay.SETTINGS ->
@@ -252,6 +259,7 @@ fun HomeScreen(
                         onFleet = { overlay = Overlay.FLEET },
                         onMods = { overlay = Overlay.MODS },
                         onNetwork = { overlay = Overlay.NETWORK },
+                        onIsland = { overlay = Overlay.ISLAND },
                         onClose = { overlay = Overlay.NONE },
                     )
                 }
@@ -272,6 +280,15 @@ fun HomeScreen(
                 OverlayScrim {
                     NetworkScreen(
                         settings = settings,
+                        activity = activity,
+                        onClose = { overlay = Overlay.NONE },
+                    )
+                }
+            Overlay.ISLAND ->
+                OverlayScrim {
+                    IslandScreen(
+                        island = island,
+                        catalog = catalog,
                         activity = activity,
                         onClose = { overlay = Overlay.NONE },
                     )

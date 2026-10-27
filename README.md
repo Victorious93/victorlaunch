@@ -58,6 +58,10 @@ only appear for installed apps whose package+cert is pinned.
 Fleet status AppWidgets (mesh/VPN, browser, messaging, health) reuse
 the status-tray pull (15 s, fresh/stale/drop).
 
+Island: profile-owner work profile with clone / freeze / unfreeze,
+offline (DPM restrictions + Quiet mode; does **not** drop packets),
+and lockdown (freeze all + pause). Wipe requires an in-app confirm.
+
 Fleet install: Settings → Install / Update loads a **local**
 `fleet-manifest.json` (schema v1) and installs a user-picked APK
 through PackageInstaller after cert-pin checks. No INTERNET.

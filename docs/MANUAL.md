@@ -60,11 +60,18 @@ Android may also ask the first time you press Home.
 
 Island is a **managed work profile**. VictorLaunch is the **profile owner** of that profile.
 
-1. Settings → **Island** → **Create work profile**, or open the app drawer → **Island** → **Create Island**.
-2. Accept Android’s provisioning screens. This is a real managed profile, not a fake folder.
+1. Home → the briefcase **Island** button, Settings → **Open Island screen**, or the app drawer → **Island** → **Create Island**.
+2. Accept Android’s provisioning screens. This is a real managed profile, not a fake folder. VictorLaunch is the **profile owner**.
 3. After provisioning, the Island tab lists apps in that profile via `LauncherApps`.
+4. From the **Island screen** you can **clone** a personal app into the profile, **freeze / unfreeze** work-profile apps, turn **offline / private** on, or **lockdown** (freeze all + pause). **Remove work profile** asks for an explicit confirm and never wipes without it.
 
 To pause or resume the profile: **Pause Island** / **Resume Island** (Quiet mode).
+
+**Offline / private** (non-root): public DevicePolicyManager user restrictions (`no_config_wifi`, `no_config_mobile_networks`, `no_config_vpn`, `no_sharing_into_profile`) plus Quiet mode. This does **not** drop packets. Root/Shizuku path: freeze work-profile packages and enable Quiet mode. Per-UID netpolicy reject is not a public API from this APK.
+
+**Lockdown** freezes every Island app and pauses the profile. It does not wipe. Confirm is required.
+
+**Wipe** deletes the Island user and every cloned app. VictorLaunch in the personal profile stays. Confirm is required. There is no silent `wipeData`.
 
 ![Island provisioning](screenshots/03-island-provision.png)
 *Placeholder: Android managed-profile provision flow.*
@@ -356,16 +363,24 @@ When Shizuku is **enabled, bound, and permitted**:
 - **Freeze / Unfreeze** run `pm suspend` / `pm unsuspend` (personal profile, plus Island freeze when a work profile exists).
 - **Force stop** runs `am force-stop --user <id>`.
 - **Grant usage access** runs `appops set … GET_USAGE_STATS allow`.
-- Island **clone / freeze / pause** prefer these shell calls, then fall back to DevicePolicyManager if Shizuku is off.
+- Island **clone / freeze / pause / offline** prefer these shell calls, then fall back to DevicePolicyManager if Shizuku is off. Offline with Shizuku freezes work-profile packages and enables Quiet mode.
 - **Create Island via Shizuku** runs `pm create-user --managed` so you can get a work profile **without** being device owner. That user is not automatically a VictorLaunch profile-owner; DPM clone/freeze still needs the provisioning flow.
 
 The first tap after enabling Shizuku may say the UserService is still binding. Tap again. If Shizuku is off, those buttons tell you so. They do not pretend it worked.
 
-### Island: clone, freeze, unfreeze, hide
+### Island: clone, freeze, unfreeze, hide, offline, lockdown
 
-From Settings → Lockdown, **Clone** asks the work-profile copy (profile owner) to `installExistingPackage`. Freeze / unfreeze uses `setPackagesSuspended`. Hide / unhide uses `setApplicationHidden`. Pause / resume uses `UserManager.requestQuietModeEnabled`.
+Open the **Island screen** (home briefcase, Settings → Open Island screen, or drawer → Manage Island).
 
-These calls no-op if there is no work profile yet.
+- **Clone** asks the work-profile copy (profile owner) to `installExistingPackage`.
+- **Freeze / unfreeze** uses `setPackagesSuspended` (or Shizuku `pm suspend` when enabled).
+- **Hide / unhide** uses `setApplicationHidden`.
+- **Pause / resume** uses `UserManager.requestQuietModeEnabled` (Shizuku first).
+- **Offline / private** applies the public DPM restriction set plus Quiet mode. It does not drop packets. With Shizuku it also freezes work-profile packages.
+- **Lockdown** freezes every listed Island app and pauses the profile. Confirm is required. Lift lockdown unfreezes and resumes.
+- **Remove work profile** calls `wipeData` only after an in-app confirm. Without confirm the call is a no-op.
+
+These calls no-op if there is no work profile yet. [Certain] wipe and lockdown refuse without `confirmed=true` (unit-tested). [Guessing] cross-profile broadcasts and Quiet mode on a phone — not device-tested.
 
 ![Island actions](screenshots/09-island-actions.png)
 *Placeholder: clone / freeze controls.*
@@ -471,7 +486,7 @@ Create the work profile, or Resume if it is paused (Quiet mode). Unlock the tab 
 Those DevicePolicyManager calls run as **profile owner** in the work profile. Until provisioning finishes, the buttons only send a request.
 
 **How do I remove the work profile?**  
-On the phone: **Settings → Accounts / Users → Work → Remove work profile**. That deletes the Island user and its cloned apps. VictorLaunch in the personal profile stays. If you are looking at the work-profile copy and it is profile owner, wiping that profile is the same outcome — treat it as destructive.
+Island screen → **Remove work profile…** → confirm. That is the only in-app wipe path; it will not run without that tap. You can also use Android **Settings → Accounts / Users → Work → Remove work profile**. Either way deletes the Island user and its cloned apps. VictorLaunch in the personal profile stays.
 
 **Biometric prompt never appears.**  
 The device has no enrolled biometric or PIN. The lock then fails open so you are not locked out of your own phone. Enroll a credential in Android Settings.

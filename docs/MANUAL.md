@@ -360,10 +360,24 @@ Forbidden names (`password`, `token`, `secret`, Twilio fields, …) refuse the f
 
 ### Install / Update fleet apps
 
-This screen is a **stub**. The fleet manifest schema is not frozen. It does not download or install APKs.
+Settings → **Install / Update fleet apps**.
 
-![Fleet stub](screenshots/12-fleet-stub.png)
-*Placeholder: stub explanation.*
+1. Tap **Load local manifest** and pick a `fleet-manifest.json`
+   (`schemaVersion` 1 from Victorious93/fleet-manifest). VictorLaunch
+   has **no INTERNET**, so it will not download the live feed.
+2. Each row shows manifest version vs installed version. Rows whose
+   `certSha256` is missing or not on the pin allow-list stay
+   **UNTRUSTED** and will not install.
+3. Tap **Install APK…** / **Update APK…**, pick the matching APK.
+   VictorLaunch checks the APK signer (and asset SHA-256 when present)
+   then opens the **system PackageInstaller confirm sheet**. It never
+   silent-installs.
+
+See `docs/fleet-manifest.md`. [Certain] the parser and pin checks have
+unit tests. [Guessing] PackageInstaller on a phone — not device-tested.
+
+![Fleet install](screenshots/12-fleet-stub.png)
+*Placeholder: manifest rows with Install / Update.*
 
 ### Help
 
@@ -383,7 +397,7 @@ VictorLaunch does **not** request `INTERNET`. There is no telemetry.
 | `BIND_DEVICE_ADMIN` (on the admin receiver) | Required so Android can make VictorLaunch the profile owner of the Island work profile. |
 | Exported `BRIDGE` service | So the controller (and other paired nodes) can send newline-delimited JSON. Callers are authorized by **package + cert**, not by a payload field. |
 | `ShizukuProvider` (`INTERACT_ACROSS_USERS_FULL` on the provider) | Lets the stock (or future embedded) Shizuku server hand us a binder. No extra runtime permission dialog from Android itself; Shizuku has its own grant prompt. |
-| `REQUEST_INSTALL_PACKAGES` | LSPatch **Install patched APK**. Android still shows the system confirm sheet. Unknown-sources must be allowed for this app. |
+| `REQUEST_INSTALL_PACKAGES` | LSPatch patched-APK install **and** fleet Install/Update. Android still shows the system confirm sheet. Unknown-sources must be allowed for this app. |
 | `READ_PHONE_STATE` | Network Monitor RAT / data state. Runtime-granted. Off until you enable the monitor. |
 | `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` | Serving-cell ID and some signal fields. Runtime-granted. Cell info is blocked by the OS without this. |
 

@@ -254,7 +254,7 @@ fun HomeScreen(
             Overlay.HELP ->
                 OverlayScrim { HelpScreen(onClose = { overlay = Overlay.NONE }) }
             Overlay.FLEET ->
-                OverlayScrim { FleetInstallScreen(onClose = { overlay = Overlay.NONE }) }
+                OverlayScrim { FleetInstallScreen(activity = activity, onClose = { overlay = Overlay.NONE }) }
             Overlay.MODS ->
                 OverlayScrim {
                     ModsScreen(

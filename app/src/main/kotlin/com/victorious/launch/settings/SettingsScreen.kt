@@ -431,8 +431,12 @@ fun SettingsScreen(
             Button(onClick = onMods, modifier = Modifier.padding(top = 8.dp)) { Text("Open Mods") }
         }
         Section("Fleet apps") {
-            Text("Install/Update fleet apps is a stub until the manifest schema is frozen.", color = Muted, fontSize = 13.sp)
-            Button(onClick = onFleet, modifier = Modifier.padding(top = 8.dp)) { Text("Open stub") }
+            Text(
+                "Load a local fleet-manifest.json (schema v1). No INTERNET — this will not poll GitHub. Unpinned certs stay untrusted. Install uses PackageInstaller confirm.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Button(onClick = onFleet, modifier = Modifier.padding(top = 8.dp)) { Text("Install / Update fleet apps") }
         }
         Section("Help") {
             Button(onClick = onHelp) { Text("Open the manual") }

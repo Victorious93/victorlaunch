@@ -52,6 +52,10 @@ Mods: a gated **Mods** screen for LSPosed, LSPatch, Geto, and MMRL
 + stock-app clients). Geto is identified as JackEblan/Geto
 (`com.android.geto`) at **90% confidence**. See `mods-embed/README.md`.
 
+Fleet install: Settings → Install / Update loads a **local**
+`fleet-manifest.json` (schema v1) and installs a user-picked APK
+through PackageInstaller after cert-pin checks. No INTERNET.
+
 Network Monitor: gated `TelephonyCallback` / `PhoneStateListener` for
 RAT, signal, cell ID, and 2G-drop alerts. RAT lock needs Shizuku/root
 and is **not** universal. Cell/band lock is not written. Fleet read op:
@@ -76,6 +80,7 @@ the APK.
 ## Docs
 
 - `docs/MANUAL.md` — user manual (also the in-app Help screen)
+- `docs/fleet-manifest.md` — local fleet update manifest (schema v1)
 - `docs/external-node.md` — Messenger bridge v1.1
 - `docs/LAWNCHAIR_REBASE.md` — why Lawnchair is not vendored yet
 - `shizuku-embed/README.md` — Shizuku client fallback + embed plan

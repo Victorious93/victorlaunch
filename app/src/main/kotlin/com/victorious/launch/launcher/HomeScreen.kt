@@ -49,7 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -74,12 +73,7 @@ import com.victorious.launch.status.ControllerClient
 import com.victorious.launch.status.PullResult
 import com.victorious.launch.widgets.FleetWidgets
 import com.victorious.launch.widgets.TrayCache
-import com.victorious.launch.theme.Charcoal
-import com.victorious.launch.theme.Cyan
-import com.victorious.launch.theme.Magenta
-import com.victorious.launch.theme.Muted
-import com.victorious.launch.theme.StaleAmber
-import com.victorious.launch.theme.Tile
+import com.victorious.launch.theme.LocalFleetColors
 import kotlinx.coroutines.delay
 
 enum class Overlay {
@@ -171,20 +165,21 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                val bar = LocalFleetColors.current
                 IconButton(onClick = { overlay = Overlay.ISLAND }) {
-                    Icon(Icons.Outlined.WorkOutline, contentDescription = "Island", tint = Magenta)
+                    Icon(Icons.Outlined.WorkOutline, contentDescription = "Island", tint = bar.secondary)
                 }
                 IconButton(onClick = { overlay = Overlay.NETWORK }) {
-                    Icon(Icons.Outlined.CellTower, contentDescription = "Network Monitor", tint = Cyan)
+                    Icon(Icons.Outlined.CellTower, contentDescription = "Network Monitor", tint = bar.primary)
                 }
                 IconButton(onClick = { overlay = Overlay.MODS }) {
-                    Icon(Icons.Outlined.Extension, contentDescription = "Mods", tint = Magenta)
+                    Icon(Icons.Outlined.Extension, contentDescription = "Mods", tint = bar.secondary)
                 }
                 IconButton(onClick = { overlay = Overlay.HELP }) {
-                    Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "Help", tint = Cyan)
+                    Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "Help", tint = bar.primary)
                 }
                 IconButton(onClick = { overlay = Overlay.SETTINGS }) {
-                    Icon(Icons.Outlined.Settings, contentDescription = "Settings", tint = Cyan)
+                    Icon(Icons.Outlined.Settings, contentDescription = "Settings", tint = bar.primary)
                 }
             }
             LawnchairWorkspace(
@@ -219,6 +214,7 @@ fun HomeScreen(
                         catalog = catalog,
                         iconPack = iconPack,
                         iconPackPackage = settings.iconPackPackage(),
+                        iconStyle = settings.iconStyle(),
                         onTab = { next ->
                             if (next == 1 && settings.launcherPreferences().islandTabLocked) {
                                 biometric.prompt(
@@ -316,10 +312,11 @@ private fun gatedLaunch(
 
 @Composable
 private fun OverlayScrim(content: @Composable () -> Unit) {
+    val colors = LocalFleetColors.current
     Box(
         Modifier
             .fillMaxSize()
-            .background(Charcoal.copy(alpha = 0.96f)),
+            .background(colors.background.copy(alpha = 0.96f)),
     ) { content() }
 }
 
@@ -337,14 +334,15 @@ private fun localRadioTile(settings: AppSettings): TrayTile {
 
 @Composable
 private fun StatusStrip(tray: PublishedTray?, note: String, radio: TrayTile?) {
+    val colors = LocalFleetColors.current
     Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)) {
         Text(
             "VictorLaunch",
-            color = Cyan,
+            color = colors.primary,
             fontWeight = FontWeight.SemiBold,
             fontSize = 18.sp,
         )
-        Text(note, color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp, bottom = 8.dp))
+        Text(note, color = colors.muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp, bottom = 8.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (radio != null) {
                 item(key = "radio") { StatusChip(radio) }
@@ -377,24 +375,25 @@ private fun StatusChip(tile: TrayTile) {
             StatusTrayState.UNKNOWN -> "no data"
             StatusTrayState.OFF -> "off"
         }
+    val colors = LocalFleetColors.current
     val accent =
         when (tile.state) {
-            StatusTrayState.UNKNOWN -> Muted
-            StatusTrayState.OK -> if (tile.freshness == Freshness.STALE) StaleAmber else Cyan
-            StatusTrayState.DEGRADED -> StaleAmber
-            StatusTrayState.DOWN -> Color(0xFFFF6B8A)
-            StatusTrayState.OFF -> Muted
+            StatusTrayState.UNKNOWN -> colors.muted
+            StatusTrayState.OK -> if (tile.freshness == Freshness.STALE) colors.stale else colors.primary
+            StatusTrayState.DEGRADED -> colors.stale
+            StatusTrayState.DOWN -> colors.danger
+            StatusTrayState.OFF -> colors.muted
         }
-    Surface(shape = RoundedCornerShape(14.dp), color = Tile) {
+    Surface(shape = RoundedCornerShape(14.dp), color = colors.tile) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp).width(110.dp)) {
-            Text(label, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            Text(label, color = colors.onBackground, fontSize = 12.sp, fontWeight = FontWeight.Medium)
             Text(stateText, color = accent, fontSize = 11.sp)
             if (tile.freshness == Freshness.STALE) {
-                Text("stale", color = StaleAmber, fontSize = 10.sp)
+                Text("stale", color = colors.stale, fontSize = 10.sp)
             }
             val detail = tile.detail
             if (!detail.isNullOrBlank()) {
-                Text(detail, color = Muted, fontSize = 10.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(detail, color = colors.muted, fontSize = 10.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -402,12 +401,13 @@ private fun StatusChip(tile: TrayTile) {
 
 @Composable
 private fun CountChip(count: Int, tray: PublishedTray?) {
-    Surface(shape = RoundedCornerShape(14.dp), color = Tile) {
+    val colors = LocalFleetColors.current
+    Surface(shape = RoundedCornerShape(14.dp), color = colors.tile) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp).width(110.dp)) {
-            Text("Paired nodes", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            Text("Paired nodes", color = colors.onBackground, fontSize = 12.sp, fontWeight = FontWeight.Medium)
             Text(
                 if (tray == null) "—" else count.toString(),
-                color = if (tray == null) Muted else Cyan,
+                color = if (tray == null) colors.muted else colors.primary,
                 fontSize = 11.sp,
             )
         }

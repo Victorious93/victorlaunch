@@ -6,14 +6,18 @@ import com.victorious.launch.core.backup.LauncherPreferences
 import com.victorious.launch.core.backup.WorkspaceItem
 import com.victorious.launch.core.protocol.Protocol
 import com.victorious.launch.core.protocol.TrustedPeers
+import com.victorious.launch.core.theme.FleetIconStyle
+import com.victorious.launch.core.theme.FleetThemeMode
 import com.victorious.launch.mods.ModsTool
+import com.victorious.launch.theme.FleetThemePublisher
 import java.security.SecureRandom
 import org.json.JSONArray
 import org.json.JSONObject
 
 class AppSettings(context: Context) {
+    private val app = context.applicationContext
     private val prefs: SharedPreferences =
-        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
     private val pairing: SharedPreferences =
         context.applicationContext.getSharedPreferences(PAIRING, Context.MODE_PRIVATE)
 
@@ -243,7 +247,60 @@ class AppSettings(context: Context) {
     fun iconPackPackage(): String? = prefs.getString(KEY_ICON_PACK, null)?.ifBlank { null }
 
     fun setIconPackPackage(packageName: String?) {
-        prefs.edit().putString(KEY_ICON_PACK, packageName.orEmpty()).apply()
+        val edit = prefs.edit().putString(KEY_ICON_PACK, packageName.orEmpty()).putLong(KEY_THEME_UPDATED, System.currentTimeMillis())
+        if (packageName.isNullOrBlank()) {
+            if (iconStyle() == FleetIconStyle.ICON_PACK) {
+                edit.putString(KEY_ICON_STYLE, FleetIconStyle.SYSTEM.name)
+            }
+        } else {
+            edit.putString(KEY_ICON_STYLE, FleetIconStyle.ICON_PACK.name)
+        }
+        edit.apply()
+        FleetThemePublisher.publish(app, this)
+    }
+
+    fun themeMode(): FleetThemeMode = FleetThemeMode.parse(prefs.getString(KEY_THEME_MODE, null))
+
+    fun setThemeMode(mode: FleetThemeMode) {
+        prefs.edit()
+            .putString(KEY_THEME_MODE, mode.name)
+            .putLong(KEY_THEME_UPDATED, System.currentTimeMillis())
+            .apply()
+        FleetThemePublisher.publish(app, this)
+    }
+
+    fun iconStyle(): FleetIconStyle {
+        val raw = prefs.getString(KEY_ICON_STYLE, null)
+        if (!raw.isNullOrBlank()) return FleetIconStyle.parse(raw)
+        return if (iconPackPackage() != null) FleetIconStyle.ICON_PACK else FleetIconStyle.SYSTEM
+    }
+
+    fun setIconStyle(style: FleetIconStyle) {
+        prefs.edit()
+            .putString(KEY_ICON_STYLE, style.name)
+            .putLong(KEY_THEME_UPDATED, System.currentTimeMillis())
+            .apply()
+        FleetThemePublisher.publish(app, this)
+    }
+
+    fun themeUpdatedAtMs(): Long = prefs.getLong(KEY_THEME_UPDATED, 0L)
+
+    fun themeExtraPins(): Map<String, List<String>> {
+        val out = LinkedHashMap<String, MutableList<String>>()
+        sharePins().forEach { (pkg, certs) -> out[pkg] = certs.toMutableList() }
+        pairedController()?.let { row ->
+            val list = out.getOrPut(row.packageName) { mutableListOf() }
+            if (row.certSha256 !in list) list.add(row.certSha256)
+        }
+        return out
+    }
+
+    fun register(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+    }
+
+    fun unregister(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        prefs.unregisterOnSharedPreferenceChangeListener(listener)
     }
 
     data class Pairing(val packageName: String, val certSha256: String)
@@ -273,5 +330,9 @@ class AppSettings(context: Context) {
         private const val KEY_PAIRED_CERT = "controller_cert_sha256"
         private const val KEY_ICON_PACK = "icon_pack_package"
         private const val KEY_SHARE_PINS = "share_target_pins"
+        private const val KEY_THEME_MODE = "fleet_theme_mode"
+        private const val KEY_ICON_STYLE = "fleet_icon_style"
+        private const val KEY_THEME_UPDATED = "fleet_theme_updated_at"
+        val THEME_KEYS: Set<String> = setOf(KEY_THEME_MODE, KEY_ICON_STYLE, KEY_ICON_PACK, KEY_THEME_UPDATED)
     }
 }

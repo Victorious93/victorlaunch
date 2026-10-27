@@ -48,11 +48,9 @@ import com.victorious.launch.core.backup.WorkspaceItem
 import com.victorious.launch.core.launcher.GestureAction
 import com.victorious.launch.core.launcher.GestureMap
 import com.victorious.launch.core.launcher.WorkspacePages
+import com.victorious.launch.core.theme.FleetIconStyle
 import com.victorious.launch.prefs.AppSettings
-import com.victorious.launch.theme.Cyan
-import com.victorious.launch.theme.Magenta
-import com.victorious.launch.theme.Muted
-import com.victorious.launch.theme.Tile
+import com.victorious.launch.theme.LocalFleetColors
 import java.util.UUID
 import kotlinx.coroutines.launch
 
@@ -70,6 +68,8 @@ fun LawnchairWorkspace(
     onOpenDrawer: () -> Unit,
     onOpenSearch: () -> Unit,
 ) {
+    val colors = LocalFleetColors.current
+    val iconStyle = settings.iconStyle()
     val columns = settings.launcherPreferences().gridColumns.coerceIn(3, 6)
     val hidden = settings.launcherPreferences().hiddenPackages.toSet()
     val items = settings.launcherPreferences().workspace.also { layoutRev }
@@ -124,6 +124,7 @@ fun LawnchairWorkspace(
                     catalog = catalog,
                     iconPack = iconPack,
                     iconPackPackage = settings.iconPackPackage(),
+                    iconStyle = iconStyle,
                     widgets = widgets,
                     onLaunch = onLaunch,
                     onOpenFolder = { openFolder = it },
@@ -139,9 +140,9 @@ fun LawnchairWorkspace(
                 Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("p.${pagerState.currentPage + 1}/$pages", color = Muted, fontSize = 11.sp, modifier = Modifier.weight(1f))
+                Text("p.${pagerState.currentPage + 1}/$pages", color = colors.muted, fontSize = 11.sp, modifier = Modifier.weight(1f))
                 IconButton(onClick = { picker = true }) {
-                    Icon(Icons.Outlined.Widgets, contentDescription = "Add widget", tint = Magenta)
+                    Icon(Icons.Outlined.Widgets, contentDescription = "Add widget", tint = colors.secondary)
                 }
             }
             DockRow(
@@ -194,6 +195,7 @@ fun LawnchairWorkspace(
                 catalog = catalog,
                 iconPack = iconPack,
                 iconPackPackage = settings.iconPackPackage(),
+                iconStyle = iconStyle,
                 onLaunch = onLaunch,
                 onClose = { openFolder = null },
             )
@@ -211,6 +213,7 @@ private fun WorkspacePage(
     catalog: AppCatalog,
     iconPack: IconPackManager,
     iconPackPackage: String?,
+    iconStyle: FleetIconStyle,
     widgets: WidgetHostHolder,
     onLaunch: (LaunchableApp) -> Unit,
     onOpenFolder: (WorkspaceItem) -> Unit,
@@ -220,7 +223,7 @@ private fun WorkspacePage(
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 "Swipe up for the drawer. Long-press an app to pin it, or tap the widget button.",
-                color = Muted,
+                color = LocalFleetColors.current.muted,
                 modifier = Modifier.padding(24.dp),
             )
         }
@@ -268,6 +271,7 @@ private fun WorkspacePage(
                             catalog = catalog,
                             iconPack = iconPack,
                             iconPackPackage = iconPackPackage,
+                            iconStyle = iconStyle,
                             onClick = { onLaunch(app) },
                             onLong = { },
                             onRemove = { onRemove(item) },
@@ -281,16 +285,17 @@ private fun WorkspacePage(
 
 @Composable
 private fun FolderCell(item: WorkspaceItem, onClick: () -> Unit, onRemove: () -> Unit) {
+    val colors = LocalFleetColors.current
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = Tile,
+        color = colors.tile,
         modifier = Modifier.padding(6.dp),
         onClick = onClick,
     ) {
         Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(item.title ?: "Folder", color = Cyan, fontSize = 12.sp)
-            Text("${item.children.size} apps", color = Muted, fontSize = 10.sp)
-            TextButton(onClick = onRemove) { Text("Remove", color = Magenta, fontSize = 10.sp) }
+            Text(item.title ?: "Folder", color = colors.primary, fontSize = 12.sp)
+            Text("${item.children.size} apps", color = colors.muted, fontSize = 10.sp)
+            TextButton(onClick = onRemove) { Text("Remove", color = colors.secondary, fontSize = 10.sp) }
         }
     }
 }
@@ -304,6 +309,7 @@ private fun DockRow(
     onLaunch: (LaunchableApp) -> Unit,
     onOpenDrawer: () -> Unit,
 ) {
+    val colors = LocalFleetColors.current
     val hidden = settings.launcherPreferences().hiddenPackages.toSet()
     val dock =
         settings.launcherPreferences().dock.mapNotNull { pkg ->
@@ -312,7 +318,7 @@ private fun DockRow(
     Surface(
         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         shape = RoundedCornerShape(28.dp),
-        color = Tile,
+        color = colors.tile,
     ) {
         Row(
             Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
@@ -325,13 +331,14 @@ private fun DockRow(
                     catalog = catalog,
                     iconPack = iconPack,
                     iconPackPackage = settings.iconPackPackage(),
+                    iconStyle = settings.iconStyle(),
                     compact = true,
                     onClick = { onLaunch(app) },
                     onLong = { },
                 )
             }
             IconButton(onClick = onOpenDrawer) {
-                Icon(Icons.Outlined.Apps, contentDescription = "App drawer", tint = Cyan)
+                Icon(Icons.Outlined.Apps, contentDescription = "App drawer", tint = colors.primary)
             }
         }
     }
@@ -343,16 +350,17 @@ private fun WidgetPicker(
     onClose: () -> Unit,
     onPick: (android.appwidget.AppWidgetProviderInfo) -> Unit,
 ) {
+    val colors = LocalFleetColors.current
     val providers = remember { widgets.providers() }
-    Surface(Modifier.fillMaxSize().padding(24.dp), color = Tile, shape = RoundedCornerShape(20.dp)) {
+    Surface(Modifier.fillMaxSize().padding(24.dp), color = colors.tile, shape = RoundedCornerShape(20.dp)) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Widgets", color = Cyan, modifier = Modifier.weight(1f))
-                TextButton(onClick = onClose) { Text("Close", color = Magenta) }
+                Text("Widgets", color = colors.primary, modifier = Modifier.weight(1f))
+                TextButton(onClick = onClose) { Text("Close", color = colors.secondary) }
             }
             Text(
                 "System AppWidgetHost. Binding may ask Android for permission. [Likely] not all providers configure cleanly.",
-                color = Muted,
+                color = colors.muted,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
@@ -361,7 +369,7 @@ private fun WidgetPicker(
                     val info = providers[index]
                     val label = info.loadLabel(widgets.packageManager).toString().ifBlank { info.provider.flattenToShortString() }
                     TextButton(onClick = { onPick(info) }) {
-                        Text(label, color = Cyan)
+                        Text(label, color = colors.primary)
                     }
                 }
             }
@@ -376,14 +384,16 @@ private fun FolderSheet(
     catalog: AppCatalog,
     iconPack: IconPackManager,
     iconPackPackage: String?,
+    iconStyle: FleetIconStyle = FleetIconStyle.SYSTEM,
     onLaunch: (LaunchableApp) -> Unit,
     onClose: () -> Unit,
 ) {
-    Surface(Modifier.fillMaxSize().padding(32.dp), color = Tile, shape = RoundedCornerShape(24.dp)) {
+    val colors = LocalFleetColors.current
+    Surface(Modifier.fillMaxSize().padding(32.dp), color = colors.tile, shape = RoundedCornerShape(24.dp)) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(folder.title ?: "Folder", color = Magenta, modifier = Modifier.weight(1f))
-                TextButton(onClick = onClose) { Text("Close", color = Cyan) }
+                Text(folder.title ?: "Folder", color = colors.secondary, modifier = Modifier.weight(1f))
+                TextButton(onClick = onClose) { Text("Close", color = colors.primary) }
             }
             val children = folder.children.mapNotNull { pkg -> apps.firstOrNull { it.packageName == pkg } }
             LazyVerticalGrid(columns = GridCells.Fixed(4), modifier = Modifier.weight(1f)) {
@@ -393,6 +403,7 @@ private fun FolderSheet(
                         catalog = catalog,
                         iconPack = iconPack,
                         iconPackPackage = iconPackPackage,
+                        iconStyle = iconStyle,
                         onClick = { onLaunch(app) },
                         onLong = { },
                     )

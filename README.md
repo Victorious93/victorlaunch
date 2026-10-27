@@ -58,6 +58,13 @@ only appear for installed apps whose package+cert is pinned.
 Fleet status AppWidgets (mesh/VPN, browser, messaging, health) reuse
 the status-tray pull (15 s, fresh/stale/drop).
 
+Shared fleet theme: Settings is the source of truth (light / dark /
+neon / Material You). Exported read-only ContentProvider + explicit
+change broadcast, gated by package+cert (signature permission is
+declared but is not enough — the fleet does not share a signing key).
+Launcher icons honor monochrome / tint / icon packs. See
+`docs/specs/FLEET_THEME.md`.
+
 Island: profile-owner work profile with clone / freeze / unfreeze,
 offline (DPM restrictions + Quiet mode; does **not** drop packets),
 and lockdown (freeze all + pause). Wipe requires an in-app confirm.

@@ -25,14 +25,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.victorious.launch.theme.Cyan
-import com.victorious.launch.theme.Magenta
+import androidx.compose.ui.graphics.toArgb
+import com.victorious.launch.core.theme.FleetIconStyle
+import com.victorious.launch.theme.LocalFleetColors
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -41,6 +41,7 @@ fun AppCell(
     catalog: AppCatalog,
     iconPack: IconPackManager,
     iconPackPackage: String?,
+    iconStyle: FleetIconStyle = FleetIconStyle.SYSTEM,
     compact: Boolean = false,
     onClick: () -> Unit,
     onLong: () -> Unit,
@@ -48,11 +49,12 @@ fun AppCell(
     onFolder: (() -> Unit)? = null,
     onRemove: (() -> Unit)? = null,
 ) {
+    val colors = LocalFleetColors.current
     val image =
-        remember(app.component, iconPackPackage) {
+        remember(app.component, iconPackPackage, iconStyle, colors.primary) {
             val packed = iconPack.loadComponentIcon(iconPackPackage, app.component)
             val raw = packed ?: catalog.loadIcon(app)
-            raw?.toImageBitmap()
+            raw?.toThemedImageBitmap(iconStyle, colors.primary.toArgb())
         }
     var menu by remember { mutableStateOf(false) }
     Column(
@@ -77,7 +79,7 @@ fun AppCell(
             Modifier
                 .size(if (compact) 44.dp else 52.dp)
                 .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(Cyan.copy(alpha = 0.35f), Magenta.copy(alpha = 0.35f)))),
+                .background(Brush.linearGradient(listOf(colors.primary.copy(alpha = 0.35f), colors.secondary.copy(alpha = 0.35f)))),
             contentAlignment = Alignment.Center,
         ) {
             if (image != null) {
@@ -88,13 +90,13 @@ fun AppCell(
                     contentScale = ContentScale.Crop,
                 )
             } else {
-                Text(app.label.take(1), color = Color.White, fontWeight = FontWeight.Bold)
+                Text(app.label.take(1), color = colors.onBackground, fontWeight = FontWeight.Bold)
             }
         }
         Spacer(Modifier.height(4.dp))
         Text(
             app.label,
-            color = Color.White,
+            color = colors.onBackground,
             fontSize = 11.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

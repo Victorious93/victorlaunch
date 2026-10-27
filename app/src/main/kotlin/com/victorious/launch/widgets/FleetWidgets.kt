@@ -19,7 +19,9 @@ import com.victorious.launch.core.status.PublishedTray
 import com.victorious.launch.core.status.StatusFreshness
 import com.victorious.launch.core.status.StatusTrayAggregator
 import com.victorious.launch.core.status.WidgetAccent
+import com.victorious.launch.core.theme.FleetThemePalettes
 import com.victorious.launch.launcher.HomeActivity
+import com.victorious.launch.theme.FleetThemeResolver
 import com.victorious.launch.status.ControllerClient
 import com.victorious.launch.status.PullResult
 import kotlinx.coroutines.CoroutineScope
@@ -56,14 +58,23 @@ object FleetWidgets {
         views.setTextViewText(R.id.widget_title, copy.title)
         views.setTextViewText(R.id.widget_line1, copy.line1)
         views.setTextViewText(R.id.widget_line2, copy.line2)
+        val palette =
+            try {
+                FleetThemeResolver.current(context, VictorLaunchApp.instance.settings).palette
+            } catch (_: Exception) {
+                FleetThemePalettes.NEON
+            }
         val color =
             when (copy.accent) {
-                WidgetAccent.OK -> 0xFF00E5FF.toInt()
-                WidgetAccent.STALE -> 0xFFFFC14D.toInt()
-                WidgetAccent.DOWN -> 0xFFFF6B8A.toInt()
-                WidgetAccent.UNKNOWN -> 0xFF9AA3B5.toInt()
+                WidgetAccent.OK -> FleetThemePalettes.parseArgb(palette.primary)
+                WidgetAccent.STALE -> FleetThemePalettes.parseArgb(palette.stale)
+                WidgetAccent.DOWN -> FleetThemePalettes.parseArgb(palette.danger)
+                WidgetAccent.UNKNOWN -> FleetThemePalettes.parseArgb(palette.muted)
             }
+        views.setInt(R.id.widget_root, "setBackgroundColor", FleetThemePalettes.parseArgb(palette.tile))
+        views.setTextColor(R.id.widget_title, FleetThemePalettes.parseArgb(palette.secondary))
         views.setTextColor(R.id.widget_line1, color)
+        views.setTextColor(R.id.widget_line2, FleetThemePalettes.parseArgb(palette.muted))
         val click =
             PendingIntent.getActivity(
                 context,

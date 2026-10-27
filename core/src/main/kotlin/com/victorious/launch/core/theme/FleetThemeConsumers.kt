@@ -15,6 +15,7 @@ object FleetThemeConsumers {
     const val MANGO = "com.victorious.mango"
     const val VICTORYPED = "com.victorious.victoryped"
     const val TASKBAR = "com.victorious.taskbar"
+    const val ROOTFORGE_DEBUG = "ai.rootforge.os.debug"
 
     const val HACKERAI_DEBUG =
         "AF:1C:8F:C5:44:9F:58:4A:46:C8:96:CC:C9:7F:35:B0:7B:35:7E:96:EE:66:5F:3A:BF:CB:0D:28:4D:F5:23:55"
@@ -27,6 +28,8 @@ object FleetThemeConsumers {
         "63:AA:41:BB:C5:0A:06:27:A0:4F:55:96:F1:11:12:E0:36:E4:51:B5:9F:4C:26:0F:AB:FB:92:E1:78:D2:F0:79"
     const val TASKBAR_CERT =
         "4F:58:A5:C5:75:93:5E:10:3B:1F:73:C0:7A:D2:E0:0A:FF:64:57:76:27:71:1B:77:96:79:37:D5:FC:3B:C2:92"
+    const val ROOTFORGE_DEBUG_CERT =
+        "77:7A:C7:00:87:05:A8:B4:B8:93:AC:EF:0E:03:E9:1C:7F:49:52:C9:52:FE:B2:6E:06:D7:90:B9:14:86:64:6F"
 
     val PINS: Map<String, Set<String>> =
         mapOf(
@@ -35,6 +38,7 @@ object FleetThemeConsumers {
             MANGO to setOf(MANGO_CERT),
             VICTORYPED to setOf(VICTORYPED_CERT),
             TASKBAR to setOf(TASKBAR_CERT),
+            ROOTFORGE_DEBUG to setOf(ROOTFORGE_DEBUG_CERT),
         )
 
     fun isPinned(packageName: String, certs: List<String>): Boolean {

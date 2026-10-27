@@ -152,6 +152,7 @@ another reason), or remote-control ops (`app.launch` / `layout.set` /
 | `com.victorious.mango` | `08:02:D9:4C:BB:CB:C3:F8:0C:9D:2F:C5:30:57:9E:5B:BD:E2:26:AC:7C:40:F4:52:31:0C:A1:0A:DA:EC:FE:55` | Theme-read only |
 | `com.victorious.victoryped` | `63:AA:41:BB:C5:0A:06:27:A0:4F:55:96:F1:11:12:E0:36:E4:51:B5:9F:4C:26:0F:AB:FB:92:E1:78:D2:F0:79` | Theme-read only |
 | `com.victorious.taskbar` | `4F:58:A5:C5:75:93:5E:10:3B:1F:73:C0:7A:D2:E0:0A:FF:64:57:76:27:71:1B:77:96:79:37:D5:FC:3B:C2:92` | Theme-read only |
+| `ai.rootforge.os.debug` | `77:7A:C7:00:87:05:A8:B4:B8:93:AC:EF:0E:03:E9:1C:7F:49:52:C9:52:FE:B2:6E:06:D7:90:B9:14:86:64:6F` | Theme-read only. The `.debug` suffix is the real applicationId; `ai.rootforge.os` is **not** pinned. |
 
 Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 

@@ -4,4 +4,8 @@
     <string name="device_admin_label">VictorLaunch Island</string>
     <string name="device_admin_description">Creates and manages the work profile used as the Island. VictorLaunch becomes the profile owner of that profile so it can clone, freeze, hide, pause, and resume apps inside it.</string>
     <string name="accessibility_app_icon">Application icon</string>
+    <string name="widget_mesh_vpn">Fleet mesh / VPN</string>
+    <string name="widget_browser">Fleet browser</string>
+    <string name="widget_messaging">Fleet messaging</string>
+    <string name="widget_health">Fleet health</string>
 </resources>

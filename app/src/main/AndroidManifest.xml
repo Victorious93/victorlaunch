@@ -129,6 +129,58 @@
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
+        <receiver
+            android:name=".widgets.MeshVpnWidget"
+            android:exported="true"
+            android:label="@string/widget_mesh_vpn">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_mesh_vpn" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BrowserWidget"
+            android:exported="true"
+            android:label="@string/widget_browser">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_browser" />
+        </receiver>
+        <receiver
+            android:name=".widgets.MessagingWidget"
+            android:exported="true"
+            android:label="@string/widget_messaging">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_messaging" />
+        </receiver>
+        <receiver
+            android:name=".widgets.HealthWidget"
+            android:exported="true"
+            android:label="@string/widget_health">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_health" />
+        </receiver>
+        <receiver
+            android:name=".widgets.WidgetRefreshReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.victorious.launch.action.WIDGET_REFRESH" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name=".island.IslandActionActivity"
             android:excludeFromRecents="true"

@@ -70,6 +70,8 @@ import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.settings.SettingsScreen
 import com.victorious.launch.status.ControllerClient
 import com.victorious.launch.status.PullResult
+import com.victorious.launch.widgets.FleetWidgets
+import com.victorious.launch.widgets.TrayCache
 import com.victorious.launch.theme.Charcoal
 import com.victorious.launch.theme.Cyan
 import com.victorious.launch.theme.Magenta
@@ -118,6 +120,8 @@ fun HomeScreen(
             when (val pull = controller.pullSnapshots()) {
                 is PullResult.Ok -> {
                     tray = aggregator.publish(pull.snapshots)
+                    TrayCache.save(tray!!)
+                    FleetWidgets.updateAll(activity, tray)
                     trayNote =
                         if (pull.snapshots.isEmpty()) {
                             "Controller answered with an empty tray"

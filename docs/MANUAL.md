@@ -241,6 +241,22 @@ widget bind on a phone — nothing here was device-tested.
 ![App drawer](screenshots/07-drawer.png)
 *Placeholder: Personal / Island tabs.*
 
+### Fleet status widgets
+
+Long-press the home wallpaper (or the system widget picker) and add:
+
+- **Fleet mesh / VPN**
+- **Fleet browser**
+- **Fleet messaging** (VictorSMS)
+- **Fleet health** (paired-node count + worst tile)
+
+They read the same `node.status.get` pull as the status tray (controller
+only, 15 s). Fresh ≤30 s, stale ≤5 min, older pulls are dropped. The
+in-process Home pull is the reliable 15 s path; the widget alarm is
+best-effort ([Likely] OEMs throttle `setRepeating` under 15 minutes).
+Tap a widget to open VictorLaunch. [Guessing] on a phone — not
+device-tested.
+
 ### Status tray
 
 Tiles: **Network** (this phone’s radio, from the local monitor), **Mesh**, **VPN**, **Browser proxy**, **VictorSMS**, **Paired-node count**.

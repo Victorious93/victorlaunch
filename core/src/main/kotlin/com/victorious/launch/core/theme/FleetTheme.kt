@@ -238,6 +238,7 @@ object FleetThemeAccess {
     ): Boolean {
         if (callerPackage == selfPackage) return true
         if (callerCerts.isEmpty()) return false
+        if (FleetThemeConsumers.isPinned(callerPackage, callerCerts)) return true
         val pairingRows =
             extraPins.flatMap { (pkg, certs) -> certs.map { pkg to it } }
         if (TrustedPeers.authorize(callerPackage, callerCerts, pairingRows)) return true
@@ -249,6 +250,7 @@ object FleetThemeAccess {
     fun broadcastPackages(extraPins: Map<String, List<String>>): Set<String> {
         val out = LinkedHashSet<String>()
         out.addAll(FleetPins.KNOWN.keys)
+        out.addAll(FleetThemeConsumers.PINS.keys)
         FleetShareCatalog.ALL.forEach { out.addAll(it.packageNames) }
         out.addAll(extraPins.keys)
         out.remove(Protocol.PACKAGE_NAME)

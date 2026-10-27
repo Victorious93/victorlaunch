@@ -39,8 +39,8 @@ The provider is **exported without `android:readPermission`**. Every
 
 1. `callingPackage`
 2. that package’s signing-cert SHA-256
-3. pins: `TrustedPeers` / `FleetPins.KNOWN` / user share-target pins /
-   extra controller pairing
+3. pins: `FleetThemeConsumers` (theme-read only) / `TrustedPeers` /
+   `FleetPins.KNOWN` / user share-target pins / extra controller pairing
 
 Untrusted callers get `SecurityException`. VictorLaunch querying itself
 is always allowed.
@@ -135,6 +135,24 @@ icons on the workspace, dock, folders, and drawer:
    Ask Don to **Trust installed fleet share apps** or add a pin. Do not
    invent colors.
 6. Never write the provider. Never treat a payload field as auth.
+
+## Pinned theme consumers
+
+These package+cert pairs may **query the theme provider** and receive
+the explicit change broadcast. They do **not** get bridge pairing,
+fleet-install trust (unless already listed in `FleetPins.KNOWN` for
+another reason), or remote-control ops (`app.launch` / `layout.set` /
+`panel.open`). A package may have more than one allowed cert.
+
+| Package | Cert SHA-256 | Notes |
+|---|---|---|
+| `ai.hackerai.companion` | `AF:1C:8F:C5:44:9F:58:4A:46:C8:96:CC:C9:7F:35:B0:7B:35:7E:96:EE:66:5F:3A:BF:CB:0D:28:4D:F5:23:55` | Theme-read only |
+| `ai.hackerai.companion` | `9E:A7:B3:14:94:5B:0A:62:97:15:6F:F7:06:E7:0C:0A:B1:B7:24:DE:06:D5:09:9C:A5:12:8A:B4:43:F7:2D:8D` | Release signer. Also a `FleetPins.KNOWN` install pin (pre-existing). Still **not** a controller. |
+| `com.victorious.mesh` | `F4:C9:25:B8:E8:0B:55:AB:83:E6:04:13:EE:49:86:57:DF:85:03:BB:30:D8:1F:9F:17:43:F2:2B:F5:36:B9:F4` | Theme-read only |
+| `com.victorious.mango` | `08:02:D9:4C:BB:CB:C3:F8:0C:9D:2F:C5:30:57:9E:5B:BD:E2:26:AC:7C:40:F4:52:31:0C:A1:0A:DA:EC:FE:55` | Theme-read only |
+| `com.victorious.victoryped` | `63:AA:41:BB:C5:0A:06:27:A0:4F:55:96:F1:11:12:E0:36:E4:51:B5:9F:4C:26:0F:AB:FB:92:E1:78:D2:F0:79` | Theme-read only |
+
+Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 
 ## Honesty
 

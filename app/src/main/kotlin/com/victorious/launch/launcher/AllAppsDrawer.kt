@@ -34,10 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.victorious.launch.core.launcher.AppSearch
 import com.victorious.launch.core.launcher.SearchableApp
+import com.victorious.launch.core.theme.FleetIconStyle
 import com.victorious.launch.island.IslandManager
-import com.victorious.launch.theme.Cyan
-import com.victorious.launch.theme.Magenta
-import com.victorious.launch.theme.Muted
+import com.victorious.launch.theme.LocalFleetColors
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -50,6 +49,7 @@ fun AllAppsDrawer(
     catalog: AppCatalog,
     iconPack: IconPackManager,
     iconPackPackage: String?,
+    iconStyle: FleetIconStyle = FleetIconStyle.SYSTEM,
     onTab: (Int) -> Unit,
     onLaunch: (LaunchableApp) -> Unit,
     onPinWorkspace: (LaunchableApp) -> Unit,
@@ -60,6 +60,7 @@ fun AllAppsDrawer(
     activity: Activity,
     onOpenIsland: () -> Unit,
 ) {
+    val colors = LocalFleetColors.current
     var query by remember { mutableStateOf("") }
     val focus = remember { FocusRequester() }
     LaunchedEffect(searchFocused) {
@@ -82,37 +83,37 @@ fun AllAppsDrawer(
         }
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Apps", color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            TextButton(onClick = onClose) { Text("Close", color = Cyan) }
+            Text("Apps", color = colors.onBackground, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            TextButton(onClick = onClose) { Text("Close", color = colors.primary) }
         }
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
             modifier = Modifier.fillMaxWidth().focusRequester(focus).padding(bottom = 8.dp),
-            placeholder = { Text("Search apps", color = Muted) },
+            placeholder = { Text("Search apps", color = colors.muted) },
             singleLine = true,
             colors =
                 TextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
+                    focusedTextColor = colors.onBackground,
+                    unfocusedTextColor = colors.onBackground,
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
-                    cursorColor = Cyan,
+                    cursorColor = colors.primary,
                 ),
         )
         Row {
             TextButton(onClick = { onTab(0) }) {
-                Text("Personal", color = if (tab == 0) Cyan else Muted)
+                Text("Personal", color = if (tab == 0) colors.primary else colors.muted)
             }
             TextButton(onClick = { onTab(1) }) {
-                Text("Island", color = if (tab == 1) Magenta else Muted)
+                Text("Island", color = if (tab == 1) colors.secondary else colors.muted)
             }
         }
         if (tab == 1) {
             IslandHeader(island, activity, onOpenIsland)
         }
         if (tab == 1 && islandLocked && islandApps.isEmpty()) {
-            Text("Island tab is locked. Authenticate to open it.", color = Muted)
+            Text("Island tab is locked. Authenticate to open it.", color = colors.muted)
         }
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
@@ -126,6 +127,7 @@ fun AllAppsDrawer(
                     catalog = catalog,
                     iconPack = iconPack,
                     iconPackPackage = iconPackPackage,
+                    iconStyle = iconStyle,
                     onClick = { onLaunch(app) },
                     onLong = { onPinWorkspace(app) },
                     onDock = { onPinDock(app) },
@@ -138,6 +140,7 @@ fun AllAppsDrawer(
 
 @Composable
 fun IslandHeader(island: IslandManager, activity: Activity, onOpenIsland: () -> Unit) {
+    val colors = LocalFleetColors.current
     Column(Modifier.padding(bottom = 8.dp)) {
         val has = island.hasWorkProfile()
         Text(
@@ -146,21 +149,21 @@ fun IslandHeader(island: IslandManager, activity: Activity, onOpenIsland: () -> 
             } else {
                 "No work profile yet"
             },
-            color = Muted,
+            color = colors.muted,
             fontSize = 12.sp,
         )
         Row {
             if (!has) {
                 TextButton(onClick = { activity.startActivity(island.provisionIntent()) }) {
-                    Text("Create Island", color = Magenta)
+                    Text("Create Island", color = colors.secondary)
                 }
             } else {
-                TextButton(onClick = { island.pauseWorkProfile() }) { Text("Pause", color = Muted) }
-                TextButton(onClick = { island.resumeWorkProfile() }) { Text("Resume", color = Cyan) }
+                TextButton(onClick = { island.pauseWorkProfile() }) { Text("Pause", color = colors.muted) }
+                TextButton(onClick = { island.resumeWorkProfile() }) { Text("Resume", color = colors.primary) }
             }
-            TextButton(onClick = onOpenIsland) { Text("Manage Island", color = Magenta) }
+            TextButton(onClick = onOpenIsland) { Text("Manage Island", color = colors.secondary) }
             TextButton(onClick = { activity.startActivity(Intent(Settings.ACTION_SYNC_SETTINGS)) }) {
-                Text("System settings", color = Muted)
+                Text("System settings", color = colors.muted)
             }
         }
     }

@@ -37,6 +37,8 @@ import com.victorious.launch.core.protocol.TrustedPeers
 import com.victorious.launch.island.IslandCommandReceiver
 import com.victorious.launch.island.IslandManager
 import com.victorious.launch.core.share.FleetShareCatalog
+import com.victorious.launch.core.theme.FleetIconStyle
+import com.victorious.launch.core.theme.FleetThemeMode
 import com.victorious.launch.launcher.AppCatalog
 import com.victorious.launch.launcher.IconPackManager
 import com.victorious.launch.share.FleetSharePublisher
@@ -103,6 +105,47 @@ fun SettingsScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Settings", color = Cyan, fontSize = 22.sp, modifier = Modifier.weight(1f))
             TextButton(onClick = onClose) { Text("Close", color = Cyan) }
+        }
+        Section("Fleet theme") {
+            Text(
+                "VictorLaunch is the source of truth. Other fleet apps read the current palette from the exported ContentProvider and a change broadcast. Callers are checked by package+cert (the fleet does not share a signing key). See docs/specs/FLEET_THEME.md.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Text("Mode: ${settings.themeMode().name}", color = Cyan, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+            ThemeChoice("Neon fleet palette", settings.themeMode() == FleetThemeMode.NEON_FLEET) {
+                settings.setThemeMode(FleetThemeMode.NEON_FLEET)
+                note = "Theme: neon fleet"
+            }
+            ThemeChoice("Dark", settings.themeMode() == FleetThemeMode.DARK) {
+                settings.setThemeMode(FleetThemeMode.DARK)
+                note = "Theme: dark"
+            }
+            ThemeChoice("Light", settings.themeMode() == FleetThemeMode.LIGHT) {
+                settings.setThemeMode(FleetThemeMode.LIGHT)
+                note = "Theme: light"
+            }
+            ThemeChoice("Material You accent", settings.themeMode() == FleetThemeMode.MATERIAL_YOU) {
+                settings.setThemeMode(FleetThemeMode.MATERIAL_YOU)
+                note = "Theme: Material You (falls back to neon below Android 12)"
+            }
+            Text("App icons: ${settings.iconStyle().name}", color = Cyan, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+            ThemeChoice("System icons", settings.iconStyle() == FleetIconStyle.SYSTEM) {
+                settings.setIconStyle(FleetIconStyle.SYSTEM)
+                note = "Icons: system"
+            }
+            ThemeChoice("Monochrome / themed", settings.iconStyle() == FleetIconStyle.MONOCHROME) {
+                settings.setIconStyle(FleetIconStyle.MONOCHROME)
+                note = "Icons: monochrome"
+            }
+            ThemeChoice("Tinted with accent", settings.iconStyle() == FleetIconStyle.TINTED) {
+                settings.setIconStyle(FleetIconStyle.TINTED)
+                note = "Icons: tinted"
+            }
+            ThemeChoice("Icon pack", settings.iconStyle() == FleetIconStyle.ICON_PACK) {
+                settings.setIconStyle(FleetIconStyle.ICON_PACK)
+                note = "Icons: icon pack"
+            }
         }
         Section("Home (Lawnchair lineage)") {
             Text(
@@ -532,4 +575,11 @@ fun SettingsScreen(
 private fun Section(title: String, content: @Composable () -> Unit) {
     Text(title, color = Magenta, fontSize = 16.sp, modifier = Modifier.padding(top = 20.dp, bottom = 6.dp))
     content()
+}
+
+@Composable
+private fun ThemeChoice(label: String, selected: Boolean, onClick: () -> Unit) {
+    TextButton(onClick = onClick) {
+        Text(if (selected) "● $label" else "○ $label", color = if (selected) Cyan else Muted)
+    }
 }

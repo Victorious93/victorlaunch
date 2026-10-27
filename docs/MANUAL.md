@@ -219,8 +219,14 @@ ideas: pages, dock, folders, widgets, icon packs, gestures). It is
 - Tap the widget button to bind a system `AppWidget` (Android may ask
   for bind permission). [Likely] some providers need a configure
   activity that can fail.
-- Settings → **Home (Lawnchair lineage)** picks an ADW / GO / Nova
-  icon pack when one is installed; otherwise system icons.
+- Settings → **Fleet theme** is the source of truth for light / dark /
+  neon fleet / Material You. VictorLaunch publishes it to other fleet
+  apps (read-only ContentProvider + change broadcast, package+cert
+  verified). See `docs/specs/FLEET_THEME.md`.
+- Settings → **Fleet theme** also sets icon style: system, monochrome /
+  themed, accent-tint, or an ADW / GO / Nova icon pack.
+- Settings → **Home (Lawnchair lineage)** still lists installed icon
+  packs. Picking a pack selects the icon-pack style.
 - Hidden apps (Settings → Lockdown) do not appear.
 - Locked apps prompt **BiometricPrompt** (or the device PIN) before they open.
 
@@ -234,6 +240,29 @@ widget bind on a phone — nothing here was device-tested.
 
 - Up to five apps plus the drawer button.
 - Long-press an app in the drawer to add it to the dock.
+
+### Fleet theme
+
+Settings → **Fleet theme**.
+
+1. Pick **Neon fleet palette** (default), **Dark**, **Light**, or
+   **Material You accent**. Material You uses Android 12+ system
+   accent/neutral colors. Below API 31 it falls back to neon.
+2. Pick how **third-party app icons** look: system, monochrome/themed,
+   tinted with the accent, or an installed icon pack.
+3. The workspace, folders, drawer, dock, status chips, and fleet
+   AppWidgets follow that palette immediately.
+4. Other fleet apps are notified with
+   `com.victorious.launch.action.FLEET_THEME_CHANGED` (explicit, pinned
+   packages only) and can query
+   `content://com.victorious.launch.theme/current`. Unpinned callers are
+   refused.
+
+[Certain] the JSON schema and caller pin checks are unit-tested.
+[Guessing] live apply in another APK — not device-tested.
+
+![Fleet theme](screenshots/15-fleet-theme.png)
+*Placeholder: theme mode and icon-style radios.*
 
 ![Dock](screenshots/06-dock.png)
 *Placeholder: bottom dock on charcoal with cyan/magenta accents.*

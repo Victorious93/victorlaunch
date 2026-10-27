@@ -8,4 +8,6 @@
     <string name="widget_browser">Fleet browser</string>
     <string name="widget_messaging">Fleet messaging</string>
     <string name="widget_health">Fleet health</string>
+    <string name="perm_read_fleet_theme_label">Read fleet theme</string>
+    <string name="perm_read_fleet_theme">Allows an app signed with the VictorLaunch key to read the shared fleet theme. Differently signed fleet apps must still pass package+cert verification.</string>
 </resources>

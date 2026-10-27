@@ -192,6 +192,8 @@ class FleetThemeTest {
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.SPOOF, FleetThemeConsumers.SPOOF_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.PENTESTSWARM, FleetThemeConsumers.PENTESTSWARM_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.EDLCOMMANDER, FleetThemeConsumers.EDLCOMMANDER_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.FILEMANAGER, FleetThemeConsumers.FILEMANAGER_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.FILEMANAGER_DEBUG, FleetThemeConsumers.FILEMANAGER_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_DEBUG))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_RELEASE))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.CONTROLLER, FleetThemeConsumers.CONTROLLER_DEBUG))
@@ -350,6 +352,26 @@ class FleetThemeTest {
                 FleetThemeConsumers.EDLCOMMANDER,
                 listOf(FleetThemeConsumers.EDLCOMMANDER_CERT),
             ),
+        )
+    }
+
+    @Test
+    fun filemanagerThemePinsAreReadOnlyAndShareOneCert() {
+        listOf(FleetThemeConsumers.FILEMANAGER, FleetThemeConsumers.FILEMANAGER_DEBUG).forEach { pkg ->
+            assertTrue(
+                "$pkg + shared cert should read the theme",
+                FleetThemeAccess.canRead(pkg, listOf(FleetThemeConsumers.FILEMANAGER_CERT), extraPins = emptyMap()),
+            )
+            assertFalse(
+                "$pkg + wrong cert must not read the theme",
+                FleetThemeAccess.canRead(pkg, listOf(WRONG_CERT), extraPins = emptyMap()),
+            )
+            assertFalse(FleetPins.isTrusted(pkg, FleetThemeConsumers.FILEMANAGER_CERT))
+            assertFalse(TrustedPeers.isPinnedController(pkg, listOf(FleetThemeConsumers.FILEMANAGER_CERT)))
+        }
+        assertEquals(
+            FleetThemeConsumers.PINS[FleetThemeConsumers.FILEMANAGER],
+            FleetThemeConsumers.PINS[FleetThemeConsumers.FILEMANAGER_DEBUG],
         )
     }
 

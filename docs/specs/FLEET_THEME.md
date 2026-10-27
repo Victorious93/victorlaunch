@@ -220,6 +220,8 @@ another reason), or remote-control ops (`app.launch` / `layout.set` /
 | `com.victorious.spoof` | `A4:84:62:2B:7E:86:E1:D9:F8:04:56:6E:B7:89:2D:EE:3C:64:EB:8E:B9:13:9E:04:25:BC:65:F3:EF:D0:FF:EE` | Theme-read only |
 | `ai.pentestswarm.companion` | `5E:3A:B1:23:1F:7E:DA:18:78:B8:FF:D8:9E:AC:B1:F7:2E:EB:66:AF:3D:BA:2E:01:33:51:24:68:42:23:30:C7` | Theme-read only |
 | `ai.edlcommander.companion` | `E5:60:B6:92:BD:E6:51:9E:B7:CB:B5:2C:E4:DC:91:5A:19:E4:41:A0:1A:5D:03:68:82:71:AC:99:78:8A:58:C8` | Theme-read only |
+| `ai.victorious.filemanager` | `8C:1F:E3:C9:E5:34:F2:71:05:C0:68:8F:45:28:D7:7E:47:11:AE:0A:79:DD:08:D1:E8:59:30:B9:E9:48:85:F2` | Theme-read only. Same signer as `.debug`. |
+| `ai.victorious.filemanager.debug` | `8C:1F:E3:C9:E5:34:F2:71:05:C0:68:8F:45:28:D7:7E:47:11:AE:0A:79:DD:08:D1:E8:59:30:B9:E9:48:85:F2` | Theme-read only. Same signer as the release applicationId. |
 
 Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 

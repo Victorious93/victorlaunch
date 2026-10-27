@@ -170,6 +170,14 @@ class FleetThemeTest {
                 extraPins = emptyMap(),
             ),
         )
+        assertFalse(
+            "bare com.victorious.keyboard must not inherit the .debug pin",
+            FleetThemeAccess.canRead(
+                "com.victorious.keyboard",
+                listOf(FleetThemeConsumers.KEYBOARD_DEBUG_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
     }
 
     @Test
@@ -179,15 +187,20 @@ class FleetThemeTest {
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.VICTORYPED, FleetThemeConsumers.VICTORYPED_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.TASKBAR, FleetThemeConsumers.TASKBAR_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.ROOTFORGE_DEBUG, FleetThemeConsumers.ROOTFORGE_DEBUG_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.IDENTITYSHIELD, FleetThemeConsumers.IDENTITYSHIELD_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.KEYBOARD_DEBUG, FleetThemeConsumers.KEYBOARD_DEBUG_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_DEBUG))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_RELEASE))
+        assertTrue(FleetPins.isTrusted(FleetThemeConsumers.CONTROLLER, FleetThemeConsumers.CONTROLLER_DEBUG))
     }
 
     @Test
     fun themeConsumersAreNotPinnedControllersAndCannotRunControlOps() {
         val dispatcher = BridgeDispatcher(FakeHost("victorlaunch-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 9_000_000L, com.victorious.launch.core.bridge.RunningResult.Unavailable(ErrorCategory.PERMISSION), LauncherPreferences()))
         var nonce = 0
-        consumerPins().forEach { (pkg, cert) ->
+        consumerPins()
+            .filterNot { (pkg, _) -> pkg == FleetThemeConsumers.CONTROLLER }
+            .forEach { (pkg, cert) ->
             assertFalse(TrustedPeers.isPinnedController(pkg, listOf(cert)))
             assertFalse(TrustedPeers.isTrusted(pkg, listOf(cert)))
             for (op in RemoteActionPolicy.FULL_CONTROL_OPS) {
@@ -236,6 +249,30 @@ class FleetThemeTest {
     fun broadcastListIncludesThemeConsumers() {
         val pkgs = FleetThemeAccess.broadcastPackages(emptyMap())
         FleetThemeConsumers.PINS.keys.forEach { assertTrue(pkgs.contains(it)) }
+    }
+
+    @Test
+    fun controllerThemePinMatchesExistingControllerCertWithoutChangingTrust() {
+        assertEquals(FleetPins.CONTROLLER_DEBUG, FleetThemeConsumers.CONTROLLER_DEBUG)
+        assertTrue(
+            FleetThemeConsumers.isPinned(
+                FleetThemeConsumers.CONTROLLER,
+                listOf(FleetThemeConsumers.CONTROLLER_DEBUG),
+            ),
+        )
+        assertTrue(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.CONTROLLER,
+                listOf(FleetThemeConsumers.CONTROLLER_DEBUG),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertTrue(
+            TrustedPeers.isPinnedController(
+                FleetThemeConsumers.CONTROLLER,
+                listOf(FleetThemeConsumers.CONTROLLER_DEBUG),
+            ),
+        )
     }
 
     @Test

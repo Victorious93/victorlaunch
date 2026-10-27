@@ -16,6 +16,9 @@ object FleetThemeConsumers {
     const val VICTORYPED = "com.victorious.victoryped"
     const val TASKBAR = "com.victorious.taskbar"
     const val ROOTFORGE_DEBUG = "ai.rootforge.os.debug"
+    const val IDENTITYSHIELD = "com.identityshield.companion"
+    const val KEYBOARD_DEBUG = "com.victorious.keyboard.debug"
+    const val CONTROLLER = "ai.droidcommand.app"
 
     const val HACKERAI_DEBUG =
         "AF:1C:8F:C5:44:9F:58:4A:46:C8:96:CC:C9:7F:35:B0:7B:35:7E:96:EE:66:5F:3A:BF:CB:0D:28:4D:F5:23:55"
@@ -30,6 +33,11 @@ object FleetThemeConsumers {
         "4F:58:A5:C5:75:93:5E:10:3B:1F:73:C0:7A:D2:E0:0A:FF:64:57:76:27:71:1B:77:96:79:37:D5:FC:3B:C2:92"
     const val ROOTFORGE_DEBUG_CERT =
         "77:7A:C7:00:87:05:A8:B4:B8:93:AC:EF:0E:03:E9:1C:7F:49:52:C9:52:FE:B2:6E:06:D7:90:B9:14:86:64:6F"
+    const val IDENTITYSHIELD_CERT =
+        "22:4F:C1:64:D6:8A:28:88:B9:FE:8F:10:C7:B6:B5:E5:78:67:2B:D2:F8:97:05:06:68:4B:23:A9:43:FA:44:1D"
+    const val KEYBOARD_DEBUG_CERT =
+        "47:1E:AD:6B:3F:96:7E:F3:C8:63:EF:49:08:74:8B:3B:E3:63:F9:1D:75:0B:FD:B1:E9:28:05:BC:F1:6B:AF:4F"
+    const val CONTROLLER_DEBUG = FleetPins.CONTROLLER_DEBUG
 
     val PINS: Map<String, Set<String>> =
         mapOf(
@@ -39,6 +47,9 @@ object FleetThemeConsumers {
             VICTORYPED to setOf(VICTORYPED_CERT),
             TASKBAR to setOf(TASKBAR_CERT),
             ROOTFORGE_DEBUG to setOf(ROOTFORGE_DEBUG_CERT),
+            IDENTITYSHIELD to setOf(IDENTITYSHIELD_CERT),
+            KEYBOARD_DEBUG to setOf(KEYBOARD_DEBUG_CERT),
+            CONTROLLER to setOf(CONTROLLER_DEBUG),
         )
 
     fun isPinned(packageName: String, certs: List<String>): Boolean {

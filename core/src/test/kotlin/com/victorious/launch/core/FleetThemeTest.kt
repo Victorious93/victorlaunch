@@ -195,6 +195,7 @@ class FleetThemeTest {
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.FILEMANAGER, FleetThemeConsumers.FILEMANAGER_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.FILEMANAGER_DEBUG, FleetThemeConsumers.FILEMANAGER_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.CAM, FleetThemeConsumers.CAM_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.TERMUX, FleetThemeConsumers.TERMUX_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_DEBUG))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_RELEASE))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.CONTROLLER, FleetThemeConsumers.CONTROLLER_DEBUG))
@@ -402,6 +403,49 @@ class FleetThemeTest {
     }
 
     @Test
+    fun termuxThemePinIsReadOnlyAndRefusesAnyOtherCert() {
+        assertTrue(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.TERMUX,
+                listOf(FleetThemeConsumers.TERMUX_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(
+            "package name alone must not authorize an upstream/other Termux signer",
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.TERMUX,
+                listOf(UPSTREAM_TERMUX_EXAMPLE_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.TERMUX,
+                listOf(WRONG_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.TERMUX,
+                listOf(FleetThemeConsumers.CAM_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(
+            FleetThemeAccess.canRead(FleetThemeConsumers.TERMUX, emptyList(), extraPins = emptyMap()),
+        )
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.TERMUX, FleetThemeConsumers.TERMUX_CERT))
+        assertFalse(
+            TrustedPeers.isPinnedController(
+                FleetThemeConsumers.TERMUX,
+                listOf(FleetThemeConsumers.TERMUX_CERT),
+            ),
+        )
+    }
+
+    @Test
     fun contractConstantsAreStable() {
         assertEquals(1, FleetThemeContract.SCHEMA_VERSION)
         assertEquals("com.victorious.launch.theme", FleetThemeContract.AUTHORITY)
@@ -416,5 +460,8 @@ class FleetThemeTest {
     companion object {
         private const val WRONG_CERT =
             "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF"
+        /** Stand-in for a non-VictorSuite `com.termux` signer (e.g. upstream/F-Droid). Not a published official fingerprint. */
+        private const val UPSTREAM_TERMUX_EXAMPLE_CERT =
+            "11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00"
     }
 }

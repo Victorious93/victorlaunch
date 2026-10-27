@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.UserHandle
 import android.os.UserManager
 import com.victorious.launch.VictorLaunchApp
+import com.victorious.launch.core.island.IslandPolicy
 import com.victorious.launch.shizuku.PrivilegedResult
 
 class IslandManager(private val context: Context) {
@@ -68,7 +69,11 @@ class IslandManager(private val context: Context) {
         return userManager.isQuietModeEnabled(user)
     }
 
-    fun sendCommand(cmd: String, packageName: String) {
+    fun sendCommand(
+        cmd: String,
+        packageName: String,
+        extras: (Intent.() -> Unit)? = null,
+    ) {
         if (tryShizuku(cmd, packageName).ok) return
         val intent =
             Intent(IslandCommandReceiver.ACTION).apply {
@@ -76,6 +81,7 @@ class IslandManager(private val context: Context) {
                 putExtra(IslandCommandReceiver.EXTRA_CMD, cmd)
                 putExtra(IslandCommandReceiver.EXTRA_PACKAGE, packageName)
                 addCategory(Intent.CATEGORY_DEFAULT)
+                extras?.invoke(this)
             }
         if (isProfileOwner()) {
             IslandCommandReceiver().onReceive(context, intent)
@@ -106,9 +112,63 @@ class IslandManager(private val context: Context) {
         }
     }
 
-    fun removeWorkProfile() {
+    fun setOfflineMode(enabled: Boolean, packages: List<String> = emptyList()): String {
+        val shizukuHits =
+            packages.count { pkg ->
+                tryShizuku(
+                    if (enabled) IslandCommandReceiver.CMD_FREEZE else IslandCommandReceiver.CMD_UNFREEZE,
+                    pkg,
+                ).ok
+            }
+        if (isProfileOwner()) {
+            val admin = IslandAdminReceiver.component(context)
+            IslandPolicy.OFFLINE_RESTRICTIONS.forEach { key ->
+                if (enabled) dpm.addUserRestriction(admin, key) else dpm.clearUserRestriction(admin, key)
+            }
+        } else {
+            sendCommand(IslandCommandReceiver.CMD_OFFLINE, "") {
+                putExtra(IslandCommandReceiver.EXTRA_ENABLED, enabled)
+            }
+        }
+        val quiet = if (enabled) pauseWorkProfile() else resumeWorkProfile()
+        val usedShizuku = shizukuHits > 0
+        val path = IslandPolicy.describeOffline(nonRoot = !usedShizuku)
+        return when {
+            usedShizuku && quiet ->
+                "Offline mode ${if (enabled) "on" else "off"} (Shizuku freeze + quiet). $path"
+            isProfileOwner() || quiet ->
+                "Offline mode ${if (enabled) "on" else "off"} (DPM restrictions + quiet). $path"
+            else ->
+                "Could not fully apply offline mode. Become profile owner or enable Shizuku. $path"
+        }
+    }
+
+    fun lockdown(packages: List<String>, enabled: Boolean, confirmed: Boolean): String {
+        if (!IslandPolicy.canLockdown(confirmed)) {
+            return "Lockdown needs an explicit confirm. Nothing was changed."
+        }
+        packages.forEach { pkg ->
+            sendCommand(if (enabled) IslandCommandReceiver.CMD_FREEZE else IslandCommandReceiver.CMD_UNFREEZE, pkg)
+        }
+        if (enabled) pauseWorkProfile() else resumeWorkProfile()
+        return if (enabled) {
+            "Island lockdown: froze ${packages.size} app(s) and paused the profile."
+        } else {
+            "Island lockdown off: unfroze ${packages.size} app(s) and resumed the profile."
+        }
+    }
+
+    fun wipeProfile(confirmed: Boolean): String {
+        if (!IslandPolicy.canWipe(confirmed)) {
+            return "Wipe refused — confirm is required. The work profile was not touched."
+        }
         if (isProfileOwner()) {
             dpm.wipeData(0)
+            return "Work profile wipe requested."
         }
+        sendCommand(IslandCommandReceiver.CMD_WIPE, "") {
+            putExtra(IslandCommandReceiver.EXTRA_CONFIRMED, true)
+        }
+        return "Wipe requested of the work-profile owner copy. Confirm already given in this UI."
     }
 }

@@ -59,6 +59,7 @@ fun SettingsScreen(
     onFleet: () -> Unit,
     onMods: () -> Unit,
     onNetwork: () -> Unit,
+    onIsland: () -> Unit,
     onClose: () -> Unit,
 ) {
     var external by remember { mutableStateOf(settings.isExternalControlEnabled()) }
@@ -294,13 +295,14 @@ fun SettingsScreen(
         Section("Island") {
             Text(
                 if (island.hasWorkProfile()) {
-                    "Work profile present. Pause, resume, clone, freeze and hide prefer Shizuku when you enabled it, then DevicePolicyManager. Inspired by Island/Insular; no third-party Island source is bundled."
+                    "Work profile present. Pause, resume, clone, freeze, offline and lockdown prefer Shizuku when you enabled it, then DevicePolicyManager. Wipe never runs without an in-app confirm. Inspired by Island/Insular; no third-party Island source is bundled."
                 } else {
                     "Create a managed work profile. VictorLaunch becomes the profile owner of that profile."
                 },
                 color = Muted,
                 fontSize = 13.sp,
             )
+            Button(onClick = onIsland, modifier = Modifier.padding(top = 8.dp)) { Text("Open Island screen") }
             Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Lock Island tab", color = Cyan, modifier = Modifier.weight(1f))
                 Switch(

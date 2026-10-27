@@ -58,6 +58,7 @@ fun AllAppsDrawer(
     onClose: () -> Unit,
     island: IslandManager,
     activity: Activity,
+    onOpenIsland: () -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
     val focus = remember { FocusRequester() }
@@ -108,7 +109,7 @@ fun AllAppsDrawer(
             }
         }
         if (tab == 1) {
-            IslandHeader(island, activity)
+            IslandHeader(island, activity, onOpenIsland)
         }
         if (tab == 1 && islandLocked && islandApps.isEmpty()) {
             Text("Island tab is locked. Authenticate to open it.", color = Muted)
@@ -136,7 +137,7 @@ fun AllAppsDrawer(
 }
 
 @Composable
-fun IslandHeader(island: IslandManager, activity: Activity) {
+fun IslandHeader(island: IslandManager, activity: Activity, onOpenIsland: () -> Unit) {
     Column(Modifier.padding(bottom = 8.dp)) {
         val has = island.hasWorkProfile()
         Text(
@@ -157,6 +158,7 @@ fun IslandHeader(island: IslandManager, activity: Activity) {
                 TextButton(onClick = { island.pauseWorkProfile() }) { Text("Pause", color = Muted) }
                 TextButton(onClick = { island.resumeWorkProfile() }) { Text("Resume", color = Cyan) }
             }
+            TextButton(onClick = onOpenIsland) { Text("Manage Island", color = Magenta) }
             TextButton(onClick = { activity.startActivity(Intent(Settings.ACTION_SYNC_SETTINGS)) }) {
                 Text("System settings", color = Muted)
             }

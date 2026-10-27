@@ -102,7 +102,42 @@ Unknown columns must be ignored. A future schema will bump
 ```
 
 Reject `schemaVersion != 1` until you ship a v2 client. Hex is
-`#RRGGBB` or `#AARRGGBB`.
+`#RRGGBB` or `#AARRGGBB`. **`schemaVersion` stays `1` in this
+revision.** Do not invent a v2 payload.
+
+### Palette keys → Material3 roles
+
+VictorLaunch applies the snapshot through `VictorLaunchTheme`
+(`app/.../theme/Theme.kt`). Each palette key maps to these
+`ColorScheme` roles — match this if you use Material3:
+
+| Palette key | Material3 role(s) actually set | Also used as |
+|---|---|---|
+| `background` | `background` | `onPrimary`, `onSecondary`, `onError` |
+| `surface` | `surface` | — |
+| `primary` | `primary` | — |
+| `secondary` | `secondary` | — |
+| `onBackground` | `onBackground` | `onSurface` |
+| `muted` | `onSurfaceVariant` | `outline` |
+| `danger` | `error` | — |
+| `tile` | `surfaceVariant` | — |
+| `stale` | *(none)* | Freshness / widget accent only. Not a `ColorScheme` field. |
+
+Roles VictorLaunch does not set (`tertiary`, `primaryContainer`,
+`inverseSurface`, `scrim`, …) stay at the consumer’s Material3
+defaults. `stale` is a fleet-only accent (status tiles / widgets);
+do not invent an M3 role for it.
+
+### Missing or invalid keys
+
+Consumers apply **per key**. If a palette key is absent, blank, or
+not valid `#RRGGBB` / `#AARRGGBB`, keep **that consumer app’s
+default** for the mapped role. Do not invent a color, do not
+substitute another palette key, and do not silently paint neon
+unless neon is already your app default.
+
+A missing key must not fail the whole snapshot. Valid keys still
+apply.
 
 ### Modes
 
@@ -136,6 +171,32 @@ icons on the workspace, dock, folders, and drawer:
    invent colors.
 6. Never write the provider. Never treat a payload field as auth.
 
+## VictorLaunch publisher pins
+
+Other fleet apps that **verify the provider** (that the process
+serving `content://com.victorious.launch.theme/current` is actually
+VictorLaunch) pin **this** package + cert. These are not
+`FleetThemeConsumers` entries — they identify the source.
+
+| Package | Status | SHA-256 |
+|---|---|---|
+| `com.victorious.launch` | **current** (debug) | `B9:9A:AF:E2:C1:41:8B:5D:64:AA:0D:4B:AC:61:FC:F7:A7:BA:81:44:35:E0:EF:89:E8:AA:55:BE:56:4E:4A:69` |
+| `com.victorious.launch` | **next** | none published |
+| `com.victorious.launch` | **REVOKED** | `1B:06:A8:9E:7F:F5:BA:21:C9:A4:F8:F1:F0:4F:95:E5:62:78:A1:22:18:AD:37:33:28:CE:E7:83:1D:4F:BA:CA` |
+| `com.victorious.launch` | **release** | **TBD, no release key exists yet.** Do not invent a SHA-256. |
+
+Source of the debug SHA-256: `keystore/README.md`. The JKS is not in
+the tree. History is not rewritten; the revoked cert was the old
+committed debug keystore.
+
+### Cert rotation
+
+Consumers that pin VictorLaunch accept **current and next**
+(overlap while a rotation is in flight) and **reject the revoked
+list**. A blank / TBD / unpublished `next` or `release` slot does
+**not** authorize. Until a next cert is published, only **current**
+is valid.
+
 ## Pinned theme consumers
 
 These package+cert pairs may **query the theme provider** and receive
@@ -156,6 +217,7 @@ another reason), or remote-control ops (`app.launch` / `layout.set` /
 | `com.identityshield.companion` | `22:4F:C1:64:D6:8A:28:88:B9:FE:8F:10:C7:B6:B5:E5:78:67:2B:D2:F8:97:05:06:68:4B:23:A9:43:FA:44:1D` | Theme-read only |
 | `com.victorious.keyboard.debug` | `47:1E:AD:6B:3F:96:7E:F3:C8:63:EF:49:08:74:8B:3B:E3:63:F9:1D:75:0B:FD:B1:E9:28:05:BC:F1:6B:AF:4F` | Theme-read only. The `.debug` suffix is the real applicationId; `com.victorious.keyboard` is **not** pinned. |
 | `ai.droidcommand.app` | `88:00:51:A6:D9:5D:38:DD:8D:81:E1:93:1E:17:05:48:03:87:D5:93:C3:09:43:53:99:68:E6:EF:11:A0:C8:4D` | Theme-read entry matching the existing controller debug pin. Bridge pairing, full-control, and the kill switch are **unchanged**. |
+| `com.victorious.spoof` | `A4:84:62:2B:7E:86:E1:D9:F8:04:56:6E:B7:89:2D:EE:3C:64:EB:8E:B9:13:9E:04:25:BC:65:F3:EF:D0:FF:EE` | Theme-read only |
 
 Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 
@@ -164,5 +226,6 @@ Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 - **[Certain]** codec, pin checks, and schema constants have unit tests.
 - **[Guessing]** ContentProvider / explicit broadcast / Material You
   system colors on a phone — not device-tested.
-- GitHub Actions is billing-blocked; local `./gradlew :core:test assembleDebug`
-  is the gate.
+- GitHub Actions **Android CI** is running and completing successfully
+  on recent `main` pushes and PRs (checked 2026-10-27). Local
+  `./gradlew :core:test assembleDebug` remains the agent merge gate.

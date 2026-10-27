@@ -189,6 +189,7 @@ class FleetThemeTest {
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.ROOTFORGE_DEBUG, FleetThemeConsumers.ROOTFORGE_DEBUG_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.IDENTITYSHIELD, FleetThemeConsumers.IDENTITYSHIELD_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.KEYBOARD_DEBUG, FleetThemeConsumers.KEYBOARD_DEBUG_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.SPOOF, FleetThemeConsumers.SPOOF_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_DEBUG))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_RELEASE))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.CONTROLLER, FleetThemeConsumers.CONTROLLER_DEBUG))
@@ -271,6 +272,31 @@ class FleetThemeTest {
             TrustedPeers.isPinnedController(
                 FleetThemeConsumers.CONTROLLER,
                 listOf(FleetThemeConsumers.CONTROLLER_DEBUG),
+            ),
+        )
+    }
+
+    @Test
+    fun spoofThemePinIsReadOnly() {
+        assertTrue(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.SPOOF,
+                listOf(FleetThemeConsumers.SPOOF_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.SPOOF,
+                listOf(WRONG_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.SPOOF, FleetThemeConsumers.SPOOF_CERT))
+        assertFalse(
+            TrustedPeers.isPinnedController(
+                FleetThemeConsumers.SPOOF,
+                listOf(FleetThemeConsumers.SPOOF_CERT),
             ),
         )
     }

@@ -19,6 +19,7 @@ object FleetThemeConsumers {
     const val IDENTITYSHIELD = "com.identityshield.companion"
     const val KEYBOARD_DEBUG = "com.victorious.keyboard.debug"
     const val CONTROLLER = "ai.droidcommand.app"
+    const val SPOOF = "com.victorious.spoof"
 
     const val HACKERAI_DEBUG =
         "AF:1C:8F:C5:44:9F:58:4A:46:C8:96:CC:C9:7F:35:B0:7B:35:7E:96:EE:66:5F:3A:BF:CB:0D:28:4D:F5:23:55"
@@ -38,6 +39,8 @@ object FleetThemeConsumers {
     const val KEYBOARD_DEBUG_CERT =
         "47:1E:AD:6B:3F:96:7E:F3:C8:63:EF:49:08:74:8B:3B:E3:63:F9:1D:75:0B:FD:B1:E9:28:05:BC:F1:6B:AF:4F"
     const val CONTROLLER_DEBUG = FleetPins.CONTROLLER_DEBUG
+    const val SPOOF_CERT =
+        "A4:84:62:2B:7E:86:E1:D9:F8:04:56:6E:B7:89:2D:EE:3C:64:EB:8E:B9:13:9E:04:25:BC:65:F3:EF:D0:FF:EE"
 
     val PINS: Map<String, Set<String>> =
         mapOf(
@@ -50,6 +53,7 @@ object FleetThemeConsumers {
             IDENTITYSHIELD to setOf(IDENTITYSHIELD_CERT),
             KEYBOARD_DEBUG to setOf(KEYBOARD_DEBUG_CERT),
             CONTROLLER to setOf(CONTROLLER_DEBUG),
+            SPOOF to setOf(SPOOF_CERT),
         )
 
     fun isPinned(packageName: String, certs: List<String>): Boolean {

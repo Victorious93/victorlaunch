@@ -25,6 +25,10 @@
 
     <queries>
         <package android:name="ai.droidcommand.app" />
+        <package android:name="com.victorious.sms" />
+        <package android:name="com.victorious.browser" />
+        <package android:name="ai.victorious.filemanager" />
+        <package android:name="ai.victorious.filemanager.debug" />
         <package android:name="moe.shizuku.privileged.api" />
         <package android:name="org.lsposed.manager" />
         <package android:name="org.lsposed.lspd" />
@@ -180,6 +184,28 @@
                 <action android:name="com.victorious.launch.action.WIDGET_REFRESH" />
             </intent-filter>
         </receiver>
+
+        <activity
+            android:name=".share.ShareCatcherActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="Share to fleet"
+            android:theme="@style/Theme.VictorLaunch">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+        <service
+            android:name=".share.FleetChooserTargetService"
+            android:exported="true"
+            android:permission="android.permission.BIND_CHOOSER_TARGET_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.chooser.ChooserTargetService" />
+            </intent-filter>
+        </service>
 
         <activity
             android:name=".island.IslandActionActivity"

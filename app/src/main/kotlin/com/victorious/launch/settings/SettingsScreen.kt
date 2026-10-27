@@ -36,8 +36,10 @@ import com.victorious.launch.core.protocol.Protocol
 import com.victorious.launch.core.protocol.TrustedPeers
 import com.victorious.launch.island.IslandCommandReceiver
 import com.victorious.launch.island.IslandManager
+import com.victorious.launch.core.share.FleetShareCatalog
 import com.victorious.launch.launcher.AppCatalog
 import com.victorious.launch.launcher.IconPackManager
+import com.victorious.launch.share.FleetSharePublisher
 import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.security.SigningCerts
 import com.victorious.launch.shizuku.EmbeddedShizukuServer
@@ -429,6 +431,30 @@ fun SettingsScreen(
                 fontSize = 13.sp,
             )
             Button(onClick = onMods, modifier = Modifier.padding(top = 8.dp)) { Text("Open Mods") }
+        }
+        Section("Share targets") {
+            Text(
+                "Direct-share shortcuts and ChooserTargets only list VictorSMS, Victorious Browser, File Manager, and DroidCommand AI when that package is installed and its signing cert matches a pin. The controller debug cert is pre-pinned. Other fleet apps stay hidden until you trust the installed cert (does not invent a pin).",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Button(
+                onClick = {
+                    val installed = FleetSharePublisher.installedCerts(activity)
+                    var n = 0
+                    FleetShareCatalog.ALL.forEach { spec ->
+                        spec.packageNames.forEach { pkg ->
+                            installed[pkg]?.firstOrNull()?.let {
+                                settings.putSharePin(pkg, it)
+                                n++
+                            }
+                        }
+                    }
+                    FleetSharePublisher.publish(activity, settings)
+                    note = "Trusted $n installed share-target cert(s)"
+                },
+                modifier = Modifier.padding(top = 8.dp),
+            ) { Text("Trust installed fleet share apps") }
         }
         Section("Fleet apps") {
             Text(

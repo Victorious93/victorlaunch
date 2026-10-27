@@ -52,6 +52,9 @@ Mods: a gated **Mods** screen for LSPosed, LSPatch, Geto, and MMRL
 + stock-app clients). Geto is identified as JackEblan/Geto
 (`com.android.geto`) at **90% confidence**. See `mods-embed/README.md`.
 
+Fleet status AppWidgets (mesh/VPN, browser, messaging, health) reuse
+the status-tray pull (15 s, fresh/stale/drop).
+
 Fleet install: Settings → Install / Update loads a **local**
 `fleet-manifest.json` (schema v1) and installs a user-picked APK
 through PackageInstaller after cert-pin checks. No INTERNET.

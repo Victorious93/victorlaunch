@@ -24,6 +24,7 @@ object FleetThemeConsumers {
     const val EDLCOMMANDER = "ai.edlcommander.companion"
     const val FILEMANAGER = "ai.victorious.filemanager"
     const val FILEMANAGER_DEBUG = "ai.victorious.filemanager.debug"
+    const val CAM = "com.victorious.cam"
 
     const val HACKERAI_DEBUG =
         "AF:1C:8F:C5:44:9F:58:4A:46:C8:96:CC:C9:7F:35:B0:7B:35:7E:96:EE:66:5F:3A:BF:CB:0D:28:4D:F5:23:55"
@@ -51,6 +52,8 @@ object FleetThemeConsumers {
         "E5:60:B6:92:BD:E6:51:9E:B7:CB:B5:2C:E4:DC:91:5A:19:E4:41:A0:1A:5D:03:68:82:71:AC:99:78:8A:58:C8"
     const val FILEMANAGER_CERT =
         "8C:1F:E3:C9:E5:34:F2:71:05:C0:68:8F:45:28:D7:7E:47:11:AE:0A:79:DD:08:D1:E8:59:30:B9:E9:48:85:F2"
+    const val CAM_CERT =
+        "8B:56:F8:18:93:B2:4F:02:BC:6C:93:39:39:36:32:3E:C5:74:86:D9:34:E2:9B:73:7C:E1:A7:B4:24:C5:B6:0D"
 
     val PINS: Map<String, Set<String>> =
         mapOf(
@@ -68,6 +71,7 @@ object FleetThemeConsumers {
             EDLCOMMANDER to setOf(EDLCOMMANDER_CERT),
             FILEMANAGER to setOf(FILEMANAGER_CERT),
             FILEMANAGER_DEBUG to setOf(FILEMANAGER_CERT),
+            CAM to setOf(CAM_CERT),
         )
 
     fun isPinned(packageName: String, certs: List<String>): Boolean {

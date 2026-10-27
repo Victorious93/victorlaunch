@@ -222,6 +222,7 @@ another reason), or remote-control ops (`app.launch` / `layout.set` /
 | `ai.edlcommander.companion` | `E5:60:B6:92:BD:E6:51:9E:B7:CB:B5:2C:E4:DC:91:5A:19:E4:41:A0:1A:5D:03:68:82:71:AC:99:78:8A:58:C8` | Theme-read only |
 | `ai.victorious.filemanager` | `8C:1F:E3:C9:E5:34:F2:71:05:C0:68:8F:45:28:D7:7E:47:11:AE:0A:79:DD:08:D1:E8:59:30:B9:E9:48:85:F2` | Theme-read only. Same signer as `.debug`. |
 | `ai.victorious.filemanager.debug` | `8C:1F:E3:C9:E5:34:F2:71:05:C0:68:8F:45:28:D7:7E:47:11:AE:0A:79:DD:08:D1:E8:59:30:B9:E9:48:85:F2` | Theme-read only. Same signer as the release applicationId. |
+| `com.victorious.cam` | `8B:56:F8:18:93:B2:4F:02:BC:6C:93:39:39:36:32:3E:C5:74:86:D9:34:E2:9B:73:7C:E1:A7:B4:24:C5:B6:0D` | Theme-read only |
 
 Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 

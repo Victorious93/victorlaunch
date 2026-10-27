@@ -194,6 +194,7 @@ class FleetThemeTest {
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.EDLCOMMANDER, FleetThemeConsumers.EDLCOMMANDER_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.FILEMANAGER, FleetThemeConsumers.FILEMANAGER_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.FILEMANAGER_DEBUG, FleetThemeConsumers.FILEMANAGER_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.CAM, FleetThemeConsumers.CAM_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_DEBUG))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_RELEASE))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.CONTROLLER, FleetThemeConsumers.CONTROLLER_DEBUG))
@@ -372,6 +373,31 @@ class FleetThemeTest {
         assertEquals(
             FleetThemeConsumers.PINS[FleetThemeConsumers.FILEMANAGER],
             FleetThemeConsumers.PINS[FleetThemeConsumers.FILEMANAGER_DEBUG],
+        )
+    }
+
+    @Test
+    fun camThemePinIsReadOnly() {
+        assertTrue(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.CAM,
+                listOf(FleetThemeConsumers.CAM_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.CAM,
+                listOf(WRONG_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.CAM, FleetThemeConsumers.CAM_CERT))
+        assertFalse(
+            TrustedPeers.isPinnedController(
+                FleetThemeConsumers.CAM,
+                listOf(FleetThemeConsumers.CAM_CERT),
+            ),
         )
     }
 

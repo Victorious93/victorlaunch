@@ -153,6 +153,9 @@ another reason), or remote-control ops (`app.launch` / `layout.set` /
 | `com.victorious.victoryped` | `63:AA:41:BB:C5:0A:06:27:A0:4F:55:96:F1:11:12:E0:36:E4:51:B5:9F:4C:26:0F:AB:FB:92:E1:78:D2:F0:79` | Theme-read only |
 | `com.victorious.taskbar` | `4F:58:A5:C5:75:93:5E:10:3B:1F:73:C0:7A:D2:E0:0A:FF:64:57:76:27:71:1B:77:96:79:37:D5:FC:3B:C2:92` | Theme-read only |
 | `ai.rootforge.os.debug` | `77:7A:C7:00:87:05:A8:B4:B8:93:AC:EF:0E:03:E9:1C:7F:49:52:C9:52:FE:B2:6E:06:D7:90:B9:14:86:64:6F` | Theme-read only. The `.debug` suffix is the real applicationId; `ai.rootforge.os` is **not** pinned. |
+| `com.identityshield.companion` | `22:4F:C1:64:D6:8A:28:88:B9:FE:8F:10:C7:B6:B5:E5:78:67:2B:D2:F8:97:05:06:68:4B:23:A9:43:FA:44:1D` | Theme-read only |
+| `com.victorious.keyboard.debug` | `47:1E:AD:6B:3F:96:7E:F3:C8:63:EF:49:08:74:8B:3B:E3:63:F9:1D:75:0B:FD:B1:E9:28:05:BC:F1:6B:AF:4F` | Theme-read only. The `.debug` suffix is the real applicationId; `com.victorious.keyboard` is **not** pinned. |
+| `ai.droidcommand.app` | `88:00:51:A6:D9:5D:38:DD:8D:81:E1:93:1E:17:05:48:03:87:D5:93:C3:09:43:53:99:68:E6:EF:11:A0:C8:4D` | Theme-read entry matching the existing controller debug pin. Bridge pairing, full-control, and the kill switch are **unchanged**. |
 
 Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 

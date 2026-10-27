@@ -5,6 +5,7 @@ import com.victorious.launch.core.bridge.ActionAuditLog
 import com.victorious.launch.network.NetworkMonitorController
 import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.shizuku.PrivilegedOps
+import com.victorious.launch.share.FleetSharePublisher
 import com.victorious.launch.shizuku.ShizukuSession
 
 class VictorLaunchApp : Application() {
@@ -37,6 +38,7 @@ class VictorLaunchApp : Application() {
         if (settings.isNetworkMonitorEnabled()) {
             network.start()
         }
+        FleetSharePublisher.publish(this, settings)
     }
 
     companion object {

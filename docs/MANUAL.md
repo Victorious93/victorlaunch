@@ -241,6 +241,23 @@ widget bind on a phone — nothing here was device-tested.
 ![App drawer](screenshots/07-drawer.png)
 *Placeholder: Personal / Island tabs.*
 
+### Share to fleet apps
+
+The system share sheet can offer **VictorSMS**, **Victorious Browser**,
+**File Manager**, and **DroidCommand AI** — only when that package is
+installed **and** its signing certificate matches a pin.
+
+- DroidCommand AI’s debug cert is pre-pinned.
+- VictorSMS / Browser / File Manager have empty fleet pins today. They
+  stay hidden until you tap Settings → **Trust installed fleet share
+  apps** (records the certs currently on the phone) or a pin lands in
+  `apps.yml`.
+- Sharing Shortcuts (API 25+) and ChooserTargets (API 23–29) both use
+  that same allow-list. Unverified packages are never offered.
+
+[Certain] the allow-list has unit tests. [Guessing] the system share
+sheet on a phone.
+
 ### Fleet status widgets
 
 Long-press the home wallpaper (or the system widget picker) and add:

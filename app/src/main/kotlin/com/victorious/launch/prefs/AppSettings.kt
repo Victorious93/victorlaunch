@@ -147,6 +147,31 @@ class AppSettings(context: Context) {
         return listOf(row.packageName to row.certSha256)
     }
 
+    fun sharePins(): Map<String, List<String>> {
+        val raw = prefs.getString(KEY_SHARE_PINS, null) ?: return emptyMap()
+        val obj = JSONObject(raw)
+        val out = LinkedHashMap<String, List<String>>()
+        obj.keys().forEach { pkg ->
+            val arr = obj.optJSONArray(pkg) ?: return@forEach
+            out[pkg] =
+                buildList {
+                    for (i in 0 until arr.length()) add(arr.getString(i))
+                }
+        }
+        return out
+    }
+
+    fun putSharePin(packageName: String, certSha256: String) {
+        val obj = JSONObject(prefs.getString(KEY_SHARE_PINS, "{}") ?: "{}")
+        val arr = obj.optJSONArray(packageName) ?: JSONArray()
+        val existing = buildList {
+            for (i in 0 until arr.length()) add(arr.getString(i))
+        }
+        if (certSha256 !in existing) arr.put(certSha256)
+        obj.put(packageName, arr)
+        prefs.edit().putString(KEY_SHARE_PINS, obj.toString()).apply()
+    }
+
     fun isCallerPaired(packageName: String, certs: List<String>): Boolean =
         TrustedPeers.authorize(packageName, certs, extraPairings())
 
@@ -247,5 +272,6 @@ class AppSettings(context: Context) {
         private const val KEY_PAIRED_PKG = "controller_package"
         private const val KEY_PAIRED_CERT = "controller_cert_sha256"
         private const val KEY_ICON_PACK = "icon_pack_package"
+        private const val KEY_SHARE_PINS = "share_target_pins"
     }
 }

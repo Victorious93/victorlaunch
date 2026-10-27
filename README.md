@@ -52,6 +52,9 @@ Mods: a gated **Mods** screen for LSPosed, LSPatch, Geto, and MMRL
 + stock-app clients). Geto is identified as JackEblan/Geto
 (`com.android.geto`) at **90% confidence**. See `mods-embed/README.md`.
 
+Share sheet targets (VictorSMS, Browser, File Manager, DroidCommand AI)
+only appear for installed apps whose package+cert is pinned.
+
 Fleet status AppWidgets (mesh/VPN, browser, messaging, health) reuse
 the status-tray pull (15 s, fresh/stale/drop).
 

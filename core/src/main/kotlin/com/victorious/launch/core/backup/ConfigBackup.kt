@@ -56,7 +56,28 @@ data class WorkspaceItem(
     val packageName: String,
     val x: Int,
     val y: Int,
-)
+    val kind: String = KIND_APP,
+    val page: Int = 0,
+    val folderId: String? = null,
+    val title: String? = null,
+    val children: List<String> = emptyList(),
+    val widgetId: Int? = null,
+    val spanX: Int = 1,
+    val spanY: Int = 1,
+) {
+    companion object {
+        const val KIND_APP = "app"
+        const val KIND_FOLDER = "folder"
+        const val KIND_WIDGET = "widget"
+    }
+
+    fun itemId(): String =
+        when (kind) {
+            KIND_FOLDER -> folderId ?: "folder-$x-$y-$page"
+            KIND_WIDGET -> "widget-${widgetId ?: "$page-$x-$y"}"
+            else -> "app-$packageName-$page-$x-$y"
+        }
+}
 
 data class ImportReport(
     val dryRun: Boolean,
@@ -120,6 +141,16 @@ object ConfigBackupCodec {
                             put("packageName", it.packageName)
                             put("x", it.x)
                             put("y", it.y)
+                            put("kind", it.kind)
+                            put("page", it.page)
+                            if (it.folderId != null) put("folderId", it.folderId)
+                            if (it.title != null) put("title", it.title)
+                            if (it.children.isNotEmpty()) {
+                                put("children", JsonArray(it.children.map { child -> JsonPrimitive(child) }))
+                            }
+                            if (it.widgetId != null) put("widgetId", it.widgetId)
+                            put("spanX", it.spanX)
+                            put("spanY", it.spanY)
                         }
                     },
                 ),
@@ -251,11 +282,21 @@ object ConfigBackupCodec {
         if (el !is JsonArray) return emptyList()
         return el.mapNotNull { item ->
             val obj = item as? JsonObject ?: return@mapNotNull null
-            val pkg = obj["packageName"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+            val kind = obj["kind"]?.jsonPrimitive?.contentOrNull ?: WorkspaceItem.KIND_APP
+            val pkg = obj["packageName"]?.jsonPrimitive?.contentOrNull ?: ""
+            if (kind == WorkspaceItem.KIND_APP && pkg.isBlank()) return@mapNotNull null
             WorkspaceItem(
                 packageName = pkg,
                 x = obj["x"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 0,
                 y = obj["y"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 0,
+                kind = kind,
+                page = obj["page"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 0,
+                folderId = obj["folderId"]?.jsonPrimitive?.contentOrNull,
+                title = obj["title"]?.jsonPrimitive?.contentOrNull,
+                children = stringList(obj["children"]),
+                widgetId = obj["widgetId"]?.jsonPrimitive?.contentOrNull?.toIntOrNull(),
+                spanX = obj["spanX"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 1,
+                spanY = obj["spanY"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 1,
             )
         }
     }
@@ -267,7 +308,7 @@ object ConfigBackupCodec {
         (live + incoming.filterNot { it in live }).distinct()
 
     private fun mergeWorkspace(live: List<WorkspaceItem>, incoming: List<WorkspaceItem>): List<WorkspaceItem> {
-        val liveIds = live.map { it.packageName }.toSet()
-        return live + incoming.filterNot { it.packageName in liveIds }
+        val liveIds = live.map { it.itemId() }.toSet()
+        return live + incoming.filterNot { it.itemId() in liveIds }
     }
 }

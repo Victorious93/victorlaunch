@@ -16,7 +16,10 @@ built on Android Launcher3:
   Launcher3  Android Open Source Project, Apache License 2.0
 
 Lawnchair and AOSP Launcher3 source are NOT vendored in this
-repository. See docs/LAWNCHAIR_REBASE.md.
+repository. The home workspace implements Launcher3-lineage
+behaviour (paged workspace, dock, folders, AppWidgetHost, ADW/GO/Nova
+icon-pack intents, swipe gestures) under GPLv3. See
+docs/LAWNCHAIR_REBASE.md.
 
 Island-style work-profile isolation is implemented with public
 Android DevicePolicyManager / LauncherApps / UserManager APIs.

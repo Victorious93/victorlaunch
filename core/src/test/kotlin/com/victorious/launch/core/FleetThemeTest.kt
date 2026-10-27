@@ -190,6 +190,7 @@ class FleetThemeTest {
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.IDENTITYSHIELD, FleetThemeConsumers.IDENTITYSHIELD_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.KEYBOARD_DEBUG, FleetThemeConsumers.KEYBOARD_DEBUG_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.SPOOF, FleetThemeConsumers.SPOOF_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.PENTESTSWARM, FleetThemeConsumers.PENTESTSWARM_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_DEBUG))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_RELEASE))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.CONTROLLER, FleetThemeConsumers.CONTROLLER_DEBUG))
@@ -297,6 +298,31 @@ class FleetThemeTest {
             TrustedPeers.isPinnedController(
                 FleetThemeConsumers.SPOOF,
                 listOf(FleetThemeConsumers.SPOOF_CERT),
+            ),
+        )
+    }
+
+    @Test
+    fun pentestswarmThemePinIsReadOnly() {
+        assertTrue(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.PENTESTSWARM,
+                listOf(FleetThemeConsumers.PENTESTSWARM_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.PENTESTSWARM,
+                listOf(WRONG_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.PENTESTSWARM, FleetThemeConsumers.PENTESTSWARM_CERT))
+        assertFalse(
+            TrustedPeers.isPinnedController(
+                FleetThemeConsumers.PENTESTSWARM,
+                listOf(FleetThemeConsumers.PENTESTSWARM_CERT),
             ),
         )
     }

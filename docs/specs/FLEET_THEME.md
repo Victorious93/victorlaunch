@@ -218,6 +218,7 @@ another reason), or remote-control ops (`app.launch` / `layout.set` /
 | `com.victorious.keyboard.debug` | `47:1E:AD:6B:3F:96:7E:F3:C8:63:EF:49:08:74:8B:3B:E3:63:F9:1D:75:0B:FD:B1:E9:28:05:BC:F1:6B:AF:4F` | Theme-read only. The `.debug` suffix is the real applicationId; `com.victorious.keyboard` is **not** pinned. |
 | `ai.droidcommand.app` | `88:00:51:A6:D9:5D:38:DD:8D:81:E1:93:1E:17:05:48:03:87:D5:93:C3:09:43:53:99:68:E6:EF:11:A0:C8:4D` | Theme-read entry matching the existing controller debug pin. Bridge pairing, full-control, and the kill switch are **unchanged**. |
 | `com.victorious.spoof` | `A4:84:62:2B:7E:86:E1:D9:F8:04:56:6E:B7:89:2D:EE:3C:64:EB:8E:B9:13:9E:04:25:BC:65:F3:EF:D0:FF:EE` | Theme-read only |
+| `ai.pentestswarm.companion` | `5E:3A:B1:23:1F:7E:DA:18:78:B8:FF:D8:9E:AC:B1:F7:2E:EB:66:AF:3D:BA:2E:01:33:51:24:68:42:23:30:C7` | Theme-read only |
 
 Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 

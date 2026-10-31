@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.victorious.launch.core.backup.LauncherPreferences
 import com.victorious.launch.core.backup.WorkspaceItem
+import com.victorious.launch.core.launcher.DrawerModel
+import com.victorious.launch.core.launcher.DrawerTab
 import com.victorious.launch.core.launcher.GestureBinding
 import com.victorious.launch.core.launcher.GestureMap
 import com.victorious.launch.core.launcher.HomeGesture
@@ -120,6 +122,18 @@ class AppSettings(context: Context) {
     fun setGestureBinding(gesture: HomeGesture, binding: GestureBinding) {
         val next = gestureBindings().toMutableMap().apply { put(gesture, binding) }
         prefs.edit().putString(KEY_GESTURES, GestureMap.encode(next)).apply()
+    }
+
+    fun drawerTabs(): List<DrawerTab> = DrawerModel.decodeTabs(prefs.getString(KEY_DRAWER_TABS, null))
+
+    fun setDrawerTabs(tabs: List<DrawerTab>) {
+        prefs.edit().putString(KEY_DRAWER_TABS, DrawerModel.encodeTabs(tabs)).apply()
+    }
+
+    fun isShowHiddenInDrawer(): Boolean = prefs.getBoolean(KEY_SHOW_HIDDEN, false)
+
+    fun setShowHiddenInDrawer(show: Boolean) {
+        prefs.edit().putBoolean(KEY_SHOW_HIDDEN, show).apply()
     }
 
     fun setDock(packages: List<String>) {
@@ -330,6 +344,8 @@ class AppSettings(context: Context) {
 
         private fun modKey(tool: ModsTool): String = "mods_tool_${tool.id}"
         private const val KEY_GESTURES = "home_gestures"
+        private const val KEY_DRAWER_TABS = "drawer_tabs"
+        private const val KEY_SHOW_HIDDEN = "drawer_show_hidden"
         private const val KEY_DOCK = "dock"
         private const val KEY_WORKSPACE = "workspace"
         private const val KEY_HIDDEN = "hidden"

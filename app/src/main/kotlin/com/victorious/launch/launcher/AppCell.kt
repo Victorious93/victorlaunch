@@ -48,6 +48,7 @@ fun AppCell(
     onDock: (() -> Unit)? = null,
     onFolder: (() -> Unit)? = null,
     onRemove: (() -> Unit)? = null,
+    extraMenu: List<Pair<String, () -> Unit>> = emptyList(),
 ) {
     val colors = LocalFleetColors.current
     val image =
@@ -65,7 +66,7 @@ fun AppCell(
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick = {
-                        if (onDock != null || onFolder != null || onRemove != null) {
+                        if (onDock != null || onFolder != null || onRemove != null || extraMenu.isNotEmpty()) {
                             menu = true
                         } else {
                             onLong()
@@ -124,6 +125,15 @@ fun AppCell(
                     onClick = {
                         menu = false
                         onFolder()
+                    },
+                )
+            }
+            extraMenu.forEach { (label, action) ->
+                DropdownMenuItem(
+                    text = { Text(label) },
+                    onClick = {
+                        menu = false
+                        action()
                     },
                 )
             }

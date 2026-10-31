@@ -15,6 +15,7 @@ data class LaunchableApp(
     val user: UserHandle,
     val userSerial: Long,
     val isWorkProfile: Boolean,
+    val category: com.victorious.launch.core.launcher.AppCategory = com.victorious.launch.core.launcher.AppCategory.OTHER,
 )
 
 class AppCatalog(private val context: Context) {
@@ -64,6 +65,12 @@ class AppCatalog(private val context: Context) {
             user = info.user,
             userSerial = serial,
             isWorkProfile = work,
+            category =
+                com.victorious.launch.core.launcher.DrawerModel.categorize(
+                    packageName = info.componentName.packageName,
+                    androidCategory = info.applicationInfo.category,
+                    isSystem = (info.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0,
+                ),
         )
 
     companion object {

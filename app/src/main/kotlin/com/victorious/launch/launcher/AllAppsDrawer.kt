@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -33,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.victorious.launch.core.launcher.AppSearch
+import com.victorious.launch.core.launcher.DrawerModel
+import com.victorious.launch.core.launcher.DrawerTab
 import com.victorious.launch.core.launcher.SearchableApp
 import com.victorious.launch.core.theme.FleetIconStyle
 import com.victorious.launch.island.IslandManager
@@ -59,6 +63,7 @@ fun AllAppsDrawer(
     island: IslandManager,
     activity: Activity,
     onOpenIsland: () -> Unit,
+    settings: com.victorious.launch.prefs.AppSettings? = null,
 ) {
     val colors = LocalFleetColors.current
     var query by remember { mutableStateOf("") }
@@ -71,16 +76,40 @@ fun AllAppsDrawer(
             }
         }
     }
-    val source = if (tab == 0) apps else islandApps
-    val filtered =
-        remember(source, query) {
-            val hits =
-                AppSearch.filter(
-                    source.map { SearchableApp(it.packageName, it.label, it.component) },
-                    query,
-                ).map { it.packageName }.toSet()
-            source.filter { it.packageName in hits }
+    var rev by remember { mutableStateOf(0) }
+    val hidden = remember(rev) { settings?.launcherPreferences()?.hiddenPackages?.toSet().orEmpty() }
+    var showHidden by remember { mutableStateOf(settings?.isShowHiddenInDrawer() ?: false) }
+    val userTabs = remember(rev) { settings?.drawerTabs().orEmpty() }
+    // "all", "user:<id>" or "cat:<CATEGORY>"
+    var section by remember { mutableStateOf("all") }
+    var newTabName by remember { mutableStateOf<String?>(null) }
+    val categories = remember(apps) { DrawerModel.presentCategories(apps.map { it.category }) }
+    val source0 = if (tab == 0) apps else islandApps
+    val source =
+        remember(source0, hidden, showHidden) {
+            val keep = DrawerModel.visible(source0.map { it.packageName }, hidden, showHidden).toSet()
+            source0.filter { it.packageName in keep }
         }
+    val filtered =
+        remember(source, query, section, userTabs) {
+            if (query.isNotBlank()) {
+                // Instant fuzzy search across every visible app, ignoring the selected tab.
+                val byPkg = source.associateBy { it.component }
+                AppSearch.fuzzy(source.map { SearchableApp(it.packageName, it.label, it.component) }, query)
+                    .mapNotNull { byPkg[it.component] }
+            } else if (tab == 1 || section == "all") {
+                source
+            } else if (section.startsWith("user:")) {
+                val pk = userTabs.firstOrNull { "user:" + it.id == section }?.packages.orEmpty().toSet()
+                source.filter { it.packageName in pk }
+            } else {
+                source.filter { "cat:" + it.category.name == section }
+            }
+        }
+    fun saveTabs(next: List<DrawerTab>) {
+        settings?.setDrawerTabs(next)
+        rev++
+    }
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Apps", color = colors.onBackground, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
@@ -109,6 +138,55 @@ fun AllAppsDrawer(
                 Text("Island", color = if (tab == 1) colors.secondary else colors.muted)
             }
         }
+        if (tab == 0) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                item { Chip("All", section == "all") { section = "all" } }
+                items(userTabs, key = { "u" + it.id }) { t ->
+                    Chip(t.title, section == "user:" + t.id) { section = "user:" + t.id }
+                }
+                items(categories, key = { "c" + it.name }) { c ->
+                    Chip(c.title, section == "cat:" + c.name) { section = "cat:" + c.name }
+                }
+                if (settings != null) {
+                    item { Chip("+ Tab", false) { newTabName = "" } }
+                    item {
+                        Chip(if (showHidden) "Hidden: shown" else "Hidden: off", showHidden) {
+                            showHidden = !showHidden
+                            settings.setShowHiddenInDrawer(showHidden)
+                        }
+                    }
+                }
+            }
+            val name = newTabName
+            if (name != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { newTabName = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Tab name", color = colors.muted) },
+                        singleLine = true,
+                    )
+                    TextButton(onClick = {
+                        val id = java.util.UUID.randomUUID().toString()
+                        saveTabs(DrawerModel.addTab(userTabs, id, name))
+                        section = "user:$id"
+                        newTabName = null
+                    }) { Text("Add", color = colors.primary) }
+                    TextButton(onClick = { newTabName = null }) { Text("Cancel", color = colors.muted) }
+                }
+            }
+            if (section.startsWith("user:")) {
+                val id = section.removePrefix("user:")
+                TextButton(onClick = {
+                    saveTabs(DrawerModel.removeTab(userTabs, id))
+                    section = "all"
+                }) { Text("Delete this tab (apps stay installed)", color = colors.muted, fontSize = 12.sp) }
+                if (filtered.isEmpty() && query.isBlank()) {
+                    Text("Empty tab. Long-press an app in All and choose \"Add to …\".", color = colors.muted, fontSize = 12.sp)
+                }
+            }
+        }
         if (tab == 1) {
             IslandHeader(island, activity, onOpenIsland)
         }
@@ -132,6 +210,27 @@ fun AllAppsDrawer(
                     onLong = { onPinWorkspace(app) },
                     onDock = { onPinDock(app) },
                     onFolder = { onCreateFolder(app) },
+                    extraMenu =
+                        if (settings == null) {
+                            emptyList()
+                        } else {
+                            buildList {
+                                add(
+                                    (if (app.packageName in hidden) "Unhide in drawer" else "Hide from drawer") to {
+                                        settings.setHidden(DrawerModel.toggleHidden(hidden, app.packageName))
+                                        rev++
+                                    },
+                                )
+                                userTabs.forEach { t ->
+                                    val inTab = app.packageName in t.packages
+                                    add(
+                                        (if (inTab) "Remove from ${t.title}" else "Add to ${t.title}") to {
+                                            saveTabs(DrawerModel.toggleMembership(userTabs, t.id, app.packageName))
+                                        },
+                                    )
+                                }
+                            }
+                        },
                 )
             }
         }
@@ -166,5 +265,13 @@ fun IslandHeader(island: IslandManager, activity: Activity, onOpenIsland: () -> 
                 Text("System settings", color = colors.muted)
             }
         }
+    }
+}
+
+@Composable
+private fun Chip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val colors = LocalFleetColors.current
+    TextButton(onClick = onClick) {
+        Text(label, color = if (selected) colors.primary else colors.muted, fontSize = 13.sp)
     }
 }

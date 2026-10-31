@@ -63,6 +63,10 @@ fun AppCell(
             raw?.toThemedImageBitmap(iconStyle, colors.primary.toArgb())
         }
     var menu by remember { mutableStateOf(false) }
+    var inspect by remember { mutableStateOf(false) }
+    if (inspect) {
+        com.victorious.launch.inspect.AppInspectorDialog(app.packageName, app.label) { inspect = false }
+    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
@@ -71,11 +75,7 @@ fun AppCell(
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick = {
-                        if (onDock != null || onFolder != null || onRemove != null || extraMenu.isNotEmpty()) {
-                            menu = true
-                        } else {
-                            onLong()
-                        }
+                        menu = true
                     },
                 )
                 .padding(6.dp)
@@ -135,6 +135,13 @@ fun AppCell(
                     },
                 )
             }
+            DropdownMenuItem(
+                text = { Text("Inspect app") },
+                onClick = {
+                    menu = false
+                    inspect = true
+                },
+            )
             extraMenu.forEach { (label, action) ->
                 DropdownMenuItem(
                     text = { Text(label) },

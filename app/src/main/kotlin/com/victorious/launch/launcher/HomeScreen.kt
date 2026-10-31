@@ -263,6 +263,7 @@ fun HomeScreen(
                         island = island,
                         activity = activity,
                         onOpenIsland = { overlay = Overlay.ISLAND },
+                        settings = settings,
                     )
                 }
             Overlay.SETTINGS ->

@@ -224,6 +224,7 @@ another reason), or remote-control ops (`app.launch` / `layout.set` /
 | `ai.victorious.filemanager.debug` | `8C:1F:E3:C9:E5:34:F2:71:05:C0:68:8F:45:28:D7:7E:47:11:AE:0A:79:DD:08:D1:E8:59:30:B9:E9:48:85:F2` | Theme-read only. Same signer as the release applicationId. |
 | `com.victorious.cam` | `8B:56:F8:18:93:B2:4F:02:BC:6C:93:39:39:36:32:3E:C5:74:86:D9:34:E2:9B:73:7C:E1:A7:B4:24:C5:B6:0D` | Theme-read only |
 | `com.termux` | `67:17:C5:5A:BE:9E:0D:F8:C6:03:C9:A0:F3:F3:67:B6:CA:BD:B0:1F:3E:58:3A:4F:F6:44:E5:DF:3D:4C:31:D3` | Theme-read only. VictorSuite signer. An upstream / F-Droid `com.termux` cert is **refused**. |
+| `com.victorious.sms` | `BA:81:F5:C7:6E:2C:59:04:E8:A0:E5:0C:80:67:A2:A1:6C:23:14:86:2F:13:DA:7F:49:67:94:8A:53:E7:D1:7A` | Theme-read only (VictorSMS debug). Another cert on this package is **refused**. |
 
 Wrong cert for a listed package is refused. Source: `FleetThemeConsumers.PINS`.
 

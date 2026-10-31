@@ -196,6 +196,7 @@ class FleetThemeTest {
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.FILEMANAGER_DEBUG, FleetThemeConsumers.FILEMANAGER_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.CAM, FleetThemeConsumers.CAM_CERT))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.TERMUX, FleetThemeConsumers.TERMUX_CERT))
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.SMS, FleetThemeConsumers.SMS_DEBUG))
         assertFalse(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_DEBUG))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.HACKERAI, FleetThemeConsumers.HACKERAI_RELEASE))
         assertTrue(FleetPins.isTrusted(FleetThemeConsumers.CONTROLLER, FleetThemeConsumers.CONTROLLER_DEBUG))
@@ -441,6 +442,42 @@ class FleetThemeTest {
             TrustedPeers.isPinnedController(
                 FleetThemeConsumers.TERMUX,
                 listOf(FleetThemeConsumers.TERMUX_CERT),
+            ),
+        )
+    }
+
+    @Test
+    fun smsThemePinIsAccepted() {
+        assertTrue(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.SMS,
+                listOf(FleetThemeConsumers.SMS_DEBUG),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(FleetPins.isTrusted(FleetThemeConsumers.SMS, FleetThemeConsumers.SMS_DEBUG))
+        assertFalse(
+            TrustedPeers.isPinnedController(
+                FleetThemeConsumers.SMS,
+                listOf(FleetThemeConsumers.SMS_DEBUG),
+            ),
+        )
+    }
+
+    @Test
+    fun smsThemePinRefusesAnotherCert() {
+        assertFalse(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.SMS,
+                listOf(WRONG_CERT),
+                extraPins = emptyMap(),
+            ),
+        )
+        assertFalse(
+            FleetThemeAccess.canRead(
+                FleetThemeConsumers.SMS,
+                listOf(FleetThemeConsumers.CAM_CERT),
+                extraPins = emptyMap(),
             ),
         )
     }

@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.victorious.launch.core.backup.LauncherPreferences
 import com.victorious.launch.core.backup.WorkspaceItem
+import com.victorious.launch.core.launcher.GestureBinding
+import com.victorious.launch.core.launcher.GestureMap
+import com.victorious.launch.core.launcher.HomeGesture
 import com.victorious.launch.core.protocol.Protocol
 import com.victorious.launch.core.protocol.TrustedPeers
 import com.victorious.launch.core.theme.FleetIconStyle
@@ -110,6 +113,13 @@ class AppSettings(context: Context) {
             .putInt(KEY_GRID, forced.gridColumns.coerceIn(3, 6))
             .putBoolean(KEY_EXTERNAL, false)
             .apply()
+    }
+
+    fun gestureBindings(): Map<HomeGesture, GestureBinding> = GestureMap.decode(prefs.getString(KEY_GESTURES, null))
+
+    fun setGestureBinding(gesture: HomeGesture, binding: GestureBinding) {
+        val next = gestureBindings().toMutableMap().apply { put(gesture, binding) }
+        prefs.edit().putString(KEY_GESTURES, GestureMap.encode(next)).apply()
     }
 
     fun setDock(packages: List<String>) {
@@ -319,6 +329,7 @@ class AppSettings(context: Context) {
         private const val KEY_NET_AUTO_RECOVER = "network_auto_recover"
 
         private fun modKey(tool: ModsTool): String = "mods_tool_${tool.id}"
+        private const val KEY_GESTURES = "home_gestures"
         private const val KEY_DOCK = "dock"
         private const val KEY_WORKSPACE = "workspace"
         private const val KEY_HIDDEN = "hidden"

@@ -5,7 +5,8 @@ import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,11 +42,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.victorious.launch.core.backup.WorkspaceItem
 import com.victorious.launch.core.launcher.GestureAction
+import com.victorious.launch.core.launcher.GestureBinding
+import com.victorious.launch.core.launcher.HomeGesture
 import com.victorious.launch.core.launcher.GestureMap
 import com.victorious.launch.core.launcher.WorkspacePages
 import com.victorious.launch.core.theme.FleetIconStyle
@@ -67,7 +71,15 @@ fun LawnchairWorkspace(
     onLaunch: (LaunchableApp) -> Unit,
     onOpenDrawer: () -> Unit,
     onOpenSearch: () -> Unit,
+    onGesture: (GestureBinding) -> Unit = { b ->
+        when (b.action) {
+            GestureAction.OPEN_DRAWER -> onOpenDrawer()
+            GestureAction.OPEN_SEARCH -> onOpenSearch()
+            else -> Unit
+        }
+    },
 ) {
+    val gestureBindings = settings.gestureBindings().also { layoutRev }
     val colors = LocalFleetColors.current
     val iconStyle = settings.iconStyle()
     val columns = settings.launcherPreferences().gridColumns.coerceIn(3, 6)
@@ -93,13 +105,67 @@ fun LawnchairWorkspace(
     Box(
         Modifier
             .fillMaxSize()
-            .pointerInput(pages) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    val gesture = GestureMap.classifyDrag(dragAmount.x, dragAmount.y, 48.dp.toPx())
-                    when (GestureMap.action(gesture ?: return@detectDragGestures)) {
-                        GestureAction.OPEN_DRAWER -> onOpenDrawer()
-                        GestureAction.OPEN_SEARCH -> onOpenSearch()
+            .pointerInput(pages, layoutRev) {
+                val threshold = 48.dp.toPx()
+                var lastTapUpMs = 0L
+                var lastTapPos = androidx.compose.ui.geometry.Offset.Zero
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var maxPointers = 1
+                    var startSpan = 0f
+                    var endSpan = 0f
+                    var startCy = 0f
+                    var endCy = 0f
+                    var drag = androidx.compose.ui.geometry.Offset.Zero
+                    var childConsumed = false
+                    var upConsumed = false
+                    var upTime = down.uptimeMillis
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val pressed = event.changes.filter { it.pressed }
+                        if (event.changes.any { it.isConsumed }) childConsumed = true
+                        if (pressed.isEmpty()) {
+                            upConsumed = event.changes.any { it.isConsumed }
+                            upTime = event.changes.maxOf { it.uptimeMillis }
+                            break
+                        }
+                        if (pressed.size >= 2) {
+                            val cy = pressed.map { it.position.y }.average().toFloat()
+                            val span = (pressed[0].position - pressed[1].position).getDistance()
+                            if (maxPointers < 2) {
+                                startSpan = span
+                                startCy = cy
+                            }
+                            endSpan = span
+                            endCy = cy
+                        } else if (maxPointers == 1) {
+                            drag += pressed[0].positionChange()
+                        }
+                        maxPointers = maxOf(maxPointers, pressed.size)
+                    }
+                    val gesture =
+                        if (maxPointers >= 2) {
+                            GestureMap.classifyMultiTouch(startSpan, endSpan, endCy - startCy, threshold)
+                        } else if (!childConsumed) {
+                            GestureMap.classifyDrag(drag.x, drag.y, threshold)
+                                ?: run {
+                                    if (upConsumed) return@run null
+                                    val d = down.position - lastTapPos
+                                    if (GestureMap.isDoubleTap(lastTapUpMs, down.uptimeMillis, d.x, d.y, slop = threshold * 2)) {
+                                        lastTapUpMs = 0L
+                                        HomeGesture.DOUBLE_TAP
+                                    } else {
+                                        lastTapUpMs = upTime
+                                        lastTapPos = down.position
+                                        null
+                                    }
+                                }
+                        } else {
+                            null
+                        }
+                    if (gesture == null) return@awaitEachGesture
+                    val binding = GestureMap.resolve(gesture, gestureBindings)
+                    when (binding.action) {
                         GestureAction.NEXT_PAGE ->
                             scope.launch {
                                 pagerState.animateScrollToPage((pagerState.currentPage + 1).coerceAtMost(pages - 1))
@@ -109,6 +175,7 @@ fun LawnchairWorkspace(
                                 pagerState.animateScrollToPage((pagerState.currentPage - 1).coerceAtLeast(0))
                             }
                         GestureAction.NOOP -> Unit
+                        else -> onGesture(binding)
                     }
                 }
             },

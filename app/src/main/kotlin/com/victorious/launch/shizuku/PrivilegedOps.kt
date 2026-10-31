@@ -35,7 +35,7 @@ class PrivilegedOps(
             .daemon(false)
             .processNameSuffix("priv")
             .debuggable(false)
-            .version(5)
+            .version(6)
 
     private val connection =
         object : ServiceConnection {
@@ -68,6 +68,15 @@ class PrivilegedOps(
         }
         service = null
     }
+
+    /** True when Shizuku is enabled in Settings, the binder is alive and permission is granted. */
+    fun isReady(): Boolean = settings.isShizukuEnabled() && session.snapshot().ready
+
+    /**
+     * Runs an argv as the Shizuku user (shell or root). Only called from on-device UI after a
+     * user tap; the bridge has no path to this.
+     */
+    fun exec(argv: List<String>): PrivilegedResult = call("exec") { it.exec(argv.toTypedArray()) }
 
     fun freeze(packageName: String, frozen: Boolean, userId: Int = 0): PrivilegedResult =
         call("freeze") { it.freeze(packageName, frozen, userId) }

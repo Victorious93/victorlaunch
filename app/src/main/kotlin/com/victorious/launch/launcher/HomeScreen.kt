@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.CellTower
+import androidx.compose.material.icons.outlined.DeveloperMode
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.WorkOutline
@@ -90,6 +91,7 @@ enum class Overlay {
     ISLAND,
     GESTURES,
     DOCK_ICONS,
+    DEV,
 }
 
 @Composable
@@ -199,6 +201,9 @@ fun HomeScreen(
                 IconButton(onClick = { overlay = Overlay.ISLAND }) {
                     Icon(Icons.Outlined.WorkOutline, contentDescription = "Island", tint = bar.secondary)
                 }
+                IconButton(onClick = { overlay = Overlay.DEV }) {
+                    Icon(Icons.Outlined.DeveloperMode, contentDescription = "Developer panel", tint = bar.secondary)
+                }
                 IconButton(onClick = { overlay = Overlay.NETWORK }) {
                     Icon(Icons.Outlined.CellTower, contentDescription = "Network Monitor", tint = bar.primary)
                 }
@@ -307,6 +312,14 @@ fun HomeScreen(
                         onIsland = { overlay = Overlay.ISLAND },
                         onGestures = { overlay = Overlay.GESTURES },
                         onDockIcons = { overlay = Overlay.DOCK_ICONS },
+                        onClose = { overlay = Overlay.NONE },
+                    )
+                }
+            Overlay.DEV ->
+                OverlayScrim {
+                    com.victorious.launch.dev.DevPanelScreen(
+                        settings = settings,
+                        activity = activity,
                         onClose = { overlay = Overlay.NONE },
                     )
                 }

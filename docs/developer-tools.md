@@ -31,3 +31,10 @@ show a one-time "allow log access" prompt.
   Show taps, pointer location and layout bounds always need Shizuku or root.
 - Animation scales (window / transition / animator).
 - Logcat viewer: tag, text, package (by PID) and minimum level filters; pause, clear, share, export via the system file picker.
+
+## App inspector (long-press any app → Inspect app)
+
+Package, version name/code, target/min SDK, install source, signing certificate
+SHA-256 (tap to copy), requested/granted permissions, component counts and APK size.
+**Extract APK…** copies the base APK and every split into a folder you pick
+(Storage Access Framework); nothing is written anywhere else.

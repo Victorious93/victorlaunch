@@ -10,4 +10,6 @@
     <string name="widget_health">Fleet health</string>
     <string name="perm_read_fleet_theme_label">Read fleet theme</string>
     <string name="perm_read_fleet_theme">Allows an app signed with the VictorLaunch key to read the shared fleet theme. Differently signed fleet apps must still pass package+cert verification.</string>
+    <string name="lock_service_label">VictorLaunch gesture lock</string>
+    <string name="lock_service_description">Optional. Lets a VictorLaunch home gesture lock the screen. It does not read screen content or what you type.</string>
 </resources>

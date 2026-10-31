@@ -68,7 +68,9 @@ import com.victorious.launch.mods.ModsScreen
 import com.victorious.launch.network.NetworkScreen
 import com.victorious.launch.lockdown.BiometricGate
 import com.victorious.launch.prefs.AppSettings
+import com.victorious.launch.settings.GestureSettingsScreen
 import com.victorious.launch.settings.SettingsScreen
+import com.victorious.launch.core.launcher.GestureAction
 import com.victorious.launch.status.ControllerClient
 import com.victorious.launch.status.PullResult
 import com.victorious.launch.widgets.FleetWidgets
@@ -85,6 +87,7 @@ enum class Overlay {
     MODS,
     NETWORK,
     ISLAND,
+    GESTURES,
 }
 
 @Composable
@@ -199,6 +202,24 @@ fun HomeScreen(
                     searchFocused = true
                     overlay = Overlay.DRAWER
                 },
+                onGesture = { binding ->
+                    when (binding.action) {
+                        GestureAction.OPEN_DRAWER -> {
+                            searchFocused = false
+                            overlay = Overlay.DRAWER
+                        }
+                        GestureAction.OPEN_SEARCH -> {
+                            searchFocused = true
+                            overlay = Overlay.DRAWER
+                        }
+                        GestureAction.EXPAND_NOTIFICATIONS -> GestureActions.expandNotifications(activity)
+                        GestureAction.OPEN_FLEET_TRAY -> overlay = Overlay.FLEET
+                        GestureAction.LAUNCH_APP ->
+                            binding.packageName?.let { GestureActions.launchPackage(activity, catalog, it) }
+                        GestureAction.LOCK_SCREEN -> GestureActions.lockScreen(activity)
+                        else -> Unit
+                    }
+                },
             )
         }
         when (overlay) {
@@ -256,7 +277,20 @@ fun HomeScreen(
                         onMods = { overlay = Overlay.MODS },
                         onNetwork = { overlay = Overlay.NETWORK },
                         onIsland = { overlay = Overlay.ISLAND },
+                        onGestures = { overlay = Overlay.GESTURES },
                         onClose = { overlay = Overlay.NONE },
+                    )
+                }
+            Overlay.GESTURES ->
+                OverlayScrim {
+                    GestureSettingsScreen(
+                        settings = settings,
+                        apps = apps,
+                        activity = activity,
+                        onClose = {
+                            layoutRev++
+                            overlay = Overlay.SETTINGS
+                        },
                     )
                 }
             Overlay.HELP ->

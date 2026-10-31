@@ -62,6 +62,7 @@ fun SettingsScreen(
     onMods: () -> Unit,
     onNetwork: () -> Unit,
     onIsland: () -> Unit,
+    onGestures: () -> Unit = {},
     onClose: () -> Unit,
 ) {
     var external by remember { mutableStateOf(settings.isExternalControlEnabled()) }
@@ -153,6 +154,7 @@ fun SettingsScreen(
                 color = Muted,
                 fontSize = 13.sp,
             )
+            TextButton(onClick = onGestures) { Text("Home gestures…", color = Cyan) }
             val packs = remember { IconPackManager(activity.packageManager).installedPacks() }
             val selected = settings.iconPackPackage()
             Text(

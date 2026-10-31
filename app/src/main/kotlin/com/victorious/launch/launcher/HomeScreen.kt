@@ -89,6 +89,7 @@ enum class Overlay {
     NETWORK,
     ISLAND,
     GESTURES,
+    DOCK_ICONS,
 }
 
 @Composable
@@ -305,7 +306,18 @@ fun HomeScreen(
                         onNetwork = { overlay = Overlay.NETWORK },
                         onIsland = { overlay = Overlay.ISLAND },
                         onGestures = { overlay = Overlay.GESTURES },
+                        onDockIcons = { overlay = Overlay.DOCK_ICONS },
                         onClose = { overlay = Overlay.NONE },
+                    )
+                }
+            Overlay.DOCK_ICONS ->
+                OverlayScrim {
+                    com.victorious.launch.settings.DockIconSettingsScreen(
+                        settings = settings,
+                        onClose = {
+                            layoutRev++
+                            overlay = Overlay.SETTINGS
+                        },
                     )
                 }
             Overlay.GESTURES ->

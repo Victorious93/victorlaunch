@@ -49,7 +49,12 @@ fun AppCell(
     onFolder: (() -> Unit)? = null,
     onRemove: (() -> Unit)? = null,
     extraMenu: List<Pair<String, () -> Unit>> = emptyList(),
+    iconScalePct: Int = 100,
+    showLabel: Boolean = true,
+    labelSp: Int = 11,
 ) {
+    val outerDp = ((if (compact) 44 else 52) * iconScalePct + 50) / 100
+    val innerDp = ((if (compact) 40 else 48) * iconScalePct + 50) / 100
     val colors = LocalFleetColors.current
     val image =
         remember(app.component, iconPackPackage, iconStyle, colors.primary) {
@@ -74,11 +79,11 @@ fun AppCell(
                     },
                 )
                 .padding(6.dp)
-                .then(if (compact) Modifier.width(64.dp) else Modifier),
+                .then(if (compact) Modifier.width((outerDp + 20).dp) else Modifier),
     ) {
         Box(
             Modifier
-                .size(if (compact) 44.dp else 52.dp)
+                .size(outerDp.dp)
                 .clip(CircleShape)
                 .background(Brush.linearGradient(listOf(colors.primary.copy(alpha = 0.35f), colors.secondary.copy(alpha = 0.35f)))),
             contentAlignment = Alignment.Center,
@@ -87,21 +92,23 @@ fun AppCell(
                 Image(
                     bitmap = image,
                     contentDescription = app.label,
-                    modifier = Modifier.size(if (compact) 40.dp else 48.dp).clip(CircleShape),
+                    modifier = Modifier.size(innerDp.dp).clip(CircleShape),
                     contentScale = ContentScale.Crop,
                 )
             } else {
                 Text(app.label.take(1), color = colors.onBackground, fontWeight = FontWeight.Bold)
             }
         }
-        Spacer(Modifier.height(4.dp))
-        Text(
-            app.label,
-            color = colors.onBackground,
-            fontSize = 11.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (showLabel) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                app.label,
+                color = colors.onBackground,
+                fontSize = labelSp.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             DropdownMenuItem(
                 text = { Text("Pin to workspace") },

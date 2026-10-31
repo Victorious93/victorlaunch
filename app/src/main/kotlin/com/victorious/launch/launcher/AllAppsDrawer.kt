@@ -1,5 +1,7 @@
 package com.victorious.launch.launcher
 
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.coerceAtLeast
 import android.app.Activity
 import android.content.Intent
 import android.provider.Settings
@@ -193,14 +195,21 @@ fun AllAppsDrawer(
         if (tab == 1 && islandLocked && islandApps.isEmpty()) {
             Text("Island tab is locked. Authenticate to open it.", color = colors.muted)
         }
+        val look = settings?.homeLayout() ?: com.victorious.launch.core.launcher.HomeLayoutConfig()
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.weight(1f)) {
+        val cellH = ((maxHeight - 8.dp * (look.drawerRows - 1)) / look.drawerRows).coerceAtLeast(56.dp)
         LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
-            modifier = Modifier.weight(1f),
+            columns = GridCells.Fixed(look.drawerColumns),
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(filtered, key = { it.component }) { app ->
+                androidx.compose.foundation.layout.Box(Modifier.height(cellH), contentAlignment = androidx.compose.ui.Alignment.Center) {
                 AppCell(
+                    iconScalePct = look.iconScalePct,
+                    showLabel = look.showLabels,
+                    labelSp = look.labelSizeSp,
                     app = app,
                     catalog = catalog,
                     iconPack = iconPack,
@@ -232,7 +241,9 @@ fun AllAppsDrawer(
                             }
                         },
                 )
+                }
             }
+        }
         }
     }
 }

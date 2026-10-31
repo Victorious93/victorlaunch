@@ -1,5 +1,16 @@
 package com.victorious.launch.launcher
 
+import androidx.compose.ui.unit.coerceAtLeast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.draw.clip
+import com.victorious.launch.core.launcher.HomeLayoutConfig
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -83,6 +94,7 @@ fun LawnchairWorkspace(
     val colors = LocalFleetColors.current
     val iconStyle = settings.iconStyle()
     val columns = settings.launcherPreferences().gridColumns.coerceIn(3, 6)
+    val look = settings.homeLayout().also { layoutRev }
     val hidden = settings.launcherPreferences().hiddenPackages.toSet()
     val items = settings.launcherPreferences().workspace.also { layoutRev }
     val pages = WorkspacePages.pageCount(items).coerceAtLeast(1)
@@ -185,6 +197,7 @@ fun LawnchairWorkspace(
                 WorkspacePage(
                     page = page,
                     columns = columns,
+                    look = look,
                     items = WorkspacePages.itemsOnPage(items, page),
                     apps = apps,
                     hidden = hidden,
@@ -214,6 +227,7 @@ fun LawnchairWorkspace(
             }
             DockRow(
                 settings = settings,
+                look = look,
                 apps = apps,
                 catalog = catalog,
                 iconPack = iconPack,
@@ -274,6 +288,7 @@ fun LawnchairWorkspace(
 private fun WorkspacePage(
     page: Int,
     columns: Int,
+    look: HomeLayoutConfig,
     items: List<WorkspaceItem>,
     apps: List<LaunchableApp>,
     hidden: Set<String>,
@@ -296,6 +311,9 @@ private fun WorkspacePage(
         }
         return
     }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val rows = look.homeRows
+    val rowH = ((maxHeight - 16.dp - 12.dp * (rows - 1)) / rows).coerceAtLeast(48.dp)
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         modifier = Modifier.fillMaxSize(),
@@ -328,25 +346,33 @@ private fun WorkspacePage(
                     }
                 }
                 WorkspaceItem.KIND_FOLDER -> {
-                    FolderCell(item, onClick = { onOpenFolder(item) }, onRemove = { onRemove(item) })
+                    Box(Modifier.height(rowH), contentAlignment = Alignment.Center) {
+                        FolderCell(item, onClick = { onOpenFolder(item) }, onRemove = { onRemove(item) })
+                    }
                 }
                 else -> {
                     val app = apps.firstOrNull { it.packageName == item.packageName && it.packageName !in hidden }
                     if (app != null) {
-                        AppCell(
-                            app = app,
-                            catalog = catalog,
-                            iconPack = iconPack,
-                            iconPackPackage = iconPackPackage,
-                            iconStyle = iconStyle,
-                            onClick = { onLaunch(app) },
-                            onLong = { },
-                            onRemove = { onRemove(item) },
-                        )
+                        Box(Modifier.height(rowH), contentAlignment = Alignment.Center) {
+                            AppCell(
+                                app = app,
+                                catalog = catalog,
+                                iconPack = iconPack,
+                                iconPackPackage = iconPackPackage,
+                                iconStyle = iconStyle,
+                                onClick = { onLaunch(app) },
+                                onLong = { },
+                                onRemove = { onRemove(item) },
+                                iconScalePct = look.iconScalePct,
+                                showLabel = look.showLabels,
+                                labelSp = look.labelSizeSp,
+                            )
+                        }
                     }
                 }
             }
         }
+    }
     }
 }
 
@@ -370,6 +396,7 @@ private fun FolderCell(item: WorkspaceItem, onClick: () -> Unit, onRemove: () ->
 @Composable
 private fun DockRow(
     settings: AppSettings,
+    look: HomeLayoutConfig,
     apps: List<LaunchableApp>,
     catalog: AppCatalog,
     iconPack: IconPackManager,
@@ -382,30 +409,70 @@ private fun DockRow(
         settings.launcherPreferences().dock.mapNotNull { pkg ->
             apps.firstOrNull { it.packageName == pkg && pkg !in hidden }
         }
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-        shape = RoundedCornerShape(28.dp),
-        color = colors.tile,
-    ) {
-        Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            dock.take(5).forEach { app ->
-                AppCell(
-                    app = app,
-                    catalog = catalog,
-                    iconPack = iconPack,
-                    iconPackPackage = settings.iconPackPackage(),
-                    iconStyle = settings.iconStyle(),
-                    compact = true,
-                    onClick = { onLaunch(app) },
-                    onLong = { },
+    val rows = look.dockRowsOf(dock.map { it.packageName })
+    var revealed by remember(look.dockSwipeUp) { mutableStateOf(!look.dockSwipeUp) }
+    Column(Modifier.fillMaxWidth()) {
+        if (look.dockSwipeUp) {
+            // Handle: swipe up to reveal the dock, down to hide it. Consumes its own drags
+            // so the home gesture detector does not also open the drawer.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(24.dp)
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures { change, dy ->
+                            change.consume()
+                            if (dy < -6f) revealed = true
+                            if (dy > 6f) revealed = false
+                        }
+                    }
+                    .clickable { revealed = !revealed },
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    Modifier.width(40.dp).height(4.dp).clip(RoundedCornerShape(2.dp))
+                        .background(colors.muted.copy(alpha = 0.6f)),
                 )
             }
-            IconButton(onClick = onOpenDrawer) {
-                Icon(Icons.Outlined.Apps, contentDescription = "App drawer", tint = colors.primary)
+        }
+        AnimatedVisibility(visible = revealed, enter = expandVertically(), exit = shrinkVertically()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                shape = RoundedCornerShape(28.dp),
+                color = colors.tile,
+            ) {
+                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                    val shown = if (rows.isEmpty()) listOf(emptyList()) else rows
+                    shown.forEachIndexed { index, rowPkgs ->
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            rowPkgs.forEach { pkg ->
+                                val app = dock.first { it.packageName == pkg }
+                                AppCell(
+                                    app = app,
+                                    catalog = catalog,
+                                    iconPack = iconPack,
+                                    iconPackPackage = settings.iconPackPackage(),
+                                    iconStyle = settings.iconStyle(),
+                                    compact = true,
+                                    onClick = { onLaunch(app) },
+                                    onLong = { },
+                                    iconScalePct = look.iconScalePct,
+                                    showLabel = look.showLabels,
+                                    labelSp = look.labelSizeSp,
+                                )
+                            }
+                            if (index == shown.lastIndex) {
+                                IconButton(onClick = onOpenDrawer) {
+                                    Icon(Icons.Outlined.Apps, contentDescription = "App drawer", tint = colors.primary)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -481,12 +548,9 @@ private fun FolderSheet(
 }
 
 fun pinToDock(settings: AppSettings, app: LaunchableApp) {
-    val dock = settings.launcherPreferences().dock.toMutableList()
-    if (app.packageName !in dock) {
-        if (dock.size >= 5) dock.removeAt(0)
-        dock.add(app.packageName)
-        settings.setDock(dock)
-    }
+    val dock = settings.launcherPreferences().dock
+    val next = settings.homeLayout().pinToDock(dock, app.packageName)
+    if (next != dock) settings.setDock(next)
 }
 
 fun pinToWorkspace(settings: AppSettings, app: LaunchableApp) {
@@ -495,6 +559,7 @@ fun pinToWorkspace(settings: AppSettings, app: LaunchableApp) {
             settings.launcherPreferences().workspace,
             app.packageName,
             settings.launcherPreferences().gridColumns,
+            settings.homeLayout().homeRows,
         ),
     )
 }
@@ -518,7 +583,7 @@ fun createFolderFromApp(settings: AppSettings, app: LaunchableApp) {
 
 private fun placeWidget(settings: AppSettings, widgetId: Int) {
     val workspace = settings.launcherPreferences().workspace
-    val (page, x, y) = WorkspacePages.nextEmptySlot(workspace, settings.launcherPreferences().gridColumns)
+    val (page, x, y) = WorkspacePages.nextEmptySlot(workspace, settings.launcherPreferences().gridColumns, settings.homeLayout().homeRows)
     settings.setWorkspace(
         workspace +
             WorkspaceItem(

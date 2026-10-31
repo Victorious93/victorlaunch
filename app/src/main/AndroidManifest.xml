@@ -145,6 +145,14 @@
             </intent-filter>
         </receiver>
 
+        <!-- On-device approval for remote layout.set from non-controller peers. -->
+        <activity
+            android:name=".bridge.ConfirmActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <activity
             android:name=".mods.PatchedApkConfirmActivity"
             android:excludeFromRecents="true"

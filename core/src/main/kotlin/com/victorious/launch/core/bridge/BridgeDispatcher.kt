@@ -44,7 +44,8 @@ interface LauncherHost {
 
     fun layout(): JsonObject
 
-    fun setLayout(params: JsonObject): JsonObject
+    /** Apply an already-validated patch; return the new layout (same shape as [layout]). */
+    fun setLayout(patch: LayoutPatch): JsonObject
 
     fun fleetPairs(): List<PairedNode>
 
@@ -82,7 +83,98 @@ class BridgeDispatcher(
         confirmed: Boolean = false,
         callerIsPinnedController: Boolean = false,
         controllerFullControlEnabled: Boolean = true,
-    ): BridgeResponse {
+    ): BridgeResponse =
+        when (
+            val o =
+                evaluate(
+                    raw, sourceNodeRef, callerPaired, externalControlEnabled, confirmed,
+                    callerIsPinnedController, controllerFullControlEnabled,
+                )
+        ) {
+            is Outcome.Done -> o.response
+            is Outcome.NeedsConfirm -> o.pending.denialResponse()
+        }
+
+    /** Result of [evaluate]: either a final response or an op parked for on-device confirmation. */
+    sealed class Outcome {
+        data class Done(val response: BridgeResponse) : Outcome()
+
+        data class NeedsConfirm(val pending: PendingConfirm) : Outcome()
+    }
+
+    /**
+     * An authorized, replay-checked request that only lacks the user's on-device OK.
+     * The nonce is already consumed, so it can only be completed once via [complete].
+     */
+    class PendingConfirm internal constructor(
+        val envelope: Envelope,
+        val sourceNodeRef: String,
+        internal val externalControlEnabled: Boolean,
+        internal val callerIsPinnedController: Boolean,
+        internal val controllerFullControlEnabled: Boolean,
+    ) {
+        /** Wall-clock ms after which the request may no longer be approved. */
+        val expiresAtMs: Long
+            get() = envelope.timestampMs + (if (envelope.ttlMs <= 0) Protocol.DEFAULT_TTL_MS else Protocol.clampTtl(envelope.ttlMs))
+
+        internal var done = false
+
+        fun denialResponse(): BridgeResponse =
+            BridgeResponse.fail(
+                envelope.requestId,
+                ErrorCategory.CONFIRMATION_REQUIRED,
+                "${envelope.op} needs on-device confirmation",
+            )
+    }
+
+    /**
+     * Finish a parked request. Approved and still inside its ttl -> run it.
+     * Denied -> confirmation_required. Ttl elapsed -> expired. Second call -> replay_detected.
+     */
+    @Synchronized
+    fun complete(pending: PendingConfirm, approved: Boolean): BridgeResponse {
+        val env = pending.envelope
+        if (pending.done) {
+            return BridgeResponse.fail(env.requestId, ErrorCategory.REPLAY_DETECTED, "already completed")
+        }
+        pending.done = true
+        if (host.nowMs() > pending.expiresAtMs) {
+            return finish(env, pending.sourceNodeRef, BridgeResponse.fail(env.requestId, ErrorCategory.EXPIRED, "confirmation window elapsed"))
+        }
+        if (!approved) {
+            return finish(env, pending.sourceNodeRef, BridgeResponse.fail(env.requestId, ErrorCategory.CONFIRMATION_REQUIRED, "declined on device"))
+        }
+        return run(
+            env, pending.sourceNodeRef, pending.externalControlEnabled, false,
+            pending.callerIsPinnedController, pending.controllerFullControlEnabled,
+        )
+    }
+
+    fun evaluate(
+        raw: String?,
+        sourceNodeRef: String,
+        callerPaired: Boolean,
+        externalControlEnabled: Boolean,
+        confirmed: Boolean = false,
+        callerIsPinnedController: Boolean = false,
+        controllerFullControlEnabled: Boolean = true,
+    ): Outcome {
+        val r = evaluateInner(
+            raw, sourceNodeRef, callerPaired, externalControlEnabled, confirmed,
+            callerIsPinnedController, controllerFullControlEnabled,
+        )
+        return if (r is BridgeResponse) Outcome.Done(r) else r as Outcome
+    }
+
+    private fun evaluateInner(
+        raw: String?,
+        sourceNodeRef: String,
+        callerPaired: Boolean,
+        externalControlEnabled: Boolean,
+        confirmed: Boolean,
+        callerIsPinnedController: Boolean,
+        controllerFullControlEnabled: Boolean,
+    ): Any {
         if (raw.isNullOrBlank()) {
             return BridgeResponse.fail(null, ErrorCategory.INVALID_PARAMETERS, "empty request")
         }
@@ -136,6 +228,16 @@ class BridgeDispatcher(
             return BridgeResponse.fail(env.requestId, ErrorCategory.UNSUPPORTED_OP, "unsupported op ${env.op}")
         }
         val isLocalUi = sourceNodeRef == self || sourceNodeRef == Protocol.PACKAGE_NAME
+        // Every peer except droidcommand-AI (pinned package+cert) and our own UI needs the
+        // generic external-control switch, for reads as well. capabilities.get stays open so
+        // a peer can discover that the switch is off.
+        if (!isLocalUi && !callerIsPinnedController && !externalControlEnabled && env.op != Ops.CAPABILITIES_GET) {
+            return finish(
+                env,
+                sourceNodeRef,
+                BridgeResponse.fail(env.requestId, ErrorCategory.EXTERNAL_CONTROL_DISABLED, "external control is off"),
+            )
+        }
         if (
             !RemoteActionPolicy.allowsAction(
                 env.op,
@@ -183,6 +285,20 @@ class BridgeDispatcher(
             !env.dryRun &&
             !confirmed
         ) {
+            if (env.op == Ops.LAYOUT_SET && !isLocalUi) {
+                // Validate before bothering the user with a prompt.
+                try {
+                    LayoutPatch.parse(env.params)
+                } catch (e: GateException) {
+                    return finish(env, sourceNodeRef, BridgeResponse.fail(env.requestId, e.category, e.message ?: e.category))
+                }
+                audit.record(
+                    ActionAuditEvent(host.nowMs(), sourceNodeRef, env.op, env.requestId, env.nonce, false, "awaiting_confirm"),
+                )
+                return Outcome.NeedsConfirm(
+                    PendingConfirm(env, sourceNodeRef, externalControlEnabled, callerIsPinnedController, controllerFullControlEnabled),
+                )
+            }
             return finish(
                 env,
                 sourceNodeRef,
@@ -193,6 +309,17 @@ class BridgeDispatcher(
                 ),
             )
         }
+        return run(env, sourceNodeRef, externalControlEnabled, isLocalUi, callerIsPinnedController, controllerFullControlEnabled)
+    }
+
+    private fun run(
+        env: Envelope,
+        sourceNodeRef: String,
+        externalControlEnabled: Boolean,
+        isLocalUi: Boolean,
+        callerIsPinnedController: Boolean,
+        controllerFullControlEnabled: Boolean,
+    ): BridgeResponse {
         return try {
             finish(
                 env,
@@ -285,6 +412,9 @@ class BridgeDispatcher(
         buildJsonObject {
             put("protocolMajor", Protocol.PROTOCOL_MAJOR)
             put("protocolMinor", Protocol.PROTOCOL_MINOR)
+            put("externalControlEnabled", genericExternalControl)
+            put("controllerFullControl", RemoteActionPolicy.controllerHasFullControl(callerIsPinnedController, controllerFullControlEnabled))
+            putJsonArray("panels") { Panels.ALL.forEach { add(JsonPrimitive(it)) } }
             putJsonArray("ops") {
                 Ops.ALL.forEach { op ->
                     add(
@@ -409,8 +539,9 @@ class BridgeDispatcher(
         ) {
             throw GateException(ErrorCategory.EXTERNAL_CONTROL_DISABLED, "external control is off")
         }
-        val pkg = env.params["packageName"]?.jsonPrimitive?.contentOrNull
-            ?: throw ForbiddenBackupContentException("packageName is required")
+        val pkg = (env.params["packageName"] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+            ?.takeIf { it.isNotBlank() }
+            ?: throw GateException(ErrorCategory.INVALID_PARAMETERS, "packageName is required")
         val ok = host.launchApp(pkg)
         if (!ok) throw GateException(ErrorCategory.NOT_FOUND, "app not found")
         return buildJsonObject { put("launched", pkg) }
@@ -434,7 +565,7 @@ class BridgeDispatcher(
         ) {
             throw GateException(ErrorCategory.EXTERNAL_CONTROL_DISABLED, "external control is off")
         }
-        return host.setLayout(env.params)
+        return host.setLayout(LayoutPatch.parse(env.params))
     }
 
     private fun panelOpen(
@@ -455,7 +586,8 @@ class BridgeDispatcher(
         ) {
             throw GateException(ErrorCategory.EXTERNAL_CONTROL_DISABLED, "external control is off")
         }
-        val panel = env.params["panel"]?.jsonPrimitive?.contentOrNull ?: "drawer"
+        val panel = (env.params["panel"] as? JsonPrimitive)?.contentOrNull ?: "drawer"
+        if (!Panels.isKnown(panel)) throw GateException(ErrorCategory.NOT_FOUND, "unknown panel")
         val ok = host.openPanel(panel)
         if (!ok) throw GateException(ErrorCategory.NOT_FOUND, "unknown panel")
         return buildJsonObject { put("panel", panel) }

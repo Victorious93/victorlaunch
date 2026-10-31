@@ -58,6 +58,14 @@ class HomeActivity : FragmentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // A remote layout.set may have been parked while a background activity start was blocked.
+        if (com.victorious.launch.bridge.BridgeEvents.hasPending()) {
+            com.victorious.launch.bridge.BridgeEvents.showPrompt(this)
+        }
+    }
+
     override fun onDestroy() {
         if (this::widgets.isInitialized) {
             widgets.stop()

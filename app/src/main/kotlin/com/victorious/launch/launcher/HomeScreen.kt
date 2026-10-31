@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -111,6 +112,31 @@ fun HomeScreen(
     var trayNote by remember { mutableStateOf("Waiting for the controller") }
     var radio by remember { mutableStateOf<TrayTile?>(null) }
     val aggregator = remember { StatusTrayAggregator() }
+
+    // droidcommand-AI / external control: panel.open and layout.set land here.
+    val remotePanel by com.victorious.launch.bridge.BridgeEvents.panel.collectAsState()
+    val remoteLayoutRev by com.victorious.launch.bridge.BridgeEvents.layoutRev.collectAsState()
+    LaunchedEffect(remotePanel) {
+        val target =
+            when (remotePanel) {
+                null -> return@LaunchedEffect
+                "home" -> Overlay.NONE
+                "drawer" -> Overlay.DRAWER
+                "island" -> Overlay.ISLAND
+                "settings" -> Overlay.SETTINGS
+                "help" -> Overlay.HELP
+                "mods" -> Overlay.MODS
+                "network" -> Overlay.NETWORK
+                "fleet" -> Overlay.FLEET
+                "gestures" -> Overlay.GESTURES
+                else -> null
+            }
+        if (target != null) overlay = target
+        com.victorious.launch.bridge.BridgeEvents.panel.value = null
+    }
+    LaunchedEffect(remoteLayoutRev) {
+        if (remoteLayoutRev > 0) layoutRev++
+    }
 
     LaunchedEffect(Unit) {
         while (true) {

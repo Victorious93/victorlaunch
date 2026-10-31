@@ -7,6 +7,10 @@ import android.os.Process
 import com.victorious.launch.core.backup.LauncherPreferences
 import com.victorious.launch.core.bridge.InstalledApp
 import com.victorious.launch.core.bridge.LauncherHost
+import com.victorious.launch.core.bridge.LayoutPatch
+import com.victorious.launch.core.bridge.Panels
+import com.victorious.launch.launcher.HomeActivity
+import android.content.Intent
 import com.victorious.launch.core.bridge.PairedNode
 import com.victorious.launch.core.bridge.RunningResult
 import com.victorious.launch.VictorLaunchApp
@@ -17,7 +21,6 @@ import com.victorious.launch.core.status.NodeStatusSnapshot
 import com.victorious.launch.network.NetworkStatusCodec
 import com.victorious.launch.launcher.AppCatalog
 import com.victorious.launch.prefs.AppSettings
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -71,6 +74,8 @@ class AndroidHost(
                             put("packageName", item.packageName)
                             put("x", item.x)
                             put("y", item.y)
+                            put("page", item.page)
+                            put("kind", item.kind)
                         },
                     )
                 }
@@ -79,10 +84,11 @@ class AndroidHost(
         }
     }
 
-    override fun setLayout(params: JsonObject): JsonObject {
-        val dock =
-            (params["dock"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.content } ?: preferences().dock
-        settings.setDock(dock)
+    override fun setLayout(patch: LayoutPatch): JsonObject {
+        patch.dock?.let { settings.setDock(it) }
+        patch.workspace?.let { settings.setWorkspace(it) }
+        patch.gridColumns?.let { settings.setGridColumns(it) }
+        BridgeEvents.layoutRev.value = BridgeEvents.layoutRev.value + 1
         return layout()
     }
 
@@ -121,9 +127,21 @@ class AndroidHost(
 
     override fun launchApp(packageName: String): Boolean = catalog.launchPackage(packageName)
 
-    override fun openPanel(panel: String): Boolean =
-        panel == "drawer" || panel == "island" || panel == "settings" || panel == "help" ||
-            panel == "mods" || panel == "network"
+    override fun openPanel(panel: String): Boolean {
+        if (!Panels.isKnown(panel)) return false
+        BridgeEvents.panel.value = panel
+        // Bring home to the front; HomeScreen consumes BridgeEvents.panel.
+        return try {
+            context.startActivity(
+                Intent(context, HomeActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            )
+            true
+        } catch (_: Exception) {
+            // Still delivered next time home is visible.
+            true
+        }
+    }
 
     override fun networkStatus(): JsonObject =
         try {

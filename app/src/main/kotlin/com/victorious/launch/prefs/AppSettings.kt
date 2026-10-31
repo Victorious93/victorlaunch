@@ -136,6 +136,10 @@ class AppSettings(context: Context) {
         prefs.edit().putBoolean(KEY_SHOW_HIDDEN, show).apply()
     }
 
+    fun setGridColumns(columns: Int) {
+        prefs.edit().putInt(KEY_GRID, columns.coerceIn(3, 6)).apply()
+    }
+
     fun setDock(packages: List<String>) {
         prefs.edit().putString(KEY_DOCK, JSONArray(packages).toString()).apply()
     }

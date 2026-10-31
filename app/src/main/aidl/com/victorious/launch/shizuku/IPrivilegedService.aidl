@@ -16,5 +16,7 @@ interface IPrivilegedService {
     String setAllowed2g(boolean allowed);
     String setPreferredNetworkMode(int mode);
     String radioRecover();
+    /** Generic argv exec for user-initiated dev tools. Never reachable from the bridge. */
+    String exec(in String[] argv);
     void destroy();
 }

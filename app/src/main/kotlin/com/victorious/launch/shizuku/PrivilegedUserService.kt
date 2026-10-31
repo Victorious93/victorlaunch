@@ -89,6 +89,11 @@ class PrivilegedUserService : IPrivilegedService.Stub {
         return "on($onCmd/$onSet/$onBc) off($offCmd/$offSet/$offBc)"
     }
 
+    override fun exec(argv: Array<String>): String {
+        if (argv.isEmpty()) return "error: empty argv"
+        return run(argv.toList())
+    }
+
     override fun destroy() {
         System.exit(0)
     }

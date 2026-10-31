@@ -54,6 +54,13 @@ class AppSettings(context: Context) {
         prefs.edit().putBoolean(KEY_SHIZUKU, enabled).apply()
     }
 
+    /** Opt-in: allow VictorLaunch to run `su` for dev tools. Off by default; su is never run otherwise. */
+    fun isRootShellAllowed(): Boolean = prefs.getBoolean("root_shell_allowed", false)
+
+    fun setRootShellAllowed(allowed: Boolean) {
+        prefs.edit().putBoolean("root_shell_allowed", allowed).apply()
+    }
+
     fun isModsMasterEnabled(): Boolean = prefs.getBoolean(KEY_MODS_MASTER, false)
 
     fun setModsMasterEnabled(enabled: Boolean) {

@@ -228,10 +228,10 @@ class BridgeDispatcher(
             return BridgeResponse.fail(env.requestId, ErrorCategory.UNSUPPORTED_OP, "unsupported op ${env.op}")
         }
         val isLocalUi = sourceNodeRef == self || sourceNodeRef == Protocol.PACKAGE_NAME
-        // Every peer except droidcommand-AI (pinned package+cert) and our own UI needs the
-        // generic external-control switch, for reads as well. capabilities.get stays open so
-        // a peer can discover that the switch is off.
-        if (!isLocalUi && !callerIsPinnedController && !externalControlEnabled && env.op != Ops.CAPABILITIES_GET) {
+        // Fleet Orchestrator contract: read ops answer directly for any paired
+        // (package+cert-verified) caller. Only actions need the generic external-control
+        // switch, except for droidcommand-AI (pinned package+cert) and our own UI.
+        if (descriptor.kind == OpKind.ACTION && !isLocalUi && !callerIsPinnedController && !externalControlEnabled) {
             return finish(
                 env,
                 sourceNodeRef,

@@ -63,6 +63,7 @@ fun SettingsScreen(
     onNetwork: () -> Unit,
     onIsland: () -> Unit,
     onGestures: () -> Unit = {},
+    onDockIcons: () -> Unit = {},
     onClose: () -> Unit,
 ) {
     var external by remember { mutableStateOf(settings.isExternalControlEnabled()) }
@@ -155,6 +156,7 @@ fun SettingsScreen(
                 fontSize = 13.sp,
             )
             TextButton(onClick = onGestures) { Text("Home gestures…", color = Cyan) }
+            TextButton(onClick = onDockIcons) { Text("Dock & icons…", color = Cyan) }
             val packs = remember { IconPackManager(activity.packageManager).installedPacks() }
             val selected = settings.iconPackPackage()
             Text(

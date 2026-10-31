@@ -36,11 +36,16 @@ object WorkspacePages {
         return Triple(pageCount(items), 0, 0)
     }
 
-    fun pinApp(items: List<WorkspaceItem>, packageName: String, columns: Int): List<WorkspaceItem> {
+    fun pinApp(
+        items: List<WorkspaceItem>,
+        packageName: String,
+        columns: Int,
+        rows: Int = DEFAULT_ROWS,
+    ): List<WorkspaceItem> {
         if (items.any { it.kind == WorkspaceItem.KIND_APP && it.packageName == packageName }) {
             return items
         }
-        val (page, x, y) = nextEmptySlot(items, columns)
+        val (page, x, y) = nextEmptySlot(items, columns, rows)
         return items + WorkspaceItem(packageName = packageName, x = x, y = y, page = page)
     }
 

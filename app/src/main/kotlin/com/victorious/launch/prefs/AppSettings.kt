@@ -136,6 +136,13 @@ class AppSettings(context: Context) {
         prefs.edit().putBoolean(KEY_SHOW_HIDDEN, show).apply()
     }
 
+    fun homeLayout(): com.victorious.launch.core.launcher.HomeLayoutConfig =
+        com.victorious.launch.core.launcher.HomeLayoutConfig.decode(prefs.getString(KEY_HOME_LAYOUT, null))
+
+    fun setHomeLayout(config: com.victorious.launch.core.launcher.HomeLayoutConfig) {
+        prefs.edit().putString(KEY_HOME_LAYOUT, config.clamped().encode()).apply()
+    }
+
     fun setGridColumns(columns: Int) {
         prefs.edit().putInt(KEY_GRID, columns.coerceIn(3, 6)).apply()
     }
@@ -357,6 +364,7 @@ class AppSettings(context: Context) {
         private const val KEY_LOCKED_FOLDERS = "locked_folders"
         private const val KEY_ISLAND_LOCKED = "island_tab_locked"
         private const val KEY_GRID = "grid"
+        private const val KEY_HOME_LAYOUT = "home_layout"
         private const val KEY_PAIRED_PKG = "controller_package"
         private const val KEY_PAIRED_CERT = "controller_cert_sha256"
         private const val KEY_ICON_PACK = "icon_pack_package"

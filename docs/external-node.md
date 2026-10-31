@@ -179,7 +179,22 @@ sheet. This is a known deviation from “destructive ops always gated”.
 For **every other peer**: those ops run **only when** the generic
 external-control switch is ON. It is **OFF by default**. Otherwise
 `external_control_disabled`. `layout.set` also needs on-device
-confirmation (`confirmation_required` without it).
+confirmation: the bridge holds the reply, shows an Allow/Deny prompt on
+the device, and answers with the real result once the user decides.
+Deny returns `confirmation_required`; no answer before the envelope ttl
+returns `expired`. Non-controller peers also need the switch for read
+ops (`fleet.list`, `layout.get`, `installed.list`, `running.list`, …);
+only `capabilities.get` stays open so they can see the switch state
+(`externalControlEnabled` in its result).
+
+### Params
+
+| op | params | errors |
+| --- | --- | --- |
+| `app.launch` | `packageName` (required) | `invalid_parameters`, `not_found` |
+| `panel.open` | `panel`: `home`, `drawer`, `island`, `settings`, `help`, `mods`, `network`, `fleet`, `gestures` (default `drawer`) | `not_found` |
+| `layout.set` | any of `dock` (≤10 package names), `workspace` (`[{packageName,x,y,page?}]`), `gridColumns` (3..6); unknown keys rejected | `invalid_parameters` |
+| `running.list` | — | `permission` without usage access, `not_available` |
 
 Every remote action (including denials) is appended to an in-process
 audit log and `Log.i("VictorLaunchAudit", …)`.

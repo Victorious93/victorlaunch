@@ -2,6 +2,7 @@ package com.victorious.launch.core
 
 import com.victorious.launch.core.backup.LauncherPreferences
 import com.victorious.launch.core.bridge.BridgeDispatcher
+import com.victorious.launch.core.bridge.LayoutPatch
 import com.victorious.launch.core.bridge.InstalledApp
 import com.victorious.launch.core.bridge.LauncherHost
 import com.victorious.launch.core.bridge.PairedNode
@@ -47,6 +48,7 @@ class BridgeDispatcherTest {
                 sourceNodeRef = "ai.droidcommand.app",
                 callerPaired = true,
                 externalControlEnabled = false,
+                callerIsPinnedController = true,
             )
         assertTrue(resp.ok)
         val text = resp.result.toString()
@@ -150,7 +152,7 @@ class BridgeDispatcherTest {
         val d = BridgeDispatcher(host())
         val resp =
             d.handle(
-                envelope("layout.set", "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
+                envelope("layout.set", "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", extra = "\"gridColumns\":5"),
                 sourceNodeRef = "com.other.node",
                 callerPaired = true,
                 externalControlEnabled = true,
@@ -258,6 +260,7 @@ class BridgeDispatcherTest {
                 sourceNodeRef = "ai.droidcommand.app",
                 callerPaired = true,
                 externalControlEnabled = false,
+                callerIsPinnedController = true,
             )
         assertFalse(resp.ok)
         assertEquals(ErrorCategory.PERMISSION, resp.error?.category)
@@ -272,6 +275,7 @@ class BridgeDispatcherTest {
                 sourceNodeRef = "ai.droidcommand.app",
                 callerPaired = true,
                 externalControlEnabled = false,
+                callerIsPinnedController = true,
             )
         assertTrue(resp.ok)
         assertTrue(resp.result.toString().contains("node_health"))
@@ -288,6 +292,7 @@ class BridgeDispatcherTest {
                 sourceNodeRef = "ai.droidcommand.app",
                 callerPaired = true,
                 externalControlEnabled = false,
+                callerIsPinnedController = true,
             )
         assertTrue(resp.ok)
         val text = resp.result.toString()
@@ -318,7 +323,7 @@ class FakeHost(
 
     override fun layout(): JsonObject = JsonObject(emptyMap())
 
-    override fun setLayout(params: JsonObject): JsonObject = params
+    override fun setLayout(patch: LayoutPatch): JsonObject = JsonObject(emptyMap())
 
     override fun fleetPairs(): List<PairedNode> = emptyList()
 

@@ -48,9 +48,9 @@ class BridgeService : Service() {
             val paired = pkgs.any { VictorLaunchApp.instance.settings.isCallerPaired(it, certs) }
             val pinned = pkgs.any { TrustedPeers.isPinnedController(it, certs) }
             val auditSize = dispatcher.audit.snapshot().size
-            val resp =
+            val outcome =
                 try {
-                    dispatcher.handle(
+                    dispatcher.evaluate(
                         raw = raw,
                         sourceNodeRef = source,
                         callerPaired = paired,
@@ -61,7 +61,18 @@ class BridgeService : Service() {
                             VictorLaunchApp.instance.settings.isControllerFullControlEnabled(),
                     )
                 } catch (e: Exception) {
-                    BridgeResponse.fail(null, ErrorCategory.INTERNAL, e.message ?: "internal")
+                    BridgeDispatcher.Outcome.Done(BridgeResponse.fail(null, ErrorCategory.INTERNAL, e.message ?: "internal"))
+                }
+            val resp =
+                when (outcome) {
+                    is BridgeDispatcher.Outcome.Done -> outcome.response
+                    is BridgeDispatcher.Outcome.NeedsConfirm -> {
+                        // Hold the reply until the user answers on-device or the ttl runs out.
+                        BridgeEvents.park(applicationContext, outcome.pending, dispatcher, System.currentTimeMillis()) {
+                            sendReply(replyTo, it)
+                        }
+                        return
+                    }
                 }
             val audited = dispatcher.audit.snapshot()
             if (audited.size > auditSize) {
@@ -71,15 +82,19 @@ class BridgeService : Service() {
                     "${event.op} source=${event.sourceNodeRef} ok=${event.ok} ${event.detail} req=${event.requestId}",
                 )
             }
-            val out = Message.obtain(null, Protocol.MSG_RESPONSE)
-            out.data =
-                Bundle().apply {
-                    putString(Protocol.KEY_RESPONSE, resp.toJson().toString())
-                }
-            try {
-                replyTo.send(out)
-            } catch (_: Exception) {
+            sendReply(replyTo, resp)
+        }
+    }
+
+    private fun sendReply(replyTo: Messenger, resp: BridgeResponse) {
+        val out = Message.obtain(null, Protocol.MSG_RESPONSE)
+        out.data =
+            Bundle().apply {
+                putString(Protocol.KEY_RESPONSE, resp.toJson().toString())
             }
+        try {
+            replyTo.send(out)
+        } catch (_: Exception) {
         }
     }
 }

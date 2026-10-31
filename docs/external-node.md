@@ -182,10 +182,14 @@ external-control switch is ON. It is **OFF by default**. Otherwise
 confirmation: the bridge holds the reply, shows an Allow/Deny prompt on
 the device, and answers with the real result once the user decides.
 Deny returns `confirmation_required`; no answer before the envelope ttl
-returns `expired`. Non-controller peers also need the switch for read
-ops (`fleet.list`, `layout.get`, `installed.list`, `running.list`, …);
-only `capabilities.get` stays open so they can see the switch state
-(`externalControlEnabled` in its result).
+returns `expired`.
+
+Read ops (`capabilities.get`, `fleet.list`, `layout.get`,
+`installed.list`, `running.list`, …) answer directly for any **paired**
+(package+cert-verified) caller, whatever the switch state, per the
+Fleet Orchestrator contract. Only the action ops above need the switch.
+Unpaired callers get `not_paired` for everything. `capabilities.get`
+reports the switch state as `externalControlEnabled`.
 
 ### Params
 

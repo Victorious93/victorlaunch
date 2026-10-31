@@ -108,14 +108,28 @@ class BridgeControlTest {
     }
 
     @Test
-    fun otherPeersNeedExternalSwitchForReadsButCanDiscoverCapabilities() {
-        for (op in listOf("fleet.list", "layout.get", "installed.list", "running.list")) {
-            assertEquals(op, ErrorCategory.EXTERNAL_CONTROL_DISABLED, peer(env(op), external = false).error?.category)
+    fun pairedPeerReadsAnswerDirectlyWithSwitchOff() {
+        host.running = RunningResult.Ok(listOf("com.a.one"))
+        for (op in listOf("capabilities.get", "fleet.list", "layout.get", "installed.list", "running.list")) {
+            assertTrue(op, peer(env(op), external = false).ok)
         }
         val caps = peer(env("capabilities.get"), external = false)
-        assertTrue(caps.ok)
         assertTrue(caps.result.toString().contains("\"externalControlEnabled\":false"))
-        assertTrue(peer(env("installed.list"), external = true).ok)
+    }
+
+    @Test
+    fun pairedPeerActionsStillNeedSwitch() {
+        for (raw in listOf(env("app.launch", "\"packageName\":\"com.a.one\""), env("layout.set", "\"gridColumns\":5"), env("panel.open", "\"panel\":\"drawer\""))) {
+            assertEquals(raw, ErrorCategory.EXTERNAL_CONTROL_DISABLED, peer(raw, external = false).error?.category)
+        }
+    }
+
+    @Test
+    fun unpairedReadsAreNotPaired() {
+        for (op in listOf("capabilities.get", "fleet.list", "layout.get", "installed.list", "running.list")) {
+            val r = d.handle(env(op), "com.other.peer", callerPaired = false, externalControlEnabled = true)
+            assertEquals(op, ErrorCategory.NOT_PAIRED, r.error?.category)
+        }
     }
 
     @Test

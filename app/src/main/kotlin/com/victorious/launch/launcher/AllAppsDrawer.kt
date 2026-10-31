@@ -70,6 +70,11 @@ fun AllAppsDrawer(
     val colors = LocalFleetColors.current
     var query by remember { mutableStateOf("") }
     val focus = remember { FocusRequester() }
+    var palette by remember { mutableStateOf<String?>(null) }
+    palette?.let { initial ->
+        com.victorious.launch.command.CommandPaletteDialog(initial) { palette = null }
+    }
+    val paletteQuery = com.victorious.launch.core.command.CommandCodec.paletteQuery(query)
     LaunchedEffect(searchFocused) {
         if (searchFocused) {
             try {
@@ -121,7 +126,7 @@ fun AllAppsDrawer(
             value = query,
             onValueChange = { query = it },
             modifier = Modifier.fillMaxWidth().focusRequester(focus).padding(bottom = 8.dp),
-            placeholder = { Text("Search apps", color = colors.muted) },
+            placeholder = { Text("Search apps (> for commands)", color = colors.muted) },
             singleLine = true,
             colors =
                 TextFieldDefaults.colors(
@@ -132,6 +137,14 @@ fun AllAppsDrawer(
                     cursorColor = colors.primary,
                 ),
         )
+        if (paletteQuery != null) {
+            TextButton(onClick = { palette = paletteQuery }) {
+                Text(
+                    if (paletteQuery.isBlank()) "Open command palette" else "Open in command palette: $paletteQuery",
+                    color = colors.primary,
+                )
+            }
+        }
         Row {
             TextButton(onClick = { onTab(0) }) {
                 Text("Personal", color = if (tab == 0) colors.primary else colors.muted)

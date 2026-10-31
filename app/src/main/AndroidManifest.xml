@@ -20,6 +20,7 @@
         tools:ignore="ProtectedPermissions" />
     <!-- LSPatch patched-APK sideload and fleet Install/Update. System confirm sheet required. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <!--
       Dev panel. Both are development/signature permissions: the OS never grants them on install.
       The user grants them once via Shizuku or `adb shell pm grant`. Without them the panel degrades.

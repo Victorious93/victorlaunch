@@ -13,7 +13,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Dock
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.RemoveCircleOutline
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Shop
+import androidx.compose.material.icons.filled.VerticalSplit
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,6 +82,11 @@ fun AppCell(
             raw?.toThemedImageBitmap(iconStyle, colors.primary.toArgb())
         }
     var menu by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    // Loaded only when the menu opens, so scrolling the drawer stays cheap.
+    val shortcuts = remember(menu, app.component) { if (menu) AppActions.shortcuts(context, app) else emptyList() }
+    val uninstall = remember(menu, app.component) { if (menu) AppActions.uninstallKind(context, app) else UninstallKind.NONE }
     var inspect by remember { mutableStateOf(false) }
     if (inspect) {
         com.victorious.launch.inspect.AppInspectorDialog(app.packageName, app.label) { inspect = false }
@@ -75,6 +99,7 @@ fun AppCell(
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         menu = true
                     },
                 )
@@ -110,56 +135,40 @@ fun AppCell(
             )
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-            DropdownMenuItem(
-                text = { Text("Pin to workspace") },
-                onClick = {
-                    menu = false
-                    onLong()
-                },
+            val close = { menu = false }
+            Text(
+                app.label + if (app.isWorkProfile) "  · Island" else "",
+                color = colors.muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp).widthIn(max = 240.dp),
             )
-            if (onDock != null) {
-                DropdownMenuItem(
-                    text = { Text("Pin to dock") },
-                    onClick = {
-                        menu = false
-                        onDock()
-                    },
-                )
-            }
-            if (onFolder != null) {
-                DropdownMenuItem(
-                    text = { Text("New folder") },
-                    onClick = {
-                        menu = false
-                        onFolder()
-                    },
-                )
-            }
-            DropdownMenuItem(
-                text = { Text("Inspect app") },
-                onClick = {
-                    menu = false
-                    inspect = true
-                },
-            )
-            extraMenu.forEach { (label, action) ->
-                DropdownMenuItem(
-                    text = { Text(label) },
-                    onClick = {
-                        menu = false
-                        action()
-                    },
-                )
-            }
-            if (onRemove != null) {
-                DropdownMenuItem(
-                    text = { Text("Remove") },
-                    onClick = {
-                        menu = false
-                        onRemove()
-                    },
-                )
+            shortcuts.forEach { sc -> MenuItem(sc.label, Icons.AutoMirrored.Filled.ArrowForward, close) { AppActions.startShortcut(context, sc) } }
+            if (shortcuts.isNotEmpty()) HorizontalDivider()
+            MenuItem("Pin to workspace", Icons.Filled.PushPin, close) { onLong() }
+            if (onDock != null) MenuItem("Pin to dock", Icons.Filled.Dock, close) { onDock() }
+            if (onFolder != null) MenuItem("New folder", Icons.Filled.CreateNewFolder, close) { onFolder() }
+            MenuItem("Split screen", Icons.Filled.VerticalSplit, close) { AppActions.openSplit(context, app) }
+            extraMenu.forEach { (label, action) -> MenuItem(label, Icons.Filled.MoreHoriz, close) { action() } }
+            HorizontalDivider()
+            MenuItem("App info", Icons.Filled.Info, close) { AppActions.appInfo(context, app) }
+            MenuItem("Inspect / extract APK", Icons.Filled.Search, close) { inspect = true }
+            MenuItem("Open in store", Icons.Filled.Shop, close) { AppActions.openInPlayStore(context, app) }
+            if (onRemove != null) MenuItem("Remove from here", Icons.Filled.RemoveCircleOutline, close) { onRemove() }
+            when (uninstall) {
+                UninstallKind.UNINSTALL -> MenuItem("Uninstall", Icons.Filled.Delete, close, danger = true) { AppActions.uninstall(context, app) }
+                UninstallKind.UNINSTALL_UPDATES -> MenuItem("Uninstall updates", Icons.Filled.Delete, close, danger = true) { AppActions.uninstall(context, app) }
+                UninstallKind.NONE -> {}
             }
         }
     }
+}
+
+@Composable
+private fun MenuItem(label: String, icon: ImageVector, close: () -> Unit, danger: Boolean = false, action: () -> Unit) {
+    val colors = LocalFleetColors.current
+    val tint = if (danger) colors.danger else colors.primary
+    DropdownMenuItem(
+        text = { Text(label, color = if (danger) colors.danger else colors.onBackground) },
+        leadingIcon = { Icon(icon, null, tint = tint) },
+        onClick = { close(); action() },
+    )
 }

@@ -5,6 +5,23 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.draw.clip
+import com.victorious.launch.theme.Tile
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -97,6 +114,8 @@ fun SettingsScreen(
             }
         }
 
+    val sectionState = remember { SectionState() }
+    CompositionLocalProvider(LocalSectionState provides sectionState) {
     Column(
         Modifier
             .fillMaxSize()
@@ -106,8 +125,25 @@ fun SettingsScreen(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Settings", color = Cyan, fontSize = 22.sp, modifier = Modifier.weight(1f))
+            TextButton(onClick = { sectionState.setAll(!sectionState.anyOpen()) }) {
+                Text(if (sectionState.anyOpen()) "Collapse all" else "Expand all", color = Muted)
+            }
             TextButton(onClick = onClose) { Text("Close", color = Cyan) }
         }
+        OutlinedTextField(
+            value = sectionState.query,
+            onValueChange = { sectionState.query = it },
+            singleLine = true,
+            placeholder = { Text("Search settings (theme, shizuku, backup…)", color = Muted) },
+            leadingIcon = { Icon(Icons.Filled.Search, null, tint = Cyan) },
+            trailingIcon = {
+                if (sectionState.query.isNotEmpty()) {
+                    IconButton(onClick = { sectionState.query = "" }) { Icon(Icons.Filled.Clear, "Clear", tint = Muted) }
+                }
+            },
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
+        )
         Section("Fleet theme") {
             Text(
                 "VictorLaunch is the source of truth. Other fleet apps read the current palette from the exported ContentProvider and a change broadcast. Callers are checked by package+cert (the fleet does not share a signing key). See docs/specs/FLEET_THEME.md.",
@@ -573,13 +609,65 @@ fun SettingsScreen(
             )
         }
     }
+    }
 }
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
-    Text(title, color = Magenta, fontSize = 16.sp, modifier = Modifier.padding(top = 20.dp, bottom = 6.dp))
-    content()
+    val state = LocalSectionState.current
+    if (!state.matches(title)) return
+    val open = state.isOpen(title)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Tile)
+            .animateContentSize(),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().clickable { state.toggle(title) }.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(title, color = Magenta, fontSize = 16.sp, modifier = Modifier.weight(1f))
+            Icon(if (open) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, null, tint = Muted)
+        }
+        if (open) Column(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 12.dp)) { content() }
+    }
 }
+
+/** Search + per-section open state. Searching auto-opens every matching section. */
+private class SectionState {
+    var query by mutableStateOf("")
+    private val open = mutableStateMapOf<String, Boolean>()
+    private var allDefault by mutableStateOf(false)
+    private val keywords = mapOf(
+        "Fleet theme" to "color colour dark light material you palette icons",
+        "Home (Lawnchair lineage)" to "icon pack grid gestures dock workspace",
+        "Default launcher" to "home default",
+        "Pair controller" to "droidcommand ai pairing qr",
+        "Shizuku (elevated, optional)" to "adb wireless debugging root privileged",
+        "Island" to "work profile clone freeze",
+        "Lockdown" to "freeze hide force stop biometric usage",
+        "Backup" to "export import restore",
+        "Mods" to "lsposed lspatch geto mmrl xposed",
+        "Fleet apps" to "install update apk",
+        "Help" to "manual docs",
+    )
+
+    fun matches(title: String): Boolean {
+        val q = query.trim().lowercase()
+        if (q.isEmpty()) return true
+        val hay = (title + " " + (keywords[title] ?: "")).lowercase()
+        return q.split(' ').filter { it.isNotBlank() }.all { hay.contains(it) }
+    }
+    fun isOpen(title: String) = query.isNotBlank() || (open[title] ?: allDefault)
+    fun toggle(title: String) { open[title] = !isOpen(title) }
+    fun anyOpen() = allDefault || open.values.any { it }
+    fun setAll(v: Boolean) { open.clear(); allDefault = v }
+}
+
+private val LocalSectionState = staticCompositionLocalOf { SectionState() }
 
 @Composable
 private fun ThemeChoice(label: String, selected: Boolean, onClick: () -> Unit) {

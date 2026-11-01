@@ -141,6 +141,13 @@ fun HomeScreen(
         if (remoteLayoutRev > 0) layoutRev++
     }
 
+    // Refresh the drawer immediately on install/uninstall instead of waiting for the next poll.
+    LaunchedEffect(Unit) {
+        catalog.packageChanges().collect {
+            apps = catalog.personal()
+            islandApps = catalog.island()
+        }
+    }
     LaunchedEffect(Unit) {
         while (true) {
             apps = catalog.personal()

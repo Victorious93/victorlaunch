@@ -1,5 +1,6 @@
 package com.victorious.launch.launcher
 
+import kotlinx.coroutines.channels.awaitClose
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherActivityInfo
@@ -31,6 +32,21 @@ class AppCatalog(private val context: Context) {
                 toLaunchable(info, serial, serial != mySerial)
             }
         }.sortedBy { it.label.lowercase() }
+    }
+
+    /** Emits whenever an app is installed, removed, updated or (un)suspended in any profile. */
+    fun packageChanges(): kotlinx.coroutines.flow.Flow<Unit> = kotlinx.coroutines.flow.callbackFlow {
+        val cb = object : LauncherApps.Callback() {
+            override fun onPackageRemoved(packageName: String?, user: android.os.UserHandle?) { trySend(Unit) }
+            override fun onPackageAdded(packageName: String?, user: android.os.UserHandle?) { trySend(Unit) }
+            override fun onPackageChanged(packageName: String?, user: android.os.UserHandle?) { trySend(Unit) }
+            override fun onPackagesAvailable(p: Array<out String>?, user: android.os.UserHandle?, replacing: Boolean) { trySend(Unit) }
+            override fun onPackagesUnavailable(p: Array<out String>?, user: android.os.UserHandle?, replacing: Boolean) { trySend(Unit) }
+            override fun onPackagesSuspended(p: Array<out String>?, user: android.os.UserHandle?) { trySend(Unit) }
+            override fun onPackagesUnsuspended(p: Array<out String>?, user: android.os.UserHandle?) { trySend(Unit) }
+        }
+        launcherApps.registerCallback(cb, android.os.Handler(android.os.Looper.getMainLooper()))
+        awaitClose { launcherApps.unregisterCallback(cb) }
     }
 
     fun personal(): List<LaunchableApp> = allLaunchable().filterNot { it.isWorkProfile }

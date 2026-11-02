@@ -26,7 +26,7 @@ class IslandCommandReceiver : BroadcastReceiver() {
             else -> {
                 val pkg = intent.getStringExtra(EXTRA_PACKAGE) ?: return
                 when (intent.getStringExtra(EXTRA_CMD)) {
-                    CMD_CLONE -> dpm.installExistingPackage(admin, pkg)
+                    CMD_CLONE -> if (android.os.Build.VERSION.SDK_INT >= 28) dpm.installExistingPackage(admin, pkg) else return
                     CMD_FREEZE -> dpm.setPackagesSuspended(admin, arrayOf(pkg), true)
                     CMD_UNFREEZE -> dpm.setPackagesSuspended(admin, arrayOf(pkg), false)
                     CMD_HIDE -> dpm.setApplicationHidden(admin, pkg, true)

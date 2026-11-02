@@ -31,6 +31,7 @@ internal fun hasLocationPermission(context: Context): Boolean =
  * Reads serving-cell + display info on the calling thread. Returns null
  * when permissions are missing. Never claims a modem lock worked.
  */
+@android.annotation.SuppressLint("MissingPermission") // READ_PHONE_STATE checked by hasPhonePermission; location by hasLocationPermission
 internal fun readNetworkSample(context: Context, nowMs: Long): NetworkSample? {
     if (!hasPhonePermission(context)) return null
     val tm = context.getSystemService(TelephonyManager::class.java) ?: return null
@@ -53,20 +54,16 @@ internal fun readNetworkSample(context: Context, nowMs: Long): NetworkSample? {
             val serving = cells?.firstOrNull { it.isRegistered }
             if (serving != null) {
                 cellId = servingCellId(serving)
-                when (val ss = serving.cellSignalStrength) {
-                    is CellSignalStrengthLte -> {
-                        rsrp = ss.rsrp.takeIf { it in -140..-40 }
-                        rsrq = ss.rsrq.takeIf { it in -34..3 }
-                        sinr = ss.rssnr.takeIf { it in -20..30 }
-                    }
-                    is CellSignalStrengthNr -> {
-                        if (Build.VERSION.SDK_INT >= 29) {
-                            rsrp = ss.ssRsrp.takeIf { it in -140..-40 }
-                            rsrq = ss.ssRsrq.takeIf { it in -43..20 }
-                            sinr = ss.ssSinr.takeIf { it in -23..40 }
-                        }
-                    }
-                    else -> Unit
+                // CellInfo.getCellSignalStrength() is API 30 and CellSignalStrengthNr is API 29: touching
+                // either on older Android throws NoSuchMethodError/NoClassDefFoundError (Errors, not
+                // Exceptions), so branch on SDK_INT before referencing them.
+                if (serving is CellInfoLte) {
+                    val ss = serving.cellSignalStrength
+                    rsrp = ss.rsrp.takeIf { it in -140..-40 }
+                    rsrq = ss.rsrq.takeIf { it in -34..3 }
+                    sinr = ss.rssnr.takeIf { it in -20..30 }
+                } else if (Build.VERSION.SDK_INT >= 29) {
+                    nrSignal(serving)?.let { (p, q, n) -> rsrp = p; rsrq = q; sinr = n }
                 }
             }
         } catch (_: SecurityException) {
@@ -92,6 +89,20 @@ internal fun readNetworkSample(context: Context, nowMs: Long): NetworkSample? {
     )
 }
 
+@androidx.annotation.RequiresApi(29)
+private fun nrSignal(info: CellInfo): Triple<Int?, Int?, Int?>? {
+    val ss = (info as? CellInfoNr)?.cellSignalStrength as? CellSignalStrengthNr ?: return null
+    return Triple(
+        ss.ssRsrp.takeIf { it in -140..-40 },
+        ss.ssRsrq.takeIf { it in -43..20 },
+        ss.ssSinr.takeIf { it in -23..40 },
+    )
+}
+
+/** MCC/MNC strings are API 28; below that report only the cell id. */
+private fun plmn(mcc: () -> String?, mnc: () -> String?): List<String?> =
+    if (Build.VERSION.SDK_INT >= 28) listOf(mcc(), mnc()) else emptyList()
+
 @androidx.annotation.RequiresApi(30)
 private fun displayOverrideType(tm: TelephonyManager): Int {
     val method = TelephonyManager::class.java.getMethod("getTelephonyDisplayInfo")
@@ -107,32 +118,31 @@ internal fun servingCellId(info: CellInfo): String? {
                 val id = info.cellIdentity
                 val ci = id.ci
                 if (ci == Int.MAX_VALUE || ci <= 0) null
-                else listOfNotNull(id.mccString, id.mncString, ci.toString()).joinToString("-")
-            }
-            is CellInfoNr -> {
-                if (Build.VERSION.SDK_INT < 29) null
-                else {
-                    val id = info.cellIdentity as CellIdentityNr
-                    val nci = id.nci
-                    if (nci == Long.MAX_VALUE || nci <= 0L) null
-                    else listOfNotNull(id.mccString, id.mncString, nci.toString()).joinToString("-")
-                }
+                else (plmn({ id.mccString }, { id.mncString }) + ci.toString()).filterNotNull().joinToString("-")
             }
             is CellInfoGsm -> {
                 val id = info.cellIdentity
                 val cid = id.cid
                 if (cid == Int.MAX_VALUE || cid <= 0) null
-                else listOfNotNull(id.mccString, id.mncString, cid.toString()).joinToString("-")
+                else (plmn({ id.mccString }, { id.mncString }) + cid.toString()).filterNotNull().joinToString("-")
             }
             is CellInfoWcdma -> {
                 val id = info.cellIdentity
                 val cid = id.cid
                 if (cid == Int.MAX_VALUE || cid <= 0) null
-                else listOfNotNull(id.mccString, id.mncString, cid.toString()).joinToString("-")
+                else (plmn({ id.mccString }, { id.mncString }) + cid.toString()).filterNotNull().joinToString("-")
             }
-            else -> null
+            else -> if (Build.VERSION.SDK_INT >= 29) nrCellId(info) else null
         }
     return raw?.takeIf { NetworkSample.CELL.matches(it) }
+}
+
+@androidx.annotation.RequiresApi(29)
+private fun nrCellId(info: CellInfo): String? {
+    val id = (info as? CellInfoNr)?.cellIdentity as? CellIdentityNr ?: return null
+    val nci = id.nci
+    return if (nci == Long.MAX_VALUE || nci <= 0L) null
+    else listOfNotNull(id.mccString, id.mncString, nci.toString()).joinToString("-")
 }
 
 @Suppress("DEPRECATION")

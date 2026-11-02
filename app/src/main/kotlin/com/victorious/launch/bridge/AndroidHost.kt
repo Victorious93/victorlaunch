@@ -108,11 +108,12 @@ class AndroidHost(
     override fun runningPackages(): RunningResult {
         val appOps = context.getSystemService(AppOpsManager::class.java)
         val mode =
-            appOps.unsafeCheckOpNoThrow(
-                AppOpsManager.OPSTR_GET_USAGE_STATS,
-                Process.myUid(),
-                context.packageName,
-            )
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName)
+            } else {
+                @Suppress("DEPRECATION")
+                appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName)
+            }
         if (mode != AppOpsManager.MODE_ALLOWED) {
             return RunningResult.Unavailable(ErrorCategory.PERMISSION)
         }

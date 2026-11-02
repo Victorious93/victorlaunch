@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -69,6 +70,7 @@ fun AllAppsDrawer(
 ) {
     val colors = LocalFleetColors.current
     var query by remember { mutableStateOf("") }
+    val recentKeys by RecentLaunches.load(activity).collectAsState()
     val focus = remember { FocusRequester() }
     var palette by remember { mutableStateOf<String?>(null) }
     palette?.let { initial ->
@@ -217,6 +219,31 @@ fun AllAppsDrawer(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            if (tab == 0 && query.isBlank()) {
+                val byKey = apps.associateBy { RecentLaunches.key(it) }
+                val recents = recentKeys.mapNotNull { byKey[it] }.filter { it.packageName !in hidden }.take(look.drawerColumns)
+                if (recents.isNotEmpty()) {
+                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }, key = "recent-h") {
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Text("RECENT", color = colors.secondary, fontSize = 11.sp, modifier = Modifier.weight(1f))
+                            TextButton(onClick = { RecentLaunches.clear(activity) }) { Text("Clear", color = colors.muted, fontSize = 11.sp) }
+                        }
+                    }
+                    items(recents, key = { "recent:" + it.component }) { app ->
+                        androidx.compose.foundation.layout.Box(Modifier.height(cellH), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                            AppCell(
+                                iconScalePct = look.iconScalePct, showLabel = look.showLabels, labelSp = look.labelSizeSp,
+                                app = app, catalog = catalog, iconPack = iconPack, iconPackPackage = iconPackPackage, iconStyle = iconStyle,
+                                onClick = { onLaunch(app) }, onLong = { onPinWorkspace(app) },
+                                onDock = { onPinDock(app) }, onFolder = { onCreateFolder(app) },
+                            )
+                        }
+                    }
+                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }, key = "all-h") {
+                        Text("ALL APPS", color = colors.secondary, fontSize = 11.sp)
+                    }
+                }
+            }
             items(filtered, key = { it.component }) { app ->
                 androidx.compose.foundation.layout.Box(Modifier.height(cellH), contentAlignment = androidx.compose.ui.Alignment.Center) {
                 AppCell(

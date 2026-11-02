@@ -65,6 +65,7 @@ class AppCatalog(private val context: Context) {
             android.content.ComponentName.unflattenFromString(app.component)
                 ?: return
         launcherApps.startMainActivity(cn, app.user, null, null)
+        RecentLaunches.record(context, app)
     }
 
     fun launchPackage(packageName: String): Boolean {

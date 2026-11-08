@@ -58,11 +58,13 @@ fun String.toComposeColor(): Color = Color(FleetThemePalettes.parseArgb(this))
 @Composable
 fun VictorLaunchTheme(
     snapshot: FleetThemeSnapshot? = null,
+    textScale: Float = 1f,
+    highContrast: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val palette = snapshot?.palette ?: FleetThemePalettes.NEON
-    val ui = FleetUiColors.from(palette)
     val light = snapshot?.mode == FleetThemeMode.LIGHT
+    val ui = FleetUiColors.from(palette).let { if (highContrast) it.highContrast(light) else it }
     val scheme =
         if (light) {
             lightColorScheme(
@@ -97,7 +99,22 @@ fun VictorLaunchTheme(
                 outline = ui.muted,
             )
         }
-    CompositionLocalProvider(LocalFleetColors provides ui) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    CompositionLocalProvider(
+        LocalFleetColors provides ui,
+        androidx.compose.ui.platform.LocalDensity provides
+            androidx.compose.ui.unit.Density(density.density, density.fontScale * textScale),
+    ) {
         MaterialTheme(colorScheme = scheme, content = content)
     }
 }
+
+/** Pure black/white surfaces, bright text and opaque tiles; accents kept so the fleet look survives. */
+fun FleetUiColors.highContrast(light: Boolean): FleetUiColors =
+    if (light) {
+        copy(background = Color.White, surface = Color.White, tile = Color(0xFFF0F0F0),
+            onBackground = Color.Black, muted = Color(0xFF303030))
+    } else {
+        copy(background = Color.Black, surface = Color.Black, tile = Color(0xFF141414),
+            onBackground = Color.White, muted = Color(0xFFE6E6E6))
+    }

@@ -35,6 +35,15 @@ class AppSettings(context: Context) {
         return id
     }
 
+    /** Extra text scale on top of Android's own font size (1.0, 1.15, 1.3). */
+    fun textScale(): Float = prefs.getFloat(KEY_TEXT_SCALE, 1f).coerceIn(1f, 1.5f)
+
+    fun setTextScale(v: Float) { prefs.edit().putFloat(KEY_TEXT_SCALE, v).apply() }
+
+    fun isHighContrast(): Boolean = prefs.getBoolean(KEY_HIGH_CONTRAST, false)
+
+    fun setHighContrast(v: Boolean) { prefs.edit().putBoolean(KEY_HIGH_CONTRAST, v).apply() }
+
     fun isExternalControlEnabled(): Boolean = prefs.getBoolean(KEY_EXTERNAL, false)
 
     fun setExternalControlEnabled(enabled: Boolean) {
@@ -379,6 +388,9 @@ class AppSettings(context: Context) {
         private const val KEY_THEME_MODE = "fleet_theme_mode"
         private const val KEY_ICON_STYLE = "fleet_icon_style"
         private const val KEY_THEME_UPDATED = "fleet_theme_updated_at"
-        val THEME_KEYS: Set<String> = setOf(KEY_THEME_MODE, KEY_ICON_STYLE, KEY_ICON_PACK, KEY_THEME_UPDATED)
+        const val KEY_TEXT_SCALE = "a11y_text_scale"
+        const val KEY_HIGH_CONTRAST = "a11y_high_contrast"
+        val THEME_KEYS: Set<String> =
+            setOf(KEY_THEME_MODE, KEY_ICON_STYLE, KEY_ICON_PACK, KEY_THEME_UPDATED, KEY_TEXT_SCALE, KEY_HIGH_CONTRAST)
     }
 }

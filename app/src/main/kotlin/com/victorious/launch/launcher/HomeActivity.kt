@@ -43,7 +43,7 @@ class HomeActivity : FragmentActivity() {
                 onDispose { settings.unregister(listener) }
             }
             val snapshot = remember(themeTick) { FleetThemeResolver.current(this, settings) }
-            VictorLaunchTheme(snapshot) {
+            VictorLaunchTheme(snapshot, textScale = remember(themeTick) { settings.textScale() }, highContrast = remember(themeTick) { settings.isHighContrast() }) {
                 HomeScreen(
                     settings = settings,
                     catalog = catalog,

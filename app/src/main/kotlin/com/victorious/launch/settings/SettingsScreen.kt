@@ -219,6 +219,21 @@ fun SettingsScreen(
                 Text("No ADW/GO/Nova icon packs installed.", color = Muted, fontSize = 12.sp)
             }
         }
+        Section("Accessibility") {
+            var scale by remember { mutableStateOf(settings.textScale()) }
+            var contrast by remember { mutableStateOf(settings.isHighContrast()) }
+            Text("Text size (on top of Android's font size)", color = Cyan, fontSize = 13.sp)
+            Row {
+                listOf(1f to "Normal", 1.15f to "Large", 1.3f to "Huge").forEach { (v, label) ->
+                    ThemeChoice(label, scale == v) { scale = v; settings.setTextScale(v); note = "Text size: $label" }
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text("High contrast", color = Cyan, modifier = Modifier.weight(1f))
+                Switch(contrast, { contrast = it; settings.setHighContrast(it) })
+            }
+            Text("Pure black (or white) background, brighter text, solid tiles.", color = Muted, fontSize = 12.sp)
+        }
         Section("Notification dots") {
             val dotsOn = com.victorious.launch.notify.DotsListener.hasAccess(activity)
             Text(
@@ -661,6 +676,7 @@ private class SectionState {
         "Fleet theme" to "color colour dark light material you palette icons",
         "Home (Lawnchair lineage)" to "icon pack grid gestures dock workspace",
         "Default launcher" to "home default",
+        "Accessibility" to "text size font large big contrast readability vision",
         "Notification dots" to "badge unread counter notification access",
         "Pair controller" to "droidcommand ai pairing qr",
         "Shizuku (elevated, optional)" to "adb wireless debugging root privileged",

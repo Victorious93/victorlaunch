@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Notification dots for app icons. Keeps only "package -> count" in memory; titles and text are
+ * Notification dots for app icons. Keeps only "package@profile -> count" in memory; titles and text are
  * never read. Runs only after the user grants notification access in Android settings.
  */
 class DotsListener : NotificationListenerService() {
@@ -25,11 +25,18 @@ class DotsListener : NotificationListenerService() {
             .filter { it.packageName != packageName }
             .filter { it.notification.flags and Notification.FLAG_GROUP_SUMMARY == 0 }
             .filter { it.notification.flags and Notification.FLAG_ONGOING_EVENT == 0 } // no dots for music/FGS
-            .groupingBy { it.packageName }
+            .groupingBy { key(it.packageName, serialOf(it)) }
             .eachCount()
     }
 
+    private fun serialOf(sbn: StatusBarNotification): Long = try {
+        getSystemService(android.os.UserManager::class.java).getSerialNumberForUser(sbn.user)
+    } catch (e: Exception) { -1L }
+
     companion object {
+        /** Package + profile serial, so the personal and Island copies of an app get their own dot. */
+        fun key(pkg: String, userSerial: Long) = "$pkg@$userSerial"
+
         private val _counts = MutableStateFlow<Map<String, Int>>(emptyMap())
         val counts: StateFlow<Map<String, Int>> = _counts
         @Volatile private var connected: DotsListener? = null

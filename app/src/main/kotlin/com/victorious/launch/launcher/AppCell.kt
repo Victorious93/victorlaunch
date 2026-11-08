@@ -84,7 +84,7 @@ fun AppCell(
             raw?.toThemedImageBitmap(iconStyle, colors.primary.toArgb())
         }
     var menu by remember { mutableStateOf(false) }
-    val dotCount = com.victorious.launch.notify.DotsListener.counts.collectAsState().value[app.packageName] ?: 0
+    val dotCount = com.victorious.launch.notify.DotsListener.counts.collectAsState().value[com.victorious.launch.notify.DotsListener.key(app.packageName, app.userSerial)] ?: 0
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     // Loaded only when the menu opens, so scrolling the drawer stays cheap.
@@ -128,7 +128,7 @@ fun AppCell(
                 Text(app.label.take(1), color = colors.onBackground, fontWeight = FontWeight.Bold)
             }
         }
-        if (dotCount > 0 && !app.isWorkProfile) {
+        if (dotCount > 0) {
             Box(
                 Modifier.align(Alignment.TopEnd).size(12.dp).clip(CircleShape).background(colors.secondary)
                     .border(2.dp, colors.background, CircleShape),

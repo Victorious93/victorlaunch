@@ -5,6 +5,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.victorious.launch.core.theme.FleetPalette
@@ -14,12 +15,13 @@ import com.victorious.launch.core.theme.FleetThemeSnapshot
 
 val Charcoal = Color(0xFF0B0C12)
 val CharcoalElevated = Color(0xFF161821)
-val Cyan = Color(0xFF00E5FF)
-val Magenta = Color(0xFFE840FF)
-val OnDark = Color(0xFFF5F7FF)
-val Muted = Color(0xFF9AA3B5)
-val Tile = Color(0xCC1A1D2B)
-val Danger = Color(0xFFFF6B8A)
+// Theme-aware: these follow the active fleet palette (incl. light mode and high contrast).
+val Cyan: Color @Composable @ReadOnlyComposable get() = LocalFleetColors.current.primary
+val Magenta: Color @Composable @ReadOnlyComposable get() = LocalFleetColors.current.secondary
+val OnDark: Color @Composable @ReadOnlyComposable get() = LocalFleetColors.current.onBackground
+val Muted: Color @Composable @ReadOnlyComposable get() = LocalFleetColors.current.muted
+val Tile: Color @Composable @ReadOnlyComposable get() = LocalFleetColors.current.tile
+val Danger: Color @Composable @ReadOnlyComposable get() = LocalFleetColors.current.danger
 val StaleAmber = Color(0xFFFFC14D)
 
 data class FleetUiColors(

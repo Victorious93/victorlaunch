@@ -279,5 +279,14 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/lock_accessibility" />
         </service>
+        <service
+            android:name=".notify.DotsListener"
+            android:exported="true"
+            android:label="VictorLaunch notification dots"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

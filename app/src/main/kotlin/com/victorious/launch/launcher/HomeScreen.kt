@@ -141,6 +141,8 @@ fun HomeScreen(
         if (remoteLayoutRev > 0) layoutRev++
     }
 
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(Unit) { com.victorious.launch.notify.DotsListener.ensureBound(ctx) }
     // Refresh the drawer immediately on install/uninstall instead of waiting for the next poll.
     LaunchedEffect(Unit) {
         catalog.packageChanges().collect {

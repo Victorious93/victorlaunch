@@ -3,6 +3,8 @@ package com.victorious.launch.launcher
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -82,6 +84,7 @@ fun AppCell(
             raw?.toThemedImageBitmap(iconStyle, colors.primary.toArgb())
         }
     var menu by remember { mutableStateOf(false) }
+    val dotCount = com.victorious.launch.notify.DotsListener.counts.collectAsState().value[app.packageName] ?: 0
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     // Loaded only when the menu opens, so scrolling the drawer stays cheap.
@@ -106,6 +109,7 @@ fun AppCell(
                 .padding(6.dp)
                 .then(if (compact) Modifier.width((outerDp + 20).dp) else Modifier),
     ) {
+        Box {
         Box(
             Modifier
                 .size(outerDp.dp)
@@ -123,6 +127,13 @@ fun AppCell(
             } else {
                 Text(app.label.take(1), color = colors.onBackground, fontWeight = FontWeight.Bold)
             }
+        }
+        if (dotCount > 0 && !app.isWorkProfile) {
+            Box(
+                Modifier.align(Alignment.TopEnd).size(12.dp).clip(CircleShape).background(colors.secondary)
+                    .border(2.dp, colors.background, CircleShape),
+            )
+        }
         }
         if (showLabel) {
             Spacer(Modifier.height(4.dp))

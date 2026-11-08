@@ -219,6 +219,22 @@ fun SettingsScreen(
                 Text("No ADW/GO/Nova icon packs installed.", color = Muted, fontSize = 12.sp)
             }
         }
+        Section("Notification dots") {
+            val dotsOn = com.victorious.launch.notify.DotsListener.hasAccess(activity)
+            Text(
+                "Shows a dot on app icons that have unread notifications. VictorLaunch only counts notifications per app; it never reads their text. Needs Android's notification access.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            if (dotsOn) {
+                Text("✓ Enabled", color = Cyan, modifier = Modifier.padding(top = 6.dp))
+            } else {
+                Button(
+                    onClick = { activity.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) },
+                    modifier = Modifier.padding(top = 8.dp),
+                ) { Text("Allow notification access") }
+            }
+        }
         Section("Default launcher") {
             Text(
                 "VictorLaunch must be the Home app to show the workspace, dock and status tray.",
@@ -645,6 +661,7 @@ private class SectionState {
         "Fleet theme" to "color colour dark light material you palette icons",
         "Home (Lawnchair lineage)" to "icon pack grid gestures dock workspace",
         "Default launcher" to "home default",
+        "Notification dots" to "badge unread counter notification access",
         "Pair controller" to "droidcommand ai pairing qr",
         "Shizuku (elevated, optional)" to "adb wireless debugging root privileged",
         "Island" to "work profile clone freeze",

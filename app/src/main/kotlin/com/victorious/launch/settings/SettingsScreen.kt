@@ -594,8 +594,7 @@ fun SettingsScreen(
                         val live = settings.launcherPreferences()
                         val preview = report.preferences
                         if (preview != null) ConfigBackupDiff.render(ConfigBackupDiff.of(live, preview), report.notes)
-                        else report.notes.joinToString("
-")
+                        else report.notes.joinToString("\n")
                     }.ifBlank { "Dry-run succeeded. External control will stay off." })
                 },
                 confirmButton = {

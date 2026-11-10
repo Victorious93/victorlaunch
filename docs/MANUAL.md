@@ -242,6 +242,12 @@ widget bind on a phone — nothing here was device-tested.
 - Up to five apps plus the drawer button.
 - Long-press an app in the drawer to add it to the dock.
 
+### Notification badges
+
+Settings → **Notification badges**. Off by default. Turn the switch on, then grant **notification access** to VictorLaunch in system Settings. Icons show a count dot; long-press shows up to three short previews (title and text). Ongoing and grouped-summary notifications are ignored.
+
+Notification content stays in memory only. It is never logged and never written to `config.export` or a backup. Turning the switch off clears the in-memory previews immediately; you can also revoke access in system Settings. Backup import cannot turn this on.
+
 ### Theme gallery
 
 Settings → **Theme gallery…**, or Dock & icons → **Theme gallery**. One tap applies a palette (including **Neon ring**: charcoal `#0B0F1A`, cyan `#00E5FF`, magenta `#FF2BD6`) and publishes it through the existing fleet theme provider. Installed ADW/GO/Nova/Atom icon packs show a row of preview icons from the pack's `appfilter.xml`; tap a row to apply it (same path as Dock & icons).
@@ -521,6 +527,7 @@ VictorLaunch requests `INTERNET` only for GitHub home-screen widgets
 | `READ_PHONE_STATE` | Network Monitor RAT / data state. Runtime-granted. Off until you enable the monitor. |
 | `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` | Serving-cell ID and some signal fields. Runtime-granted. Cell info is blocked by the OS without this. |
 | `INTERNET` | GitHub widgets only: `https://api.github.com` for PRs, Actions and releases. The token is in EncryptedSharedPreferences and is not exported. |
+| `BIND_NOTIFICATION_LISTENER_SERVICE` (on the listener service) | Opt-in notification badges and long-press previews. The OS only binds this after you grant Notification access. Content is not logged or exported. |
 
 Wallpaper is shown with `windowShowWallpaper`. VictorLaunch does not need `SET_WALLPAPER` to display the current wallpaper.
 
@@ -606,6 +613,7 @@ No claim. It is a heuristic. Rural GSM, carrier fallback, and a fake BTS can loo
 
 - `INTERNET` is used only by GitHub widgets (`api.github.com`). No crash reporter, no analytics SDK.
 - The GitHub fine-grained token is stored in EncryptedSharedPreferences / Android Keystore, excluded from Android backup, never logged, and never included in `config.export`.
+- Notification badge previews stay in memory only. They are never logged and never included in `config.export`.
 - Status `detail` text is capped and scanned for secret-like names.
 - Backup JSON is launcher preferences only. Signing keys, keystore passwords, API tokens, VictorSMS secrets, and Twilio fields are refused.
 - Pairing stores a **certificate fingerprint**, not a private key.

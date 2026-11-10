@@ -366,5 +366,20 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/lock_accessibility" />
         </service>
+
+        <!--
+          Opt-in notification badges and long-press previews (Launcher3 NotificationListener path).
+          The OS only binds this when the user grants notification access in system Settings.
+          The in-app toggle is also required. Content is in memory only — not logged, not exported.
+        -->
+        <service
+            android:name=".notify.LauncherNotificationListener"
+            android:exported="true"
+            android:label="@string/notification_listener_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

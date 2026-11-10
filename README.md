@@ -107,11 +107,12 @@ the APK.
 
 ## Privacy
 
-`INTERNET` is declared only so GitHub home-screen widgets can call
-`https://api.github.com`. There is no telemetry. Status and backup refuse
-secret-like fields. The GitHub token is stored in EncryptedSharedPreferences
-and is never part of `config.export`. VictorLaunch never holds the fleet
-backup wrapping key.
+`INTERNET` is declared for GitHub home-screen widgets (`https://api.github.com`)
+and for URL Tools (`https://www.virustotal.com` / `https://is.gd` on an explicit
+tap, plus the user-supplied URL's hosts when you tap Expand). There is no
+telemetry. Status and backup refuse secret-like fields. The GitHub token and
+any VirusTotal API key are stored in EncryptedSharedPreferences and are never
+part of `config.export`. VictorLaunch never holds the fleet backup wrapping key.
 
 Notification badges use an opt-in `NotificationListenerService` (no extra
 `uses-permission`). They stay off until you flip the in-app toggle and grant

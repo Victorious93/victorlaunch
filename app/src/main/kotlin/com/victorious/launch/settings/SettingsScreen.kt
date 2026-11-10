@@ -47,6 +47,7 @@ import com.victorious.launch.launcher.IconPackManager
 import com.victorious.launch.share.FleetSharePublisher
 import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.notify.NotificationBadgeStore
+import com.victorious.launch.url.UrlToolsActivity
 import com.victorious.launch.security.SigningCerts
 import com.victorious.launch.shizuku.EmbeddedShizukuServer
 import com.victorious.launch.shizuku.ShizukuStarters
@@ -596,6 +597,14 @@ fun SettingsScreen(
                 },
                 modifier = Modifier.padding(top = 8.dp),
             ) { Text("Trust installed fleet share apps") }
+        }
+        Section("URL Tools") {
+            Text(
+                "Check, expand, shorten, or clean a link. Offline safety checks always run on this device. Online actions (VirusTotal, is.gd, expand) only run when you tap them. The VirusTotal key, if you save one, is stored like the GitHub token and is never exported.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Button(onClick = { activity.startActivity(UrlToolsActivity.intent(activity)) }, modifier = Modifier.padding(top = 8.dp)) { Text("URL Tools…") }
         }
         Section("GitHub widgets") {
             Text(

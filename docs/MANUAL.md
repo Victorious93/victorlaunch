@@ -340,7 +340,9 @@ Long-press a fleet app (Mesh, Mango, Victorious Browser, VictorSMS, and the othe
 - **Open** and **App info** are always offered (safe, no extra permissions).
 - VictorSMS: **Compose SMS** via the public `ACTION_SENDTO` / `smsto:` intent, unless the app already publishes a Compose shortcut.
 - Victorious Browser: **Open new tab** via public `ACTION_VIEW` / `https://`, unless a similar shortcut exists.
-- Mesh, Mango (VPN), and the rest: this tree does not know a public mesh-up / mesh-down or VPN-toggle intent, so only Open, App info, and whatever shortcuts those apps publish are shown. VictorLaunch does not add permissions to read other apps' data.
+- **Mesh VPN on** / **Mesh VPN off** (Victorious Mesh, `com.victorious.mesh`): shown only if the app publishes static shortcuts `mesh_connect` / `mesh_disconnect`, or if `PackageManager` can resolve `com.victorious.mesh.action.MESH_CONNECT` / `MESH_DISCONNECT` (component class is discovered at runtime). Shortcuts win when both exist. Mesh shows its own confirm; the first connect may show Android's VPN prompt. Hidden while Mesh has not shipped those contracts.
+- **Router VPN on** / **Router VPN off** (VictorMango, `com.victorious.mango`): same rule for shortcuts `vpn_on` / `vpn_off`, else `com.victorious.mango.action.VPN_ON` / `VPN_OFF` on `.VpnToggleActivity` when that resolves. If only `VPN_TOGGLE` resolves, a single **Router VPN on/off** item is shown. Distinct from Mesh. VictorMango confirms in its own UI. Hidden until Mango ships the contract.
+- Other fleet apps still only get Open, App info, and whatever shortcuts they publish. No new permissions; VictorLaunch never toggles silently and does not expose this on the external-node bridge.
 
 ### Fleet dashboard
 
@@ -353,6 +355,8 @@ For each known fleet app it shows:
 - Mesh / VPN / Browser / Messaging tiles from the same `node.status.get` tray as the status strip (fresh under 30s, stale under 5 minutes, dropped after that; pulled every 15s)
 
 Tap an installed app to launch it. **Install…** / **Update…** opens the existing one-tap fleet install screen (local manifest + local APK + PackageInstaller confirm). The last loaded manifest is remembered so the dashboard can compare versions; fleet install still does not use the network.
+
+The **Mesh** and **VPN** tiles are tappable when the matching on/off (or toggle) contract resolves. Mesh tile actions go to Victorious Mesh (**Mesh VPN on/off**). VPN tile actions go to VictorMango (**Router VPN on/off**), not Mesh — Mango is the router VPN. A tap opens a short menu of the actions that resolved (it does not silently flip anything). If Mesh or Mango is missing or has not published the shortcuts/intents yet, the tile stays status-only and is not clickable.
 
 ### Status tray
 

@@ -64,6 +64,8 @@
         <package android:name="ai.droidcommand.app" />
         <package android:name="com.victorious.sms" />
         <package android:name="com.victorious.browser" />
+        <package android:name="com.victorious.mesh" />
+        <package android:name="com.victorious.mango" />
         <package android:name="ai.victorious.filemanager" />
         <package android:name="ai.victorious.filemanager.debug" />
         <package android:name="moe.shizuku.privileged.api" />
@@ -86,6 +88,21 @@
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.HOME" />
+        </intent>
+        <intent>
+            <action android:name="com.victorious.mesh.action.MESH_CONNECT" />
+        </intent>
+        <intent>
+            <action android:name="com.victorious.mesh.action.MESH_DISCONNECT" />
+        </intent>
+        <intent>
+            <action android:name="com.victorious.mango.action.VPN_ON" />
+        </intent>
+        <intent>
+            <action android:name="com.victorious.mango.action.VPN_OFF" />
+        </intent>
+        <intent>
+            <action android:name="com.victorious.mango.action.VPN_TOGGLE" />
         </intent>
     </queries>
 

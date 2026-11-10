@@ -99,21 +99,49 @@ object AppActions {
         try { la(ctx).startShortcut(s.info, null, null) } catch (e: Exception) { toast(ctx, "Couldn't open shortcut") }
     }
 
-    fun startPublic(ctx: Context, action: FleetPublicAction) {
+    fun startPublic(ctx: Context, action: FleetPublicAction, user: android.os.UserHandle? = null) {
         try {
-            val intent =
-                when (action.kind) {
-                    FleetActionKind.OPEN -> ctx.packageManager.getLaunchIntentForPackage(action.packageName)
-                    FleetActionKind.INFO ->
-                        Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${action.packageName}"))
-                    FleetActionKind.SENDTO, FleetActionKind.VIEW ->
-                        Intent(action.action, action.dataUri?.let { Uri.parse(it) }).setPackage(action.packageName)
-                } ?: run {
-                    toast(ctx, "Nothing to open")
+            when (action.kind) {
+                FleetActionKind.SHORTCUT -> {
+                    val id = action.shortcutId ?: run {
+                        toast(ctx, "Nothing to open")
+                        return
+                    }
+                    if (Build.VERSION.SDK_INT < 25) {
+                        toast(ctx, "Couldn't open ${action.label}")
+                        return
+                    }
+                    la(ctx).startShortcut(
+                        action.packageName,
+                        id,
+                        user ?: android.os.Process.myUserHandle(),
+                        null,
+                        null,
+                    )
                     return
                 }
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            ctx.startActivity(intent)
+                else -> {
+                    val intent =
+                        when (action.kind) {
+                            FleetActionKind.OPEN -> ctx.packageManager.getLaunchIntentForPackage(action.packageName)
+                            FleetActionKind.INFO ->
+                                Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${action.packageName}"))
+                            FleetActionKind.SENDTO, FleetActionKind.VIEW ->
+                                Intent(action.action, action.dataUri?.let { Uri.parse(it) }).setPackage(action.packageName)
+                            FleetActionKind.EXPLICIT ->
+                                Intent(action.action).setPackage(action.packageName).also { i ->
+                                    val cls = action.activityClass
+                                    if (!cls.isNullOrBlank()) i.setClassName(action.packageName, cls)
+                                }
+                            FleetActionKind.SHORTCUT -> null
+                        } ?: run {
+                            toast(ctx, "Nothing to open")
+                            return
+                        }
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                }
+            }
         } catch (e: Exception) {
             toast(ctx, "Couldn't open ${action.label}")
         }

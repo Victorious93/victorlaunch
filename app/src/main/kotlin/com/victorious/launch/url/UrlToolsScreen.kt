@@ -69,6 +69,7 @@ fun UrlToolsScreen(
 
     fun working(): String = UrlHeuristics.extractUrl(url) ?: url.trim()
 
+    @Composable
     fun fieldColors() =
         TextFieldDefaults.colors(
             focusedTextColor = colors.onBackground,

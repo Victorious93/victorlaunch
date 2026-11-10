@@ -214,6 +214,7 @@ ideas: pages, dock, folders, widgets, icon packs, gestures). It is
 
 - Swipe **up** to open the app drawer. Swipe **down** to focus search.
 - Swipe **left / right** (or the pager) for extra pages.
+- Swipe right from the first home page to open the **Fleet dashboard** (live status of fleet apps).
 - Long-press an app in the drawer → pin to workspace, pin to dock, or
   start a **folder** (needs one other pinned app).
 - Tap the widget button to bind a system `AppWidget` (Android may ask
@@ -309,6 +310,18 @@ in-process Home pull is the reliable 15 s path; the widget alarm is
 best-effort ([Likely] OEMs throttle `setRepeating` under 15 minutes).
 Tap a widget to open VictorLaunch. [Guessing] on a phone — not
 device-tested.
+
+### Fleet dashboard
+
+Swipe right from the first home page (the page indicator says **Fleet · 1/N**). This is a home-screen page, not a settings overlay.
+
+For each known fleet app it shows:
+
+- installed or not, the version on the device, and **Update available** when a previously loaded local `fleet-manifest.json` is newer
+- **Running** only if you have granted usage access (Settings → Grant usage access). Otherwise it says usage access is needed and does not invent a running state
+- Mesh / VPN / Browser / Messaging tiles from the same `node.status.get` tray as the status strip (fresh under 30s, stale under 5 minutes, dropped after that; pulled every 15s)
+
+Tap an installed app to launch it. **Install…** / **Update…** opens the existing one-tap fleet install screen (local manifest + local APK + PackageInstaller confirm). The last loaded manifest is remembered so the dashboard can compare versions; fleet install still does not use the network.
 
 ### Status tray
 

@@ -327,6 +327,13 @@ class AppSettings(context: Context) {
 
     fun themeUpdatedAtMs(): Long = prefs.getLong(KEY_THEME_UPDATED, 0L)
 
+    fun lastFleetManifestJson(): String? = prefs.getString(KEY_FLEET_MANIFEST, null)?.ifBlank { null }
+
+    fun setLastFleetManifestJson(json: String?) {
+        prefs.edit().putString(KEY_FLEET_MANIFEST, json.orEmpty()).apply()
+    }
+
+
     fun themeExtraPins(): Map<String, List<String>> {
         val out = LinkedHashMap<String, MutableList<String>>()
         sharePins().forEach { (pkg, certs) -> out[pkg] = certs.toMutableList() }
@@ -379,6 +386,7 @@ class AppSettings(context: Context) {
         private const val KEY_THEME_MODE = "fleet_theme_mode"
         private const val KEY_ICON_STYLE = "fleet_icon_style"
         private const val KEY_THEME_UPDATED = "fleet_theme_updated_at"
+        private const val KEY_FLEET_MANIFEST = "fleet_manifest_json"
         val THEME_KEYS: Set<String> = setOf(KEY_THEME_MODE, KEY_ICON_STYLE, KEY_ICON_PACK, KEY_THEME_UPDATED)
     }
 }

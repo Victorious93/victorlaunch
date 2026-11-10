@@ -82,6 +82,9 @@ fun LawnchairWorkspace(
     onLaunch: (LaunchableApp) -> Unit,
     onOpenDrawer: () -> Unit,
     onOpenSearch: () -> Unit,
+    tray: com.victorious.launch.core.status.PublishedTray? = null,
+    trayNote: String = "",
+    onOpenFleet: () -> Unit = {},
     onGesture: (GestureBinding) -> Unit = { b ->
         when (b.action) {
             GestureAction.OPEN_DRAWER -> onOpenDrawer()
@@ -97,8 +100,9 @@ fun LawnchairWorkspace(
     val look = settings.homeLayout().also { layoutRev }
     val hidden = settings.launcherPreferences().hiddenPackages.toSet()
     val items = settings.launcherPreferences().workspace.also { layoutRev }
-    val pages = WorkspacePages.pageCount(items).coerceAtLeast(1)
-    val pagerState = rememberPagerState(pageCount = { pages })
+    val workspacePages = WorkspacePages.pageCount(items).coerceAtLeast(1)
+    val pages = workspacePages + 1 // page 0 is the Fleet dashboard; home starts at page 1
+    val pagerState = rememberPagerState(initialPage = 1, pageCount = { pages })
     val scope = rememberCoroutineScope()
     var picker by remember { mutableStateOf(false) }
     var openFolder by remember { mutableStateOf<WorkspaceItem?>(null) }
@@ -194,11 +198,27 @@ fun LawnchairWorkspace(
     ) {
         Column(Modifier.fillMaxSize()) {
             HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
+                if (page == 0) {
+                    com.victorious.launch.fleet.FleetDashboardPage(
+                        settings = settings,
+                        catalog = catalog,
+                        activity = activity,
+                        tray = tray,
+                        trayNote = trayNote,
+                        onLaunchPackage = { pkg ->
+                            apps.firstOrNull { it.packageName == pkg }?.let { onLaunch(it) }
+                                ?: catalog.launchPackage(pkg)
+                        },
+                        onOpenInstall = onOpenFleet,
+                    )
+                    return@HorizontalPager
+                }
+                val workspacePage = page - 1
                 WorkspacePage(
-                    page = page,
+                    page = workspacePage,
                     columns = columns,
                     look = look,
-                    items = WorkspacePages.itemsOnPage(items, page),
+                    items = WorkspacePages.itemsOnPage(items, workspacePage),
                     apps = apps,
                     hidden = hidden,
                     catalog = catalog,
@@ -220,7 +240,10 @@ fun LawnchairWorkspace(
                 Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("p.${pagerState.currentPage + 1}/$pages", color = colors.muted, fontSize = 11.sp, modifier = Modifier.weight(1f))
+                val label =
+                    if (pagerState.currentPage == 0) "Fleet · 1/$pages"
+                    else "Home ${pagerState.currentPage}/$pages"
+                Text(label, color = colors.muted, fontSize = 11.sp, modifier = Modifier.weight(1f))
                 IconButton(onClick = { picker = true }) {
                     Icon(Icons.Outlined.Widgets, contentDescription = "Add widget", tint = colors.secondary)
                 }

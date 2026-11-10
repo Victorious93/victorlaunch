@@ -34,6 +34,8 @@ import com.victorious.launch.security.SigningCerts
 import com.victorious.launch.theme.Cyan
 import com.victorious.launch.theme.Magenta
 import com.victorious.launch.theme.Muted
+import com.victorious.launch.VictorLaunchApp
+import androidx.compose.runtime.LaunchedEffect
 
 /**
  * One-tap fleet install/update. No INTERNET: the user (or the controller)
@@ -42,16 +44,26 @@ import com.victorious.launch.theme.Muted
  */
 @Composable
 fun FleetInstallScreen(activity: Activity, onClose: () -> Unit) {
+    val settings = VictorLaunchApp.instance.settings
     var note by remember { mutableStateOf<String?>(null) }
     var rows by remember { mutableStateOf<List<FleetPlanRow>>(emptyList()) }
     var pending by remember { mutableStateOf<FleetPlanRow?>(null) }
+    LaunchedEffect(Unit) {
+        val saved = FleetApps.loadManifest(settings)
+        if (saved != null && rows.isEmpty()) {
+            rows = planFrom(activity, saved, settings)
+            note = "Loaded ${rows.size} fleet app(s) from the last local manifest."
+        }
+    }
     val pickManifest =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri == null) return@rememberLauncherForActivityResult
             try {
                 val text = activity.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
                     ?: error("empty")
-                rows = planFrom(activity, FleetManifestCodec.parse(text))
+                val manifest = FleetManifestCodec.parse(text)
+                settings.setLastFleetManifestJson(text)
+                rows = planFrom(activity, manifest, settings)
                 note = "Loaded ${rows.size} fleet app(s) from local manifest (schema v1)."
             } catch (e: Exception) {
                 note = e.message ?: "manifest failed"
@@ -88,7 +100,7 @@ fun FleetInstallScreen(activity: Activity, onClose: () -> Unit) {
         Text("Install / Update fleet apps", color = Magenta, fontSize = 20.sp)
         Text(
             "Schema is Victorious93/fleet-manifest schemaVersion 1 (see docs/fleet-manifest.md). " +
-                "This APK has no INTERNET permission, so it will not poll GitHub. Load a local " +
+                "Fleet install does not use the network and will not poll GitHub. Load a local " +
                 "fleet-manifest.json, then pick a local APK. Install always asks the system " +
                 "PackageInstaller confirm sheet. Unsigned / unpinned rows stay UNTRUSTED.",
             color = Muted,
@@ -136,18 +148,8 @@ private fun stateLabel(state: FleetRowState): String =
         FleetRowState.UNTRUSTED -> "Untrusted — no pin match (will not install)"
     }
 
-private fun planFrom(activity: Activity, manifest: FleetManifest) =
-    FleetPlanner.plan(manifest, installedMap(activity.packageManager))
-
-@Suppress("DEPRECATION")
-private fun installedMap(pm: PackageManager): Map<String, Pair<Int, String>> {
-    val packages = pm.getInstalledPackages(0)
-    return packages.associate { info ->
-        val code =
-            if (Build.VERSION.SDK_INT >= 28) info.longVersionCode.toInt() else info.versionCode
-        info.packageName to (code to (info.versionName ?: ""))
-    }
-}
+private fun planFrom(activity: Activity, manifest: FleetManifest, settings: com.victorious.launch.prefs.AppSettings) =
+    FleetPlanner.plan(manifest, FleetApps.installedMap(activity.packageManager), FleetApps.extraPins(settings))
 
 private fun archiveCerts(activity: Activity, path: String): List<String> {
     val pm = activity.packageManager

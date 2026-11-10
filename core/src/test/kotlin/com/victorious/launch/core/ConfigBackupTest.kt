@@ -2,6 +2,8 @@ package com.victorious.launch.core
 
 import com.victorious.launch.core.backup.BackupConflictPolicy
 import com.victorious.launch.core.backup.ConfigBackupCodec
+import com.victorious.launch.core.backup.ConfigBackupDiff
+import com.victorious.launch.core.backup.WorkspaceItem
 import com.victorious.launch.core.backup.ForbiddenBackupContentException
 import com.victorious.launch.core.backup.LauncherPreferences
 import org.junit.Assert.assertEquals
@@ -119,5 +121,49 @@ class ConfigBackupTest {
     @Test(expected = ForbiddenBackupContentException::class)
     fun refusesSecrets() {
         ConfigBackupCodec.decode("""{"schemaVersion":1,"password":"nope"}""")
+    }
+
+    @Test
+    fun previewDiffDescribesDockWorkspaceAndKeepsExternalOff() {
+        val live =
+            LauncherPreferences(
+                dock = listOf("a"),
+                workspace = listOf(WorkspaceItem("a", 0, 0)),
+                hiddenPackages = listOf("h"),
+                gridColumns = 4,
+                islandTabLocked = false,
+                externalControlEnabled = false,
+            )
+        val incoming =
+            LauncherPreferences(
+                dock = listOf("a", "b"),
+                workspace = listOf(WorkspaceItem("a", 0, 0), WorkspaceItem("b", 1, 0)),
+                hiddenPackages = emptyList(),
+                gridColumns = 5,
+                islandTabLocked = true,
+                externalControlEnabled = true,
+            )
+        val lines = ConfigBackupDiff.of(live, incoming.copy(externalControlEnabled = false))
+        val dock = lines.first { it.field == "Dock" }
+        assertTrue(dock.changed)
+        assertTrue(dock.summary.contains("added b"))
+        val hidden = lines.first { it.field == "Hidden apps" }
+        assertTrue(hidden.summary.contains("removed h"))
+        assertTrue(lines.first { it.field == "Grid columns" }.summary.contains("4 → 5"))
+        val ext = lines.first { it.field == "External control" }
+        assertFalse(ext.changed)
+        assertTrue(ext.summary.contains("stays off"))
+        val text = ConfigBackupDiff.render(lines, listOf("incoming externalControlEnabled was ignored; remote.command stays off"))
+        assertTrue(text.contains("Dock"))
+        assertTrue(text.contains("remote.command stays off"))
+        assertFalse(text.contains("token", ignoreCase = true))
+    }
+
+    @Test
+    fun exportStillRefusesSecretsAndOmitsGithubToken() {
+        val json = ConfigBackupCodec.exportJson(LauncherPreferences(dock = listOf("com.android.settings")))
+        assertFalse(json.contains("token", ignoreCase = true))
+        assertFalse(json.contains("github", ignoreCase = true))
+        assertFalse(json.contains("secret", ignoreCase = true))
     }
 }

@@ -448,8 +448,8 @@ These calls no-op if there is no work profile yet. [Certain] wipe and lockdown r
 
 ### Backup
 
-1. **Export launcher preferences** shares a JSON file of dock, workspace, hidden/locked apps, grid, Island-tab lock. `externalControlEnabled` is always written `false`.
-2. **Import** opens a file, **dry-runs**, then asks you to confirm. Applying still forces external control **off**.
+1. **Export to file…** writes launcher preferences (dock, workspace, hidden/locked apps, grid, Island-tab lock) through the system file picker (SAF). **Share export…** still offers the share sheet. `externalControlEnabled` is always written `false`. The GitHub token and other secrets are never included.
+2. **Import** opens a file, **dry-runs**, and shows a **preview diff** of what would change. You must confirm. Applying still forces external control **off** and cannot turn on remote.command, the controller kill switch, Mods, or Network Monitor.
 3. **Fleet bundle** (macros, other apps, wrapping key) is the controller’s job. VictorLaunch may *ask* DroidCommand AI to export or import that bundle. It never stores the wrapping key.
 
 Forbidden names (`password`, `token`, `secret`, Twilio fields, …) refuse the file instead of stripping them.

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.victorious.launch.core.backup.BackupConflictPolicy
 import com.victorious.launch.core.backup.ConfigBackupCodec
+import com.victorious.launch.core.backup.ConfigBackupDiff
 import com.victorious.launch.core.backup.ImportReport
 import com.victorious.launch.VictorLaunchApp
 import com.victorious.launch.core.protocol.Protocol
@@ -76,6 +77,22 @@ fun SettingsScreen(
     var note by remember { mutableStateOf<String?>(null) }
     var pendingImport by remember { mutableStateOf<ImportReport?>(null) }
     val pairing = settings.pairedController()
+    val createDocument =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+            if (uri == null) return@rememberLauncherForActivityResult
+            try {
+                val json = ConfigBackupCodec.exportJson(settings.launcherPreferences())
+                activity.contentResolver.openOutputStream(uri)?.use { out ->
+                    out.write(json.toByteArray(Charsets.UTF_8))
+                } ?: run {
+                    note = "Could not write file"
+                    return@rememberLauncherForActivityResult
+                }
+                note = "Exported launcher preferences"
+            } catch (e: Exception) {
+                note = e.message ?: "export failed"
+            }
+        }
     val openDocument =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri == null) return@rememberLauncherForActivityResult
@@ -445,6 +462,10 @@ fun SettingsScreen(
                 fontSize = 13.sp,
             )
             OutlinedButton(
+                onClick = { createDocument.launch("victorlaunch-config.json") },
+                modifier = Modifier.padding(top = 8.dp),
+            ) { Text("Export to file…") }
+            OutlinedButton(
                 onClick = {
                     val json = ConfigBackupCodec.exportJson(settings.launcherPreferences())
                     val send = Intent(Intent.ACTION_SEND).apply {
@@ -455,13 +476,13 @@ fun SettingsScreen(
                     activity.startActivity(Intent.createChooser(send, "Export launcher preferences"))
                 },
                 modifier = Modifier.padding(top = 8.dp),
-            ) { Text("Export launcher preferences") }
+            ) { Text("Share export…") }
             OutlinedButton(
                 onClick = { openDocument.launch(arrayOf("application/json", "text/plain", "*/*")) },
                 modifier = Modifier.padding(top = 8.dp),
-            ) { Text("Import (dry-run then confirm)") }
+            ) { Text("Import (preview diff, then confirm)") }
             Text(
-                "Import always dry-runs first. Confirming still forces external control off. VictorLaunch never stores the fleet wrapping key — ask DroidCommand AI to export or import the encrypted fleet bundle.",
+                "Export and import cover launcher preferences only (dock, workspace, hidden/locked apps, grid, Island-tab lock). The GitHub token and other secrets are never included. Import always dry-runs and shows a preview diff; confirming still forces external control off. VictorLaunch never stores the fleet wrapping key — ask DroidCommand AI to export or import the encrypted fleet bundle.",
                 color = Muted,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 8.dp),
@@ -569,7 +590,13 @@ fun SettingsScreen(
                 onDismissRequest = { pendingImport = null },
                 title = { Text("Apply launcher backup?") },
                 text = {
-                    Text(report.notes.joinToString("\n").ifBlank { "Dry-run succeeded. External control will stay off." })
+                    Text(run {
+                        val live = settings.launcherPreferences()
+                        val preview = report.preferences
+                        if (preview != null) ConfigBackupDiff.render(ConfigBackupDiff.of(live, preview), report.notes)
+                        else report.notes.joinToString("
+")
+                    }.ifBlank { "Dry-run succeeded. External control will stay off." })
                 },
                 confirmButton = {
                     TextButton(

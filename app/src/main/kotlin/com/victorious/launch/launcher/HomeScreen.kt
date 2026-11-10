@@ -248,6 +248,9 @@ fun HomeScreen(
                     searchFocused = true
                     overlay = Overlay.DRAWER
                 },
+                tray = tray,
+                trayNote = trayNote,
+                onOpenFleet = { overlay = Overlay.FLEET },
                 onGesture = { binding ->
                     when (binding.action) {
                         GestureAction.OPEN_DRAWER -> {

@@ -38,9 +38,9 @@ import com.victorious.launch.VictorLaunchApp
 import androidx.compose.runtime.LaunchedEffect
 
 /**
- * One-tap fleet install/update. No INTERNET: the user (or the controller)
- * supplies a local fleet-manifest.json and a local APK. PackageInstaller
- * always shows the system confirm sheet.
+ * One-tap fleet install/update. Fleet install does not use the network: the
+ * user (or the controller) supplies a local fleet-manifest.json and a local
+ * APK. PackageInstaller always shows the system confirm sheet.
  */
 @Composable
 fun FleetInstallScreen(activity: Activity, onClose: () -> Unit) {

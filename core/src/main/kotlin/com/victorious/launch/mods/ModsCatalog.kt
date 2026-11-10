@@ -103,7 +103,7 @@ object ModsCatalog {
                 rootPath =
                     "Open MMRL to browse/install Magisk, KernelSU, and APatch modules. Optional magisk --install-module command is built but not auto-run.",
                 nonRootPath =
-                    "Read-only: a static list of well-known repo names (no INTERNET, no download). Hand-off to stock MMRL (com.dergoogler.mmrl) which itself needs root to install.",
+                    "Read-only: a static list of well-known repo names (this path does not use INTERNET and does not download). Hand-off to stock MMRL (com.dergoogler.mmrl) which itself needs root to install.",
                 embedStatus = "skeleton + stock com.dergoogler.mmrl; no repo fetch",
                 risks =
                     "Magisk modules modify the system at boot. A bad zip can bootloop. Keep a recovery path. MMRL is GPLv3; we do not vendor its WebUI.",

@@ -191,7 +191,7 @@ Stock package: `com.dergoogler.mmrl`. License checked: **GPL-3.0**.
 | Path | What this build does |
 |---|---|
 | **Root** | Open MMRL to browse/install Magisk, KernelSU, and APatch modules. Optional **Install zip via Magisk / KernelSU / APatch** copies a zip you pick and runs `magisk --install-module`, `ksud module install`, or `apd module install` **only after you confirm**. Not auto-run. |
-| **Non-root** | **Read-only:** a static list of well-known repo **names** (this APK has no `INTERNET` and does not download). Hand-off to stock MMRL, which itself needs root to install. |
+| **Non-root** | **Read-only:** a static list of well-known repo **names** (this path does not use `INTERNET` and does not download). Hand-off to stock MMRL, which itself needs root to install. |
 
 MMRL’s WebUI and repo fetch are **not** vendored (`mods-embed/mmrl/` is a skeleton).
 
@@ -258,7 +258,7 @@ Nothing is sent anywhere without an explicit tap. URL Tools is not exposed as an
 
 Settings → **Notification badges**. Off by default. Turn the switch on, then grant **notification access** to VictorLaunch in system Settings. Icons show a count dot; long-press shows up to three short previews (title and text). Ongoing and grouped-summary notifications are ignored.
 
-Notification content stays in memory only. It is never logged and never written to `config.export` or a backup. Turning the switch off clears the in-memory previews immediately; you can also revoke access in system Settings. Backup import cannot turn this on.
+Notification content stays in memory only. It is never logged and never written to `config.export` or a backup. Turning the switch off clears the in-memory previews immediately; you can also revoke access in system Settings. Backup import cannot turn this on. Personal and Island (work profile) notifications for the same package share one badge.
 
 ### Theme gallery
 
@@ -371,7 +371,7 @@ Pull interval: 15 seconds, controller only. Empty / unknown tiles mean “we hav
 
 ### Network Monitor (optional, off by default)
 
-Home → **cell-tower icon**, or Settings → **Network Monitor**. Everything stays **off** until you enable it and grant **phone state** + **fine location**. Backup import cannot turn it on. History and cell IDs stay on this phone. There is no telemetry and no `INTERNET`. Nothing here was tested on a device.
+Home → **cell-tower icon**, or Settings → **Network Monitor**. Everything stays **off** until you enable it and grant **phone state** + **fine location**. Backup import cannot turn it on. History and cell IDs stay on this phone. There is no telemetry, and this feature does not use `INTERNET`. Nothing here was tested on a device.
 
 **This is not a universal IMSI-catcher detector.** An unexpected drop to 2G/GSM is a *heuristic* that can also be rural coverage, a carrier fallback, or airplane-mode recovery.
 
@@ -470,7 +470,7 @@ These calls no-op if there is no work profile yet. [Certain] wipe and lockdown r
 
 ### Backup
 
-1. **Export to file…** writes launcher preferences (dock, workspace, hidden/locked apps, grid, Island-tab lock) through the system file picker (SAF). **Share export…** still offers the share sheet. `externalControlEnabled` is always written `false`. The GitHub token and other secrets are never included.
+1. **Export to file…** writes launcher preferences (dock, workspace, hidden/locked apps, grid, Island-tab lock) through the system file picker (SAF). **Share export…** still offers the share sheet. `externalControlEnabled` is always written `false`. The GitHub token, any VirusTotal API key, and other secrets are never included.
 2. **Import** opens a file, **dry-runs**, and shows a **preview diff** of what would change. You must confirm. Applying still forces external control **off** and cannot turn on remote.command, the controller kill switch, Mods, or Network Monitor.
 3. **Fleet bundle** (macros, other apps, wrapping key) is the controller’s job. VictorLaunch may *ask* DroidCommand AI to export or import that bundle. It never stores the wrapping key.
 
@@ -484,8 +484,8 @@ Forbidden names (`password`, `token`, `secret`, Twilio fields, …) refuse the f
 Settings → **Install / Update fleet apps**.
 
 1. Tap **Load local manifest** and pick a `fleet-manifest.json`
-   (`schemaVersion` 1 from Victorious93/fleet-manifest). VictorLaunch
-   has **no INTERNET**, so it will not download the live feed.
+   (`schemaVersion` 1 from Victorious93/fleet-manifest). Fleet install
+   does not use the network, so it will not download the live feed.
 2. Each row shows manifest version vs installed version. Rows whose
    `certSha256` is missing or not on the pin allow-list stay
    **UNTRUSTED** and will not install.
@@ -524,8 +524,9 @@ Widgets refresh at least every 15 minutes and when you tap **Refresh**. Rate lim
 
 ## Permissions and why
 
-VictorLaunch requests `INTERNET` only for GitHub home-screen widgets
-(`https://api.github.com`). There is no telemetry.
+VictorLaunch requests `INTERNET` for GitHub home-screen widgets
+(`https://api.github.com`) and for URL Tools (`virustotal.com`, `is.gd`,
+and a user-supplied URL only when you tap Expand). There is no telemetry.
 
 | Permission | Why |
 |---|---|

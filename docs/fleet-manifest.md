@@ -8,8 +8,8 @@ provisional. VictorLaunch still cannot fetch it itself.
 ## Why local files
 
 Fleet install has no network client and will not poll GitHub Pages or
-`raw.githubusercontent.com`. (The app's `INTERNET` permission is used only
-by the GitHub home-screen widgets, which talk to `api.github.com`.) A user
+`raw.githubusercontent.com`. (The app's `INTERNET` permission is used by
+GitHub widgets and URL Tools, not by fleet install.) A user
 (or the controller, later) must hand it:
 
 1. a `fleet-manifest.json` (Open Document)

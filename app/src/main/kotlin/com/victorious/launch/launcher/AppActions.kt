@@ -114,9 +114,9 @@ object AppActions {
                     la(ctx).startShortcut(
                         action.packageName,
                         id,
+                        null,
+                        null,
                         user ?: android.os.Process.myUserHandle(),
-                        null,
-                        null,
                     )
                     return
                 }

@@ -17,6 +17,7 @@ enum class FleetThemeMode {
     LIGHT,
     DARK,
     NEON_FLEET,
+    NEON_RING,
     MATERIAL_YOU,
     ;
 
@@ -150,10 +151,24 @@ object FleetThemePalettes {
             stale = "#FFC68900",
             tile = "#E6E6E9F2",
         )
+    /** Charcoal #0B0F1A, cyan #00E5FF, magenta #FF2BD6 ring preset. */
+    val RING =
+        FleetPalette(
+            background = "#FF0B0F1A",
+            surface = "#FF141A28",
+            primary = "#FF00E5FF",
+            secondary = "#FFFF2BD6",
+            onBackground = "#FFF5F7FF",
+            muted = "#FF9AA3B5",
+            danger = "#FFFF6B8A",
+            stale = "#FFFFC14D",
+            tile = "#CC1A2233",
+        )
 
     fun paletteFor(mode: FleetThemeMode, materialYou: FleetPalette? = null): FleetPalette =
         when (mode) {
             FleetThemeMode.NEON_FLEET -> NEON
+            FleetThemeMode.NEON_RING -> RING
             FleetThemeMode.DARK -> DARK
             FleetThemeMode.LIGHT -> LIGHT
             FleetThemeMode.MATERIAL_YOU -> materialYou ?: NEON

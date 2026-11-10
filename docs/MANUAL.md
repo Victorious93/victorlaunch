@@ -242,6 +242,10 @@ widget bind on a phone — nothing here was device-tested.
 - Up to five apps plus the drawer button.
 - Long-press an app in the drawer to add it to the dock.
 
+### Theme gallery
+
+Settings → **Theme gallery…**, or Dock & icons → **Theme gallery**. One tap applies a palette (including **Neon ring**: charcoal `#0B0F1A`, cyan `#00E5FF`, magenta `#FF2BD6`) and publishes it through the existing fleet theme provider. Installed ADW/GO/Nova/Atom icon packs show a row of preview icons from the pack's `appfilter.xml`; tap a row to apply it (same path as Dock & icons).
+
 ### Fleet theme
 
 Settings → **Fleet theme**.

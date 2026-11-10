@@ -67,6 +67,7 @@ fun SettingsScreen(
     onDockIcons: () -> Unit = {},
     onGitHub: () -> Unit = {},
     onDevice: () -> Unit = {},
+    onThemeGallery: () -> Unit = {},
     onClose: () -> Unit,
 ) {
     var external by remember { mutableStateOf(settings.isExternalControlEnabled()) }
@@ -134,6 +135,11 @@ fun SettingsScreen(
                 fontSize = 13.sp,
             )
             Text("Mode: ${settings.themeMode().name}", color = Cyan, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+            TextButton(onClick = onThemeGallery) { Text("Theme gallery…", color = Cyan) }
+            ThemeChoice("Neon ring (charcoal / cyan / magenta)", settings.themeMode() == FleetThemeMode.NEON_RING) {
+                settings.setThemeMode(FleetThemeMode.NEON_RING)
+                note = "Theme: neon ring"
+            }
             ThemeChoice("Neon fleet palette", settings.themeMode() == FleetThemeMode.NEON_FLEET) {
                 settings.setThemeMode(FleetThemeMode.NEON_FLEET)
                 note = "Theme: neon fleet"

@@ -94,6 +94,7 @@ enum class Overlay {
     DEV,
     GITHUB,
     DEVICE,
+    THEME_GALLERY,
 }
 
 @Composable
@@ -331,6 +332,7 @@ fun HomeScreen(
                         onDockIcons = { overlay = Overlay.DOCK_ICONS },
                         onGitHub = { overlay = Overlay.GITHUB },
                         onDevice = { overlay = Overlay.DEVICE },
+                        onThemeGallery = { overlay = Overlay.THEME_GALLERY },
                         onClose = { overlay = Overlay.NONE },
                     )
                 }
@@ -350,6 +352,7 @@ fun HomeScreen(
                             layoutRev++
                             overlay = Overlay.SETTINGS
                         },
+                        onThemeGallery = { overlay = Overlay.THEME_GALLERY },
                     )
                 }
             Overlay.GESTURES ->
@@ -408,6 +411,15 @@ fun HomeScreen(
                         activity = activity,
                         onClose = { overlay = Overlay.NONE },
                         onOpenDevPanel = { overlay = Overlay.DEV },
+                    )
+                }
+            Overlay.THEME_GALLERY ->
+                OverlayScrim {
+                    com.victorious.launch.settings.ThemeGalleryScreen(
+                        settings = settings,
+                        activity = activity,
+                        onClose = { overlay = Overlay.NONE },
+                        onDockIcons = { overlay = Overlay.DOCK_ICONS },
                     )
                 }
         }

@@ -68,7 +68,7 @@ Also register a `ContentObserver` on the URI. VictorLaunch calls
 | Column | Type | Notes |
 |---|---|---|
 | `schemaVersion` | int | Always `1` in this revision |
-| `mode` | string | `LIGHT` / `DARK` / `NEON_FLEET` / `MATERIAL_YOU` |
+| `mode` | string | `LIGHT` / `DARK` / `NEON_FLEET` / `NEON_RING` / `MATERIAL_YOU` |
 | `iconStyle` | string | `SYSTEM` / `MONOCHROME` / `TINTED` / `ICON_PACK` |
 | `iconPackPackage` | string | Empty if none |
 | `json` | string | Full snapshot (see below) |
@@ -143,10 +143,14 @@ apply.
 
 | Mode | Meaning |
 |---|---|
-| `NEON_FLEET` | Default charcoal + cyan/magenta ring |
+| `NEON_FLEET` | Default charcoal + cyan/magenta (`#0B0C12`, `#00E5FF`, `#E840FF`) |
+| `NEON_RING` | Charcoal `#0B0F1A`, cyan `#00E5FF`, magenta `#FF2BD6` ring preset |
 | `DARK` | Neutral dark + cooler accents |
 | `LIGHT` | Light surfaces, darker cyan/magenta for contrast |
 | `MATERIAL_YOU` | System accent1/accent2/neutral on API 31+; **neon fallback** below 12 |
+
+If you see an unknown `mode` string, **still apply the palette columns**.
+Do not reject the row and do not invent colors. `schemaVersion` stays **1**.
 
 ### Icon styles (launcher-side)
 

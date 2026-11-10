@@ -26,6 +26,25 @@ class IconPackManager(private val pm: PackageManager) {
         return seen.values.toList()
     }
 
+    fun packIcon(packPackage: String): Drawable? =
+        try {
+            pm.getApplicationIcon(packPackage)
+        } catch (_: Exception) {
+            null
+        }
+
+    fun previewIcons(packPackage: String, limit: Int = 4): List<Drawable> {
+        return try {
+            val res = pm.getResourcesForApplication(packPackage)
+            IconPackContract.previewDrawables(appFilter(packPackage), limit).mapNotNull { name ->
+                val id = res.getIdentifier(name, "drawable", packPackage)
+                if (id == 0) null else res.getDrawable(id, null)
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
     fun loadComponentIcon(packPackage: String?, component: String): Drawable? {
         if (packPackage.isNullOrBlank()) return null
         val drawableName = appFilter(packPackage)[normalizeComponent(component)] ?: return null

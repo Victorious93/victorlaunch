@@ -14,4 +14,42 @@ object IconPackContract {
     val THEME_ACTIONS: List<String> = listOf(ADW_THEMES, GO_THEME, NOVA_THEME, TURBO_THEME)
 
     fun isKnownThemeAction(action: String): Boolean = THEME_ACTIONS.contains(action)
+
+    /** Common launcher components used to preview an installed pack. */
+    val PREVIEW_COMPONENTS: List<String> =
+        listOf(
+            "com.android.settings/com.android.settings.Settings",
+            "com.android.chrome/com.google.android.apps.chrome.Main",
+            "com.google.android.gm/com.google.android.gm.ConversationListActivityGmail",
+            "com.google.android.apps.messaging/com.google.android.apps.messaging.ui.ConversationListActivity",
+            "com.android.camera2/com.android.camera.CameraLauncher",
+            "com.android.dialer/.DialtactsActivity",
+            "com.android.mms/.ui.ConversationList",
+            "com.android.browser/.BrowserActivity",
+        )
+
+    fun normalizeComponent(raw: String): String {
+        val trimmed = raw.trim()
+        val inner =
+            if (trimmed.startsWith("ComponentInfo{") && trimmed.endsWith("}")) {
+                trimmed.removePrefix("ComponentInfo{").removeSuffix("}")
+            } else {
+                trimmed
+            }
+        return inner.lowercase()
+    }
+
+    fun previewDrawables(appFilter: Map<String, String>, limit: Int = 4): List<String> {
+        val lookup = appFilter.mapKeys { normalizeComponent(it.key) }
+        val names = LinkedHashSet<String>()
+        PREVIEW_COMPONENTS.forEach { component ->
+            lookup[normalizeComponent(component)]?.let { names += it }
+            if (names.size >= limit) return names.toList()
+        }
+        lookup.values.forEach { value ->
+            if (value.isNotBlank()) names += value
+            if (names.size >= limit) return names.toList()
+        }
+        return names.toList().take(limit)
+    }
 }

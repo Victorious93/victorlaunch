@@ -280,6 +280,46 @@
                 <action android:name="com.victorious.launch.action.GITHUB_REFRESH" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".widgets.DeviceInfoWidget"
+            android:exported="true"
+            android:label="@string/widget_device_info">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_device_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.DeviceRootWidget"
+            android:exported="true"
+            android:label="@string/widget_device_root">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_device_root" />
+        </receiver>
+        <receiver
+            android:name=".widgets.DeviceResourcesWidget"
+            android:exported="true"
+            android:label="@string/widget_device_resources">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_device_resources" />
+        </receiver>
+        <receiver
+            android:name=".widgets.DeviceRefreshReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.victorious.launch.action.DEVICE_REFRESH" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".share.ShareCatcherActivity"

@@ -93,6 +93,7 @@ enum class Overlay {
     DOCK_ICONS,
     DEV,
     GITHUB,
+    DEVICE,
 }
 
 @Composable
@@ -144,6 +145,7 @@ fun HomeScreen(
             when (launchOpen) {
                 null -> return@LaunchedEffect
                 LauncherIntents.GITHUB -> Overlay.GITHUB
+                LauncherIntents.DEVICE -> Overlay.DEVICE
                 else -> null
             }
         if (target != null) overlay = target
@@ -325,6 +327,7 @@ fun HomeScreen(
                         onGestures = { overlay = Overlay.GESTURES },
                         onDockIcons = { overlay = Overlay.DOCK_ICONS },
                         onGitHub = { overlay = Overlay.GITHUB },
+                        onDevice = { overlay = Overlay.DEVICE },
                         onClose = { overlay = Overlay.NONE },
                     )
                 }
@@ -393,6 +396,15 @@ fun HomeScreen(
                     com.victorious.launch.github.GitHubSettingsScreen(
                         activity = activity,
                         onClose = { overlay = Overlay.NONE },
+                    )
+                }
+            Overlay.DEVICE ->
+                OverlayScrim {
+                    com.victorious.launch.device.DeviceSettingsScreen(
+                        settings = settings,
+                        activity = activity,
+                        onClose = { overlay = Overlay.NONE },
+                        onOpenDevPanel = { overlay = Overlay.DEV },
                     )
                 }
         }

@@ -74,3 +74,17 @@ in Settings → **GitHub widgets**.
 - Rate limits, a rejected token, a missing repo, or a network error show on the
   widget (and in the settings screen) instead of failing silently.
 - Adding a widget opens a picker so it can follow one repo or all configured repos.
+
+## Device widgets (home screen)
+
+Three widgets, set up from Settings → **Device widgets**:
+
+- **Device info**: model, Android version and API level, security patch, uptime, free/total storage.
+- **Root status**: Magisk / KernelSU / APatch apps and well-known `su`/`/data/adb` paths. This is
+  detection by file and package checks only. `su` is never started unless *Dev panel → Allow root* is on
+  **and** you tap **Refresh now** in Device widgets (then it runs `id` once to confirm uid 0).
+  Periodic widget refreshes never run `su`.
+- **CPU, RAM and battery**: CPU usage from `/proc/stat`, current core frequencies from `cpufreq`,
+  RAM from `/proc/meminfo`, battery level/temperature/charging, and `PowerManager` thermal status (Android 10+).
+
+They refresh about once a minute (inexact alarm) and on tap of **Refresh**. No network use.

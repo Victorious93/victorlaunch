@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.toArgb
 import com.victorious.launch.core.fleet.FleetActionKind
 import com.victorious.launch.core.fleet.FleetPublicActions
+import com.victorious.launch.fleet.FleetToggleResolver
 import com.victorious.launch.core.theme.FleetIconStyle
 import com.victorious.launch.theme.LocalFleetColors
 import com.victorious.launch.notify.LocalNotificationBadges
@@ -93,7 +94,15 @@ fun AppCell(
     // Loaded only when the menu opens, so scrolling the drawer stays cheap.
     val shortcuts = remember(menu, app.component) { if (menu) AppActions.shortcuts(context, app) else emptyList() }
     val fleetActions = remember(menu, app.packageName, shortcuts) {
-        if (!menu) emptyList() else FleetPublicActions.extras(app.packageName, shortcuts.map { it.label })
+        if (!menu) emptyList()
+        else {
+            val capability = FleetToggleResolver.capability(context, app.packageName, app.user)
+            FleetPublicActions.extras(app.packageName, shortcuts.map { it.label }, capability)
+        }
+    }
+    val menuShortcuts = remember(shortcuts, fleetActions) {
+        val claimed = FleetPublicActions.claimedShortcutIds(fleetActions)
+        shortcuts.filter { it.info.id !in claimed }
     }
     val uninstall = remember(menu, app.component) { if (menu) AppActions.uninstallKind(context, app) else UninstallKind.NONE }
     var inspect by remember { mutableStateOf(false) }
@@ -181,11 +190,11 @@ fun AppCell(
             fleetActions.filter { it.kind == FleetActionKind.OPEN }.forEach { act ->
                 MenuItem(act.label, Icons.AutoMirrored.Filled.ArrowForward, close) { onClick() }
             }
-            shortcuts.forEach { sc -> MenuItem(sc.label, Icons.AutoMirrored.Filled.ArrowForward, close) { AppActions.startShortcut(context, sc) } }
+            menuShortcuts.forEach { sc -> MenuItem(sc.label, Icons.AutoMirrored.Filled.ArrowForward, close) { AppActions.startShortcut(context, sc) } }
             fleetActions.filter { it.kind != FleetActionKind.OPEN }.forEach { act ->
-                MenuItem(act.label, Icons.AutoMirrored.Filled.ArrowForward, close) { AppActions.startPublic(context, act) }
+                MenuItem(act.label, Icons.AutoMirrored.Filled.ArrowForward, close) { AppActions.startPublic(context, act, app.user) }
             }
-            if (shortcuts.isNotEmpty() || fleetActions.isNotEmpty()) HorizontalDivider()
+            if (menuShortcuts.isNotEmpty() || fleetActions.isNotEmpty()) HorizontalDivider()
             MenuItem("Pin to workspace", Icons.Filled.PushPin, close) { onLong() }
             if (onDock != null) MenuItem("Pin to dock", Icons.Filled.Dock, close) { onDock() }
             if (onFolder != null) MenuItem("New folder", Icons.Filled.CreateNewFolder, close) { onFolder() }

@@ -2,6 +2,14 @@ package com.victorious.launch.fleet
 
 import android.app.Activity
 import androidx.compose.foundation.clickable
+import com.victorious.launch.launcher.AppActions
+import com.victorious.launch.core.fleet.FleetVpnToggles
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -83,12 +91,32 @@ fun FleetDashboardPage(
                         tile.freshness == Freshness.STALE || tile.state == StatusTrayState.DEGRADED -> colors.stale
                         else -> colors.primary
                     }
-                Text(
-                    FleetDashboardFactory.tileLabel(tile),
-                    color = color,
-                    fontSize = 11.sp,
-                    modifier = Modifier.weight(1f).padding(end = 4.dp),
-                )
+                val togglePkg = FleetVpnToggles.packageForTrayDomain(tile.domain.wire)
+                val toggleActions =
+                    if (togglePkg == null) emptyList()
+                    else FleetVpnToggles.actionsFor(togglePkg, FleetToggleResolver.capability(activity, togglePkg))
+                var menu by remember(tile.id) { mutableStateOf(false) }
+                Box(Modifier.weight(1f).padding(end = 4.dp)) {
+                    Text(
+                        FleetDashboardFactory.tileLabel(tile),
+                        color = color,
+                        fontSize = 11.sp,
+                        modifier =
+                            if (toggleActions.isEmpty()) Modifier
+                            else Modifier.clickable { menu = true },
+                    )
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        toggleActions.forEach { act ->
+                            DropdownMenuItem(
+                                text = { Text(act.label, color = colors.onBackground, fontSize = 13.sp) },
+                                onClick = {
+                                    menu = false
+                                    AppActions.startPublic(activity, act)
+                                },
+                            )
+                        }
+                    }
+                }
             }
         }
         if (!dash.hasManifest) {

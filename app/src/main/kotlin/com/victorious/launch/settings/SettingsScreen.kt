@@ -65,6 +65,7 @@ fun SettingsScreen(
     onGestures: () -> Unit = {},
     onDockIcons: () -> Unit = {},
     onGitHub: () -> Unit = {},
+    onDevice: () -> Unit = {},
     onClose: () -> Unit,
 ) {
     var external by remember { mutableStateOf(settings.isExternalControlEnabled()) }
@@ -513,6 +514,14 @@ fun SettingsScreen(
                 fontSize = 13.sp,
             )
             Button(onClick = onGitHub, modifier = Modifier.padding(top = 8.dp)) { Text("GitHub widgets…") }
+        }
+        Section("Device widgets") {
+            Text(
+                "Home-screen widgets for device info, root/Magisk/KernelSU status, CPU, RAM, battery and thermal status. Root detection checks files and packages only; su runs only if Dev panel → Allow root is on and you tap Refresh.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Button(onClick = onDevice, modifier = Modifier.padding(top = 8.dp)) { Text("Device widgets…") }
         }
         Section("Fleet apps") {
             Text(

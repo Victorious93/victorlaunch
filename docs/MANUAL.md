@@ -462,6 +462,14 @@ Settings → Help (or the `?` on home) shows this manual from app assets.
 
 ---
 
+## Device widgets
+
+Settings → **Device widgets**, or add the **Device info**, **Root status**, or **CPU, RAM and battery** widgets to the home screen. They refresh about once a minute and when you tap Refresh.
+
+Root status is inferred from Magisk / KernelSU / APatch packages and well-known file paths. `su` is not started unless Dev panel → **Allow root** is on and you tap **Refresh now** on that screen.
+
+---
+
 ## GitHub widgets
 
 Settings → **GitHub widgets**. Paste a fine-grained personal access token (Pull requests, Actions, and Contents read on the repos you care about) and add `owner/repo` slugs. Then add the **GitHub pull requests**, **GitHub Actions**, or **GitHub releases** widget to the home screen.

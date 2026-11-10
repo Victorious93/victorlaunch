@@ -462,9 +462,18 @@ Settings → Help (or the `?` on home) shows this manual from app assets.
 
 ---
 
+## GitHub widgets
+
+Settings → **GitHub widgets**. Paste a fine-grained personal access token (Pull requests, Actions, and Contents read on the repos you care about) and add `owner/repo` slugs. Then add the **GitHub pull requests**, **GitHub Actions**, or **GitHub releases** widget to the home screen.
+
+Widgets refresh at least every 15 minutes and when you tap **Refresh**. Rate limits and errors are shown on the widget. The token never appears in a launcher backup.
+
+---
+
 ## Permissions and why
 
-VictorLaunch does **not** request `INTERNET`. There is no telemetry.
+VictorLaunch requests `INTERNET` only for GitHub home-screen widgets
+(`https://api.github.com`). There is no telemetry.
 
 | Permission | Why |
 |---|---|
@@ -477,6 +486,7 @@ VictorLaunch does **not** request `INTERNET`. There is no telemetry.
 | `REQUEST_INSTALL_PACKAGES` | LSPatch patched-APK install **and** fleet Install/Update. Android still shows the system confirm sheet. Unknown-sources must be allowed for this app. |
 | `READ_PHONE_STATE` | Network Monitor RAT / data state. Runtime-granted. Off until you enable the monitor. |
 | `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` | Serving-cell ID and some signal fields. Runtime-granted. Cell info is blocked by the OS without this. |
+| `INTERNET` | GitHub widgets only: `https://api.github.com` for PRs, Actions and releases. The token is in EncryptedSharedPreferences and is not exported. |
 
 Wallpaper is shown with `windowShowWallpaper`. VictorLaunch does not need `SET_WALLPAPER` to display the current wallpaper.
 
@@ -560,7 +570,8 @@ No claim. It is a heuristic. Rural GSM, carrier fallback, and a fake BTS can loo
 
 ## Privacy
 
-- No `INTERNET` permission, no crash reporter, no analytics SDK.
+- `INTERNET` is used only by GitHub widgets (`api.github.com`). No crash reporter, no analytics SDK.
+- The GitHub fine-grained token is stored in EncryptedSharedPreferences / Android Keystore, excluded from Android backup, never logged, and never included in `config.export`.
 - Status `detail` text is capped and scanned for secret-like names.
 - Backup JSON is launcher preferences only. Signing keys, keystore passwords, API tokens, VictorSMS secrets, and Twilio fields are refused.
 - Pairing stores a **certificate fingerprint**, not a private key.

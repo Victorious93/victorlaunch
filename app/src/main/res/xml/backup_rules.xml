@@ -2,4 +2,5 @@
 <full-backup-content>
     <exclude domain="sharedpref" path="pairing.xml" />
     <exclude domain="sharedpref" path="fleet_bridge.xml" />
+        <exclude domain="sharedpref" path="github_secure.xml" />
 </full-backup-content>

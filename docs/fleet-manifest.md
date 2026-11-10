@@ -7,9 +7,10 @@ provisional. VictorLaunch still cannot fetch it itself.
 
 ## Why local files
 
-VictorLaunch has **no `INTERNET` permission**. It will not poll
-GitHub Pages or `raw.githubusercontent.com`. A user (or the
-controller, later) must hand it:
+Fleet install has no network client and will not poll GitHub Pages or
+`raw.githubusercontent.com`. (The app's `INTERNET` permission is used only
+by the GitHub home-screen widgets, which talk to `api.github.com`.) A user
+(or the controller, later) must hand it:
 
 1. a `fleet-manifest.json` (Open Document)
 2. the APK bytes for the row they want to install (Open Document)

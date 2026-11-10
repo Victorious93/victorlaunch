@@ -45,9 +45,11 @@
     <uses-permission android:name="com.victorious.launch.permission.READ_FLEET_THEME" />
 
     <!--
-      No INTERNET permission. Status, pairing and backup talk to other on-device
-      apps over Messenger. There is no telemetry endpoint.
+      INTERNET is used only by the GitHub home-screen widgets, which call
+      https://api.github.com and nothing else. Status, pairing and backup still
+      talk to other on-device apps over Messenger. There is no telemetry endpoint.
     -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- Command palette: run Termux scripts via RUN_COMMAND (user must also allow it in Termux + app permissions). -->
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
@@ -231,6 +233,51 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="com.victorious.launch.action.WIDGET_REFRESH" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".widgets.GitHubPullsWidget"
+            android:exported="true"
+            android:label="@string/widget_github_pulls">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_github_pulls" />
+        </receiver>
+        <receiver
+            android:name=".widgets.GitHubActionsWidget"
+            android:exported="true"
+            android:label="@string/widget_github_actions">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_github_actions" />
+        </receiver>
+        <receiver
+            android:name=".widgets.GitHubReleasesWidget"
+            android:exported="true"
+            android:label="@string/widget_github_releases">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_github_releases" />
+        </receiver>
+        <activity
+            android:name=".github.GitHubWidgetConfigureActivity"
+            android:exported="true"
+            android:theme="@style/Theme.VictorLaunch" />
+        <receiver
+            android:name=".widgets.GitHubRefreshReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.victorious.launch.action.GITHUB_REFRESH" />
             </intent-filter>
         </receiver>
 

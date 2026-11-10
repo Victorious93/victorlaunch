@@ -3,9 +3,11 @@
     <cloud-backup>
         <exclude domain="sharedpref" path="pairing.xml" />
         <exclude domain="sharedpref" path="fleet_bridge.xml" />
+        <exclude domain="sharedpref" path="github_secure.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="pairing.xml" />
         <exclude domain="sharedpref" path="fleet_bridge.xml" />
+        <exclude domain="sharedpref" path="github_secure.xml" />
     </device-transfer>
 </data-extraction-rules>

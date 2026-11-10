@@ -64,6 +64,7 @@ fun SettingsScreen(
     onIsland: () -> Unit,
     onGestures: () -> Unit = {},
     onDockIcons: () -> Unit = {},
+    onGitHub: () -> Unit = {},
     onClose: () -> Unit,
 ) {
     var external by remember { mutableStateOf(settings.isExternalControlEnabled()) }
@@ -505,9 +506,17 @@ fun SettingsScreen(
                 modifier = Modifier.padding(top = 8.dp),
             ) { Text("Trust installed fleet share apps") }
         }
+        Section("GitHub widgets") {
+            Text(
+                "Home-screen widgets for PRs, Actions and releases. Uses INTERNET only to talk to api.github.com. The token is stored in EncryptedSharedPreferences and is not part of config.export.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Button(onClick = onGitHub, modifier = Modifier.padding(top = 8.dp)) { Text("GitHub widgets…") }
+        }
         Section("Fleet apps") {
             Text(
-                "Load a local fleet-manifest.json (schema v1). No INTERNET — this will not poll GitHub. Unpinned certs stay untrusted. Install uses PackageInstaller confirm.",
+                "Load a local fleet-manifest.json (schema v1). Fleet install does not use the network and will not poll GitHub. Unpinned certs stay untrusted. Install uses PackageInstaller confirm.",
                 color = Muted,
                 fontSize = 13.sp,
             )

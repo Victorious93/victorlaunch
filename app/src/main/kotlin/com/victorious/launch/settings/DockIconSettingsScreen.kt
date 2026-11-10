@@ -29,6 +29,7 @@ import com.victorious.launch.theme.LocalFleetColors
 fun DockIconSettingsScreen(
     settings: AppSettings,
     onClose: () -> Unit,
+    onThemeGallery: () -> Unit = {},
 ) {
     val colors = LocalFleetColors.current
     var cfg by remember { mutableStateOf(settings.homeLayout()) }
@@ -72,6 +73,7 @@ fun DockIconSettingsScreen(
             TextButton(onClick = onClose) { Text("Close", color = colors.primary) }
         }
 
+        TextButton(onClick = onThemeGallery) { Text("Theme gallery (palettes & icon packs)…", color = colors.primary) }
         Header("Dock")
         Stepper("Icons per row", cfg.dockIcons, HomeLayoutConfig.DOCK_ICONS) { save(cfg.copy(dockIcons = it)) }
         Stepper("Rows", cfg.dockRows, HomeLayoutConfig.DOCK_ROWS) { save(cfg.copy(dockRows = it)) }

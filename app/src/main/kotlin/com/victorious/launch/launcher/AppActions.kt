@@ -1,5 +1,8 @@
 package com.victorious.launch.launcher
 
+import com.victorious.launch.core.fleet.FleetActionKind
+import com.victorious.launch.core.fleet.FleetPublicAction
+
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -96,5 +99,25 @@ object AppActions {
         try { la(ctx).startShortcut(s.info, null, null) } catch (e: Exception) { toast(ctx, "Couldn't open shortcut") }
     }
 
-    private fun toast(ctx: Context, msg: String) = Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
+    fun startPublic(ctx: Context, action: FleetPublicAction) {
+        try {
+            val intent =
+                when (action.kind) {
+                    FleetActionKind.OPEN -> ctx.packageManager.getLaunchIntentForPackage(action.packageName)
+                    FleetActionKind.INFO ->
+                        Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${action.packageName}"))
+                    FleetActionKind.SENDTO, FleetActionKind.VIEW ->
+                        Intent(action.action, action.dataUri?.let { Uri.parse(it) }).setPackage(action.packageName)
+                } ?: run {
+                    toast(ctx, "Nothing to open")
+                    return
+                }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+        } catch (e: Exception) {
+            toast(ctx, "Couldn't open ${action.label}")
+        }
+    }
+
+        private fun toast(ctx: Context, msg: String) = Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
 }

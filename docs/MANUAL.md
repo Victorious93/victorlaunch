@@ -215,7 +215,7 @@ ideas: pages, dock, folders, widgets, icon packs, gestures). It is
 - Swipe **up** to open the app drawer. Swipe **down** to focus search.
 - Swipe **left / right** (or the pager) for extra pages.
 - Swipe right from the first home page to open the **Fleet dashboard** (live status of fleet apps).
-- Long-press an app in the drawer → pin to workspace, pin to dock, or
+- Long-press an app in the drawer or on the workspace for shortcuts, pin to workspace/dock, or
   start a **folder** (needs one other pinned app).
 - Tap the widget button to bind a system `AppWidget` (Android may ask
   for bind permission). [Likely] some providers need a configure
@@ -310,6 +310,15 @@ in-process Home pull is the reliable 15 s path; the widget alarm is
 best-effort ([Likely] OEMs throttle `setRepeating` under 15 minutes).
 Tap a widget to open VictorLaunch. [Guessing] on a phone — not
 device-tested.
+
+### Fleet app long-press
+
+Long-press a fleet app (Mesh, Mango, Victorious Browser, VictorSMS, and the other known fleet packages) for extra actions. These use only **public** intents and shortcuts the app itself publishes:
+
+- **Open** and **App info** are always offered (safe, no extra permissions).
+- VictorSMS: **Compose SMS** via the public `ACTION_SENDTO` / `smsto:` intent, unless the app already publishes a Compose shortcut.
+- Victorious Browser: **Open new tab** via public `ACTION_VIEW` / `https://`, unless a similar shortcut exists.
+- Mesh, Mango (VPN), and the rest: this tree does not know a public mesh-up / mesh-down or VPN-toggle intent, so only Open, App info, and whatever shortcuts those apps publish are shown. VictorLaunch does not add permissions to read other apps' data.
 
 ### Fleet dashboard
 

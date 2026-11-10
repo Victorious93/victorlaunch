@@ -88,3 +88,11 @@ Three widgets, set up from Settings → **Device widgets**:
   RAM from `/proc/meminfo`, battery level/temperature/charging, and `PowerManager` thermal status (Android 10+).
 
 They refresh about once a minute (inexact alarm) and on tap of **Refresh**. No network use.
+
+## Fleet app long-press
+
+Extra long-press items for known fleet packages use only public intents
+(`MAIN`, `SENDTO smsto:`, `VIEW https://`) plus the app's own launcher shortcuts.
+Mesh up/down and VPN toggle are **not** implemented here — those apps do not
+document a public control intent in this tree. If they expose shortcuts, those
+already appear in the menu. No new permissions to other apps' data.

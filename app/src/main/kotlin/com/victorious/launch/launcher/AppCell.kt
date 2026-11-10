@@ -208,7 +208,6 @@ fun AppCell(
 @Composable
 private fun MenuItem(label: String, icon: ImageVector, close: () -> Unit, danger: Boolean = false, action: () -> Unit) {
     val colors = LocalFleetColors.current
-    val badge = LocalNotificationBadges.current[app.packageName]
     val tint = if (danger) colors.danger else colors.primary
     DropdownMenuItem(
         text = { Text(label, color = if (danger) colors.danger else colors.onBackground) },

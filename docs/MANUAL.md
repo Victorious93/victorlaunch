@@ -242,6 +242,18 @@ widget bind on a phone — nothing here was device-tested.
 - Up to five apps plus the drawer button.
 - Long-press an app in the drawer to add it to the dock.
 
+### URL Tools
+
+Settings → **URL Tools…**, drawer search (try "url", "unshorten", "utm"), the command palette, Share → **URL Tools**, or Open with **Open with URL Tools**. The screen reads the clipboard when it opens; there is also a **Paste** button.
+
+- **Safety check** is offline only (punycode/IDN, raw IP hosts, http vs https, suspicious TLDs, long or heavily encoded URLs, known shorteners). **Scan with VirusTotal** is optional and runs only when you tap it, using an API key you paste (free VirusTotal key). The key is stored in EncryptedSharedPreferences / Keystore, excluded from Android backup, never logged, and never included in `config.export`. The verdict and per-engine counts (malicious / suspicious / harmless / undetected) are shown. Google Safe Browsing is not included in this version because it would need a second API key.
+- **Expand** follows redirects step by step (HEAD, then GET on 405/501 or a redirect with no Location), up to 10 hops, with no cookies and without rendering the page. Each hop and the final URL are listed. This is the only action that contacts the user-supplied URL's hosts, and only after you tap it.
+- **Shorten** uses the public is.gd API (no key). The shortener sees the link; the screen says so.
+- **Clean link** strips tracking parameters (`utm_*`, `fbclid`, `gclid`, and similar) and leaves functional query parameters alone.
+- **Copy**, **Share**, **Open in browser** (prefers Victorious Browser if it is installed), and a **QR code** of the current URL.
+
+Nothing is sent anywhere without an explicit tap. URL Tools is not exposed as an external-node bridge operation.
+
 ### Notification badges
 
 Settings → **Notification badges**. Off by default. Turn the switch on, then grant **notification access** to VictorLaunch in system Settings. Icons show a count dot; long-press shows up to three short previews (title and text). Ongoing and grouped-summary notifications are ignored.
@@ -526,7 +538,7 @@ VictorLaunch requests `INTERNET` only for GitHub home-screen widgets
 | `REQUEST_INSTALL_PACKAGES` | LSPatch patched-APK install **and** fleet Install/Update. Android still shows the system confirm sheet. Unknown-sources must be allowed for this app. |
 | `READ_PHONE_STATE` | Network Monitor RAT / data state. Runtime-granted. Off until you enable the monitor. |
 | `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` | Serving-cell ID and some signal fields. Runtime-granted. Cell info is blocked by the OS without this. |
-| `INTERNET` | GitHub widgets only: `https://api.github.com` for PRs, Actions and releases. The token is in EncryptedSharedPreferences and is not exported. |
+| `INTERNET` | GitHub widgets (`https://api.github.com`) and URL Tools (`https://www.virustotal.com` / `https://is.gd` on an explicit tap; unshorten follows the user-supplied URL's hosts only when you tap Expand). Tokens and API keys are in EncryptedSharedPreferences and are not exported. |
 | `BIND_NOTIFICATION_LISTENER_SERVICE` (on the listener service) | Opt-in notification badges and long-press previews. The OS only binds this after you grant Notification access. Content is not logged or exported. |
 
 Wallpaper is shown with `windowShowWallpaper`. VictorLaunch does not need `SET_WALLPAPER` to display the current wallpaper.
@@ -611,8 +623,9 @@ No claim. It is a heuristic. Rural GSM, carrier fallback, and a fake BTS can loo
 
 ## Privacy
 
-- `INTERNET` is used only by GitHub widgets (`api.github.com`). No crash reporter, no analytics SDK.
+- `INTERNET` is used by GitHub widgets (`api.github.com`) and URL Tools (`virustotal.com`, `is.gd`, and a user-supplied URL on Expand). No crash reporter, no analytics SDK.
 - The GitHub fine-grained token is stored in EncryptedSharedPreferences / Android Keystore, excluded from Android backup, never logged, and never included in `config.export`.
+- A VirusTotal API key, if you save one in URL Tools, is stored the same way (its own `url_tools_secure` prefs file, excluded from backup). It is never logged and never included in `config.export`.
 - Notification badge previews stay in memory only. They are never logged and never included in `config.export`.
 - Status `detail` text is capped and scanned for secret-like names.
 - Backup JSON is launcher preferences only. Signing keys, keystore passwords, API tokens, VictorSMS secrets, and Twilio fields are refused.

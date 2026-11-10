@@ -1,5 +1,7 @@
 package com.victorious.launch.launcher
 
+import com.victorious.launch.core.url.UrlToolsActions
+
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.unit.coerceAtLeast
 import android.app.Activity
@@ -65,6 +67,7 @@ fun AllAppsDrawer(
     island: IslandManager,
     activity: Activity,
     onOpenIsland: () -> Unit,
+    onOpenUrlTools: () -> Unit = {},
     settings: com.victorious.launch.prefs.AppSettings? = null,
 ) {
     val colors = LocalFleetColors.current
@@ -143,6 +146,11 @@ fun AllAppsDrawer(
                     if (paletteQuery.isBlank()) "Open command palette" else "Open in command palette: $paletteQuery",
                     color = colors.primary,
                 )
+            }
+        }
+        if (query.isNotBlank() && UrlToolsActions.matches(query)) {
+            TextButton(onClick = onOpenUrlTools) {
+                Text("${UrlToolsActions.TITLE} — ${UrlToolsActions.SUBTITLE}", color = colors.primary)
             }
         }
         Row {

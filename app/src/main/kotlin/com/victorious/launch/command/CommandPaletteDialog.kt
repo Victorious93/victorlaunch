@@ -39,6 +39,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.victorious.launch.core.command.CommandTarget
 import com.victorious.launch.core.command.DestructiveCommands
+import com.victorious.launch.core.url.UrlToolsActions
+import com.victorious.launch.url.UrlToolsActivity
 import com.victorious.launch.core.command.SavedCommand
 import com.victorious.launch.core.command.TermuxRun
 import com.victorious.launch.prefs.AppSettings
@@ -124,6 +126,12 @@ fun CommandPaletteDialog(initial: String, onDismiss: () -> Unit) {
                 Text("Command palette", color = colors.onBackground, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.weight(1f))
                 TextButton(onClick = onDismiss) { Text("Close") }
             }
+            TextButton(
+                onClick = {
+                    context.startActivity(UrlToolsActivity.intent(context))
+                    onDismiss()
+                },
+            ) { Text("${UrlToolsActions.TITLE} — ${UrlToolsActions.SUBTITLE}", color = colors.primary) }
             OutlinedTextField(
                 value = command,
                 onValueChange = { command = it },

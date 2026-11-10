@@ -73,6 +73,7 @@ import com.victorious.launch.lockdown.BiometricGate
 import com.victorious.launch.prefs.AppSettings
 import com.victorious.launch.notify.LocalNotificationBadges
 import com.victorious.launch.notify.NotificationBadgeStore
+import com.victorious.launch.url.UrlToolsActivity
 import com.victorious.launch.settings.GestureSettingsScreen
 import com.victorious.launch.settings.SettingsScreen
 import com.victorious.launch.core.launcher.GestureAction
@@ -318,6 +319,7 @@ fun HomeScreen(
                         island = island,
                         activity = activity,
                         onOpenIsland = { overlay = Overlay.ISLAND },
+                        onOpenUrlTools = { activity.startActivity(UrlToolsActivity.intent(activity)) },
                         settings = settings,
                     )
                 }

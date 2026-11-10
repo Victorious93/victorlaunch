@@ -21,5 +21,8 @@
     <string name="widget_device_resources">CPU, RAM and battery</string>
     <string name="notification_listener_label">VictorLaunch notification badges</string>
     <string name="notification_listener_description">Optional. Shows notification dots on app icons and a short preview in the long-press menu. VictorLaunch does not log or export notification content.</string>
+    <string name="url_tools_label">URL Tools</string>
+    <string name="url_tools_view_label">Open with URL Tools</string>
 </resources>
+
 

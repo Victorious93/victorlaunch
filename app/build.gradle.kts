@@ -132,6 +132,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.security.crypto)
+    implementation("com.google.zxing:core:3.5.3")
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
 }

@@ -127,11 +127,13 @@ fun FleetDashboardPage(
                     fontSize = 12.sp,
                 )
                 val running = FleetDashboardFactory.runningLabel(row.running, dash.usageAccess)
+                val trayState = row.trayState
                 val tray =
                     when {
-                        row.trayState == null -> null
-                        row.kind.name == "OTHER" || row.kind.name == "CONTROLLER" -> null
-                        else -> " · " + (row.trayState.name.lowercase())
+                        trayState == null -> null
+                        row.kind == com.victorious.launch.core.fleet.FleetKind.OTHER ||
+                            row.kind == com.victorious.launch.core.fleet.FleetKind.CONTROLLER -> null
+                        else -> " · " + trayState.name.lowercase()
                     }
                 Text(running + (tray ?: ""), color = colors.muted, fontSize = 12.sp)
                 if (row.canInstallOrUpdate) {

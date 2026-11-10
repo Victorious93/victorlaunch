@@ -363,7 +363,7 @@ private fun ToolCard(
                 Text("· $repo", color = Muted, fontSize = 12.sp)
             }
             Text(
-                "Read-only names only — this APK has no INTERNET and does not fetch zips.",
+                "Read-only names only — this screen does not use INTERNET and does not fetch zips.",
                 color = Muted,
                 fontSize = 11.sp,
             )

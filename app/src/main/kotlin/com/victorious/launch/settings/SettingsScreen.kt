@@ -505,7 +505,7 @@ fun SettingsScreen(
                             settings.setNotificationBadgesEnabled(true)
                             notifBadges = true
                             if (!NotificationBadgeStore.isListenerGranted(activity)) {
-                                activity.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                                openNotificationListenerSettings(activity)
                                 note = "Turn on VictorLaunch in Notification access, then return."
                             } else {
                                 NotificationBadgeStore.requestRebind(activity)
@@ -521,7 +521,7 @@ fun SettingsScreen(
                 )
             }
             OutlinedButton(
-                onClick = { activity.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) },
+                onClick = { openNotificationListenerSettings(activity) },
                 modifier = Modifier.padding(top = 8.dp),
             ) { Text("Open notification access settings") }
         }
@@ -552,7 +552,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(top = 8.dp),
             ) { Text("Import (preview diff, then confirm)") }
             Text(
-                "Export and import cover launcher preferences only (dock, workspace, hidden/locked apps, grid, Island-tab lock). The GitHub token and other secrets are never included. Import always dry-runs and shows a preview diff; confirming still forces external control off. VictorLaunch never stores the fleet wrapping key — ask DroidCommand AI to export or import the encrypted fleet bundle.",
+                "Export and import cover launcher preferences only (dock, workspace, hidden/locked apps, grid, Island-tab lock). The GitHub token, any VirusTotal API key, and other secrets are never included. Import always dry-runs and shows a preview diff; confirming still forces external control off. VictorLaunch never stores the fleet wrapping key — ask DroidCommand AI to export or import the encrypted fleet bundle.",
                 color = Muted,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 8.dp),
@@ -707,5 +707,17 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 private fun ThemeChoice(label: String, selected: Boolean, onClick: () -> Unit) {
     TextButton(onClick = onClick) {
         Text(if (selected) "● $label" else "○ $label", color = if (selected) Cyan else Muted)
+    }
+}
+
+
+private fun openNotificationListenerSettings(activity: android.app.Activity) {
+    try {
+        activity.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+    } catch (_: Exception) {
+        try {
+            activity.startActivity(Intent(Settings.ACTION_SETTINGS))
+        } catch (_: Exception) {
+        }
     }
 }

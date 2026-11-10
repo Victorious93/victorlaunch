@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.os.Looper
 import android.os.Build
 import android.os.Environment
 import android.os.PowerManager
@@ -30,12 +31,19 @@ object DeviceSnapshotter {
                 null
             }
         val before = readText("/proc/stat")
-        try {
-            Thread.sleep(250)
-        } catch (_: InterruptedException) {
-            Thread.currentThread().interrupt()
-        }
-        val after = readText("/proc/stat")
+        // CPU delta needs a short sample. Never sleep on the main thread (widget
+        // and alarm paths already use refreshAsync / IO; this is a last-resort guard).
+        val after =
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                before
+            } else {
+                try {
+                    Thread.sleep(250)
+                } catch (_: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                }
+                readText("/proc/stat")
+            }
         val bat = battery(context)
         return DeviceReadings(
             manufacturer = Build.MANUFACTURER.orEmpty(),

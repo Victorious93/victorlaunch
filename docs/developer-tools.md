@@ -67,8 +67,8 @@ in Settings → **GitHub widgets**.
   `EncryptedSharedPreferences` (Android Keystore). It is never logged, never shown
   after you save it, and is never included in `config.export`. Android backup also
   excludes the secrets file.
-- Network use is limited to `https://api.github.com`. This is why the APK now
-  declares `INTERNET`. There is still no telemetry.
+- Network use for these widgets is limited to `https://api.github.com`. The APK
+  also uses `INTERNET` for URL Tools (documented in the MANUAL). There is still no telemetry.
 - WorkManager refreshes at least every 15 minutes when a network is available.
   Tap **Refresh** on the widget or **Refresh now** in Settings for a manual pull.
 - Rate limits, a rejected token, a missing repo, or a network error show on the

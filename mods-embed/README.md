@@ -17,7 +17,7 @@ GPLv3. Upstream:
 - **Gated** Mods screen (master + per-tool, default off).
 - LSPatch **does not rewrite APKs** here. Confirm-to-install is wired
   as a PackageInstaller hand-off once a patched file exists.
-- MMRL **does not download repos** (no `INTERNET`). Non-root browse is
+- MMRL **does not download repos** (this path does not use `INTERNET`). Non-root browse is
   a static name list plus a hand-off.
 
 Nothing in this module was run against a device.
@@ -27,8 +27,8 @@ Nothing in this module was run against a device.
 LSPosed is a Zygisk/Riru native module plus a manager. LSPatch is a
 Java rewriter with native libs and a separate `applicationId`. Geto
 and MMRL are full Compose apps (MMRL also wants network). Embedding
-them while keeping CI at `assembleDebug` and no `INTERNET` is a
-follow-up.
+them while keeping CI at `assembleDebug` is a follow-up. The APK's
+`INTERNET` permission is scoped to GitHub widgets and URL Tools, not Mods.
 
 ## Plan (later PR)
 

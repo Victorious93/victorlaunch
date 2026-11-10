@@ -20,11 +20,13 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +46,7 @@ import com.victorious.launch.launcher.AppCatalog
 import com.victorious.launch.launcher.IconPackManager
 import com.victorious.launch.share.FleetSharePublisher
 import com.victorious.launch.prefs.AppSettings
+import com.victorious.launch.notify.NotificationBadgeStore
 import com.victorious.launch.security.SigningCerts
 import com.victorious.launch.shizuku.EmbeddedShizukuServer
 import com.victorious.launch.shizuku.ShizukuStarters
@@ -51,6 +54,8 @@ import com.victorious.launch.shizuku.ShizukuStartupMode
 import com.victorious.launch.theme.Cyan
 import com.victorious.launch.theme.Magenta
 import com.victorious.launch.theme.Muted
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 @Composable
 fun SettingsScreen(
@@ -76,6 +81,23 @@ fun SettingsScreen(
     var confirmShizuku by remember { mutableStateOf(false) }
     var islandLocked by remember { mutableStateOf(settings.launcherPreferences().islandTabLocked) }
     var note by remember { mutableStateOf<String?>(null) }
+    var notifBadges by remember { mutableStateOf(settings.isNotificationBadgesEnabled()) }
+    var listenerGranted by remember { mutableStateOf(NotificationBadgeStore.isListenerGranted(activity)) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, activity) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                listenerGranted = NotificationBadgeStore.isListenerGranted(activity)
+                if (settings.isNotificationBadgesEnabled() && listenerGranted) {
+                    NotificationBadgeStore.requestRebind(activity)
+                } else if (!settings.isNotificationBadgesEnabled()) {
+                    NotificationBadgeStore.clear()
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     var pendingImport by remember { mutableStateOf<ImportReport?>(null) }
     val pairing = settings.pairedController()
     val createDocument =
@@ -460,6 +482,47 @@ fun SettingsScreen(
                 },
                 modifier = Modifier.padding(top = 8.dp),
             ) { Text("Grant usage access to VictorLaunch (Shizuku)") }
+        }
+        Section("Notification badges") {
+            Text(
+                "Off by default. When you turn this on and grant notification-listener access in system Settings, VictorLaunch can show dots on app icons and a short preview in the long-press menu (Launcher3-style). Notification content stays in memory only — it is never logged and never included in config.export. Backup import cannot turn this on.",
+                color = Muted,
+                fontSize = 13.sp,
+            )
+            Text(
+                if (listenerGranted) "System notification access: granted" else "System notification access: not granted",
+                color = if (listenerGranted) Cyan else Muted,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+                Text("Show badges and previews", color = Cyan, modifier = Modifier.weight(1f))
+                Switch(
+                    checked = notifBadges,
+                    onCheckedChange = { on ->
+                        if (on) {
+                            settings.setNotificationBadgesEnabled(true)
+                            notifBadges = true
+                            if (!NotificationBadgeStore.isListenerGranted(activity)) {
+                                activity.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                                note = "Turn on VictorLaunch in Notification access, then return."
+                            } else {
+                                NotificationBadgeStore.requestRebind(activity)
+                                note = "Notification badges on"
+                            }
+                        } else {
+                            settings.setNotificationBadgesEnabled(false)
+                            notifBadges = false
+                            NotificationBadgeStore.clear()
+                            note = "Notification badges off. You can also revoke access in system Settings."
+                        }
+                    },
+                )
+            }
+            OutlinedButton(
+                onClick = { activity.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) },
+                modifier = Modifier.padding(top = 8.dp),
+            ) { Text("Open notification access settings") }
         }
         Section("Backup") {
             Text(

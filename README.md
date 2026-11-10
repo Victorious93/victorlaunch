@@ -112,3 +112,8 @@ the APK.
 secret-like fields. The GitHub token is stored in EncryptedSharedPreferences
 and is never part of `config.export`. VictorLaunch never holds the fleet
 backup wrapping key.
+
+Notification badges use an opt-in `NotificationListenerService` (no extra
+`uses-permission`). They stay off until you flip the in-app toggle and grant
+notification access in system Settings. Preview text stays in memory only —
+it is never logged and never included in `config.export`.

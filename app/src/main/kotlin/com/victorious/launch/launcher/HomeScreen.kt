@@ -43,6 +43,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,6 +71,8 @@ import com.victorious.launch.mods.ModsScreen
 import com.victorious.launch.network.NetworkScreen
 import com.victorious.launch.lockdown.BiometricGate
 import com.victorious.launch.prefs.AppSettings
+import com.victorious.launch.notify.LocalNotificationBadges
+import com.victorious.launch.notify.NotificationBadgeStore
 import com.victorious.launch.settings.GestureSettingsScreen
 import com.victorious.launch.settings.SettingsScreen
 import com.victorious.launch.core.launcher.GestureAction
@@ -118,6 +121,7 @@ fun HomeScreen(
     var trayNote by remember { mutableStateOf("Waiting for the controller") }
     var radio by remember { mutableStateOf<TrayTile?>(null) }
     val aggregator = remember { StatusTrayAggregator() }
+    val notificationBadges by NotificationBadgeStore.badges.collectAsState()
 
     // droidcommand-AI / external control: panel.open and layout.set land here.
     val remotePanel by com.victorious.launch.bridge.BridgeEvents.panel.collectAsState()
@@ -198,6 +202,7 @@ fun HomeScreen(
         }
     }
 
+    CompositionLocalProvider(LocalNotificationBadges provides notificationBadges) {
     Box(Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -423,6 +428,7 @@ fun HomeScreen(
                     )
                 }
         }
+    }
     }
 }
 

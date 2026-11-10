@@ -3,6 +3,7 @@ package com.victorious.launch.launcher
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +55,8 @@ import com.victorious.launch.core.fleet.FleetActionKind
 import com.victorious.launch.core.fleet.FleetPublicActions
 import com.victorious.launch.core.theme.FleetIconStyle
 import com.victorious.launch.theme.LocalFleetColors
+import com.victorious.launch.notify.LocalNotificationBadges
+import com.victorious.launch.core.notify.NotificationBadges
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -77,6 +80,7 @@ fun AppCell(
     val outerDp = ((if (compact) 44 else 52) * iconScalePct + 50) / 100
     val innerDp = ((if (compact) 40 else 48) * iconScalePct + 50) / 100
     val colors = LocalFleetColors.current
+    val badge = LocalNotificationBadges.current[app.packageName]
     val image =
         remember(app.component, iconPackPackage, iconStyle, colors.primary) {
             val packed = iconPack.loadComponentIcon(iconPackPackage, app.component)
@@ -111,22 +115,36 @@ fun AppCell(
                 .padding(6.dp)
                 .then(if (compact) Modifier.width((outerDp + 20).dp) else Modifier),
     ) {
-        Box(
-            Modifier
-                .size(outerDp.dp)
-                .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(colors.primary.copy(alpha = 0.35f), colors.secondary.copy(alpha = 0.35f)))),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (image != null) {
-                Image(
-                    bitmap = image,
-                    contentDescription = app.label,
-                    modifier = Modifier.size(innerDp.dp).clip(CircleShape),
-                    contentScale = ContentScale.Crop,
-                )
-            } else {
-                Text(app.label.take(1), color = colors.onBackground, fontWeight = FontWeight.Bold)
+        Box(Modifier.size(outerDp.dp), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .size(outerDp.dp)
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(colors.primary.copy(alpha = 0.35f), colors.secondary.copy(alpha = 0.35f)))),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (image != null) {
+                    Image(
+                        bitmap = image,
+                        contentDescription = app.label,
+                        modifier = Modifier.size(innerDp.dp).clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    Text(app.label.take(1), color = colors.onBackground, fontWeight = FontWeight.Bold)
+                }
+            }
+            val countLabel = badge?.let { NotificationBadges.badgeLabel(it.count) }.orEmpty()
+            if (countLabel.isNotEmpty()) {
+                Box(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .clip(CircleShape)
+                        .background(colors.danger)
+                        .padding(horizontal = 4.dp, vertical = 1.dp),
+                ) {
+                    Text(countLabel, color = colors.background, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
         if (showLabel) {
@@ -146,6 +164,20 @@ fun AppCell(
                 color = colors.muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp).widthIn(max = 240.dp),
             )
+            badge?.previews.orEmpty().forEach { preview ->
+                val line = listOf(preview.title, preview.text).filter { it.isNotBlank() }.joinToString(" — ").take(80)
+                if (line.isNotEmpty()) {
+                    Text(
+                        line,
+                        color = colors.onBackground,
+                        fontSize = 12.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp).widthIn(max = 240.dp).clickable { close(); onClick() },
+                    )
+                }
+            }
+            if (badge?.previews?.isNotEmpty() == true) HorizontalDivider()
             fleetActions.filter { it.kind == FleetActionKind.OPEN }.forEach { act ->
                 MenuItem(act.label, Icons.AutoMirrored.Filled.ArrowForward, close) { onClick() }
             }

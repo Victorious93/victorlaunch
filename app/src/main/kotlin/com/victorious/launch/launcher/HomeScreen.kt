@@ -92,6 +92,7 @@ enum class Overlay {
     GESTURES,
     DOCK_ICONS,
     DEV,
+    GITHUB,
 }
 
 @Composable
@@ -118,6 +119,7 @@ fun HomeScreen(
 
     // droidcommand-AI / external control: panel.open and layout.set land here.
     val remotePanel by com.victorious.launch.bridge.BridgeEvents.panel.collectAsState()
+    val launchOpen by LauncherIntents.open.collectAsState()
     val remoteLayoutRev by com.victorious.launch.bridge.BridgeEvents.layoutRev.collectAsState()
     LaunchedEffect(remotePanel) {
         val target =
@@ -136,6 +138,16 @@ fun HomeScreen(
             }
         if (target != null) overlay = target
         com.victorious.launch.bridge.BridgeEvents.panel.value = null
+    }
+    LaunchedEffect(launchOpen) {
+        val target =
+            when (launchOpen) {
+                null -> return@LaunchedEffect
+                LauncherIntents.GITHUB -> Overlay.GITHUB
+                else -> null
+            }
+        if (target != null) overlay = target
+        LauncherIntents.open.value = null
     }
     LaunchedEffect(remoteLayoutRev) {
         if (remoteLayoutRev > 0) layoutRev++
@@ -312,6 +324,7 @@ fun HomeScreen(
                         onIsland = { overlay = Overlay.ISLAND },
                         onGestures = { overlay = Overlay.GESTURES },
                         onDockIcons = { overlay = Overlay.DOCK_ICONS },
+                        onGitHub = { overlay = Overlay.GITHUB },
                         onClose = { overlay = Overlay.NONE },
                     )
                 }
@@ -371,6 +384,13 @@ fun HomeScreen(
                     IslandScreen(
                         island = island,
                         catalog = catalog,
+                        activity = activity,
+                        onClose = { overlay = Overlay.NONE },
+                    )
+                }
+            Overlay.GITHUB ->
+                OverlayScrim {
+                    com.victorious.launch.github.GitHubSettingsScreen(
                         activity = activity,
                         onClose = { overlay = Overlay.NONE },
                     )

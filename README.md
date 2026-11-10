@@ -71,7 +71,7 @@ and lockdown (freeze all + pause). Wipe requires an in-app confirm.
 
 Fleet install: Settings → Install / Update loads a **local**
 `fleet-manifest.json` (schema v1) and installs a user-picked APK
-through PackageInstaller after cert-pin checks. No INTERNET.
+through PackageInstaller after cert-pin checks. Fleet install does not use the network.
 
 Network Monitor: gated `TelephonyCallback` / `PhoneStateListener` for
 RAT, signal, cell ID, and 2G-drop alerts. RAT lock needs Shizuku/root
@@ -107,6 +107,8 @@ the APK.
 
 ## Privacy
 
-No `INTERNET` permission. No telemetry. Status and backup refuse
-secret-like fields. VictorLaunch never holds the fleet backup wrapping
-key.
+`INTERNET` is declared only so GitHub home-screen widgets can call
+`https://api.github.com`. There is no telemetry. Status and backup refuse
+secret-like fields. The GitHub token is stored in EncryptedSharedPreferences
+and is never part of `config.export`. VictorLaunch never holds the fleet
+backup wrapping key.

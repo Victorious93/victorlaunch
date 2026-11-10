@@ -8,6 +8,7 @@ import com.victorious.launch.shizuku.PrivilegedOps
 import com.victorious.launch.share.FleetSharePublisher
 import com.victorious.launch.theme.FleetThemePublisher
 import com.victorious.launch.shizuku.ShizukuSession
+import com.victorious.launch.github.GitHubRefresh
 
 class VictorLaunchApp : Application() {
     lateinit var settings: AppSettings
@@ -41,6 +42,7 @@ class VictorLaunchApp : Application() {
         }
         FleetSharePublisher.publish(this, settings)
         FleetThemePublisher.publish(this, settings)
+        GitHubRefresh.schedule(this)
     }
 
     companion object {

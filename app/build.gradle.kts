@@ -130,6 +130,8 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.security.crypto)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
 }

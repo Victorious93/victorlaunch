@@ -12,4 +12,8 @@
     <string name="perm_read_fleet_theme">Allows an app signed with the VictorLaunch key to read the shared fleet theme. Differently signed fleet apps must still pass package+cert verification.</string>
     <string name="lock_service_label">VictorLaunch gesture lock</string>
     <string name="lock_service_description">Optional. Lets a VictorLaunch home gesture lock the screen. It does not read screen content or what you type.</string>
+    <string name="widget_github_pulls">GitHub pull requests</string>
+    <string name="widget_github_actions">GitHub Actions</string>
+    <string name="widget_github_releases">GitHub releases</string>
+    <string name="widget_refresh">Refresh</string>
 </resources>

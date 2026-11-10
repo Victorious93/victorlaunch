@@ -57,3 +57,20 @@ block devices, `settings put`, …) show a confirmation dialog first.
 
 **Safety:** every run is an explicit tap in the palette. The bridge has no exec/shell op
 (`Ops.ALL` is asserted to contain none in `CommandPaletteTest`), and no external app or paired node can trigger a command.
+
+## GitHub widgets (home screen)
+
+Three widgets — pull requests, Actions runs, and releases — for repositories you pick
+in Settings → **GitHub widgets**.
+
+- Paste a **fine-grained** GitHub token in that screen. It is stored with
+  `EncryptedSharedPreferences` (Android Keystore). It is never logged, never shown
+  after you save it, and is never included in `config.export`. Android backup also
+  excludes the secrets file.
+- Network use is limited to `https://api.github.com`. This is why the APK now
+  declares `INTERNET`. There is still no telemetry.
+- WorkManager refreshes at least every 15 minutes when a network is available.
+  Tap **Refresh** on the widget or **Refresh now** in Settings for a manual pull.
+- Rate limits, a rejected token, a missing repo, or a network error show on the
+  widget (and in the settings screen) instead of failing silently.
+- Adding a widget opens a picker so it can follow one repo or all configured repos.

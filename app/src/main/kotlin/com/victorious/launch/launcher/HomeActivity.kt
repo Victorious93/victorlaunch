@@ -1,5 +1,6 @@
 package com.victorious.launch.launcher
 
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -30,6 +31,7 @@ class HomeActivity : FragmentActivity() {
         val iconPack = IconPackManager(packageManager)
         widgets = WidgetHostHolder(this)
         widgets.start()
+        LauncherIntents.consume(intent)
         setContent {
             var themeTick by remember { mutableIntStateOf(0) }
             DisposableEffect(settings) {
@@ -56,6 +58,12 @@ class HomeActivity : FragmentActivity() {
                 )
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        LauncherIntents.consume(intent)
     }
 
     override fun onResume() {

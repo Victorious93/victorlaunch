@@ -1,21 +1,29 @@
 <!-- victorious-fleet-readme-refresh:start -->
 <p align="center">
-  <img src="assets/logo.png" alt="VictorLaunch logo" width="200">
+  <img src="docs/assets/banner.svg" alt="VictorLaunch: neon cyan-to-magenta ring on dark charcoal" width="100%">
+</p>
+
+<p align="center">
+  <a href="https://github.com/Victorious93/victorlaunch/actions/workflows/android.yml"><img alt="Android CI" src="https://github.com/Victorious93/victorlaunch/actions/workflows/android.yml/badge.svg?branch=main"></a>
+  <a href="LICENSE"><img alt="License: GPL v3" src="https://img.shields.io/github/license/Victorious93/victorlaunch?color=00E5FF"></a>
+  <a href="https://github.com/Victorious93/victorlaunch/releases/tag/debug-latest"><img alt="Latest debug release" src="https://img.shields.io/github/v/release/Victorious93/victorlaunch?include_prereleases&label=debug%20release&color=FF2BD6"></a>
 </p>
 
 # VictorLaunch
 
-Nova-class, Lawnchair-based fleet home-screen launcher.
+Nova-class, Lawnchair-lineage home-screen launcher for the Victorious fleet.
 
-**Package id:** `com.victorious.launch`
+**VictorLaunch works as a standalone launcher; no other fleet apps are required.** Fleet
+features (status tray, fleet dashboard, fleet long-press actions, share targets) light up
+only for fleet apps that are actually installed, and show "no data" or hide themselves
+otherwise.
 
-**Status:** CI green *(from [fleet-manifest ROADMAP](https://github.com/Victorious93/fleet-manifest/blob/main/ROADMAP.md))*
+**Download:** the latest debug APK is the `debug-latest` pre-release,
+[releases/tag/debug-latest](https://github.com/Victorious93/victorlaunch/releases/tag/debug-latest).
+CI rebuilds and republishes it on every push to `main`. It is a debug-signed build, not a
+release build.
 
-## Install / build
-
-Kotlin Gradle app (`app/build.gradle.kts`). Typical: `./gradlew :app:assembleDebug`.
-
-_Steps above are taken from this repo’s build files / existing docs; anything not exercised in this refresh is unlabeled as verified on a device._
+**Package id:** `com.victorious.launch` · minSdk 26 · targetSdk 35
 
 ## Victorious fleet
 
@@ -24,14 +32,51 @@ _Steps above are taken from this repo’s build files / existing docs; anything 
 
 <!-- victorious-fleet-readme-refresh:end -->
 
-Fleet-native Android home-screen launcher (`com.victorious.launch`).
+## What it is
 
-VictorLaunch is the on-device hub for the Victorious / droidcommand-AI
-fleet: a HOME activity with workspace, dock and app drawer, a status
-tray that **only** reads the controller’s `node.status.get`, an Island
-work profile, and an EXTERNAL_NODE bridge.
+A HOME activity with a paged workspace, dock and app drawer, a status tray that **only**
+reads the controller's `node.status.get`, an Island work profile, and an `EXTERNAL_NODE`
+bridge so [droidcommand-AI](https://github.com/Victorious93/droidcommand-AI) (`ai.droidcommand.app`)
+can read its status and, subject to the gates documented there, ask it to act. The bridge is a Messenger
+service (`com.victorious.launch.action.BRIDGE`) authorized by package + signing
+certificate. See [`docs/external-node.md`](docs/external-node.md). Live traffic against a
+running controller is documented there as unverified.
 
-License: **GNU GPL v3.0**. See `LICENSE`, `NOTICE`, `THIRD_PARTY.md`.
+## Features
+
+Each item below exists in the code; the manual ([`docs/MANUAL.md`](docs/MANUAL.md)) has the
+step-by-step version.
+
+| Feature | What it does |
+|---|---|
+| **Dev panel** | Wireless debugging toggle, quick developer toggles, animation scales, and a logcat viewer with filters and export. Writes go through `WRITE_SECURE_SETTINGS`, Shizuku, or opted-in root. See [`docs/developer-tools.md`](docs/developer-tools.md). |
+| **App inspector** | Long-press an app, then Inspect app: versions, SDK levels, install source, signing certificate SHA-256, permissions, component counts. Extract APK copies the base APK and splits into a folder you pick. |
+| **Command palette** | Type `>` in drawer search. Run commands through Shizuku, opted-in root, or Termux `RUN_COMMAND`, with saved commands and a confirm step for destructive-looking commands. Every run is an explicit tap. |
+| **GitHub widgets** | Pull requests, Actions, and releases home-screen widgets backed by `api.github.com`. The token is kept in encrypted preferences and never exported. |
+| **Device widgets** | Device info, root status, and CPU / RAM / battery widgets. |
+| **Fleet dashboard** | A home page you swipe to: install state, version, update-available (from a local manifest), optional running state (needs usage access), and Mesh / VPN / Browser / Messaging tiles from the controller's tray. |
+| **Fleet long-press actions** | Extra actions for known fleet apps using only public intents and shortcuts the target app publishes. |
+| **Layout backup / restore** | Export launcher preferences through the system file picker; import runs a dry-run with a preview diff and needs confirmation. Secrets and risky switches are never written or enabled by an import. |
+| **Theme gallery** | One-tap palettes, including Neon ring (charcoal `#0B0F1A`, cyan, magenta), plus icon-pack previews. Published to fleet apps through a read-only provider. |
+| **Notification badges** | Opt-in icon dots and long-press previews via a notification listener. Content stays in memory only. Off until you enable it and grant notification access. |
+| **URL tools** | Offline safety check, optional VirusTotal scan (your own key, only on tap), redirect expand, is.gd shorten, tracking-parameter cleaner, QR code. Also a share / Open-with target. |
+| **Mesh / Router VPN toggles** | Mesh VPN on/off (Victorious Mesh) and Router VPN on/off (VictorMango) in fleet long-press and the dashboard tiles. Shown only when the target app's published shortcut or intent resolves at runtime; never a silent toggle and not a bridge op. |
+
+Also included: the Island work profile, gesture actions, a drawer with fuzzy search and
+categories, fleet status widgets, share-to-fleet targets, fleet install/update from a local
+manifest, a gated Network Monitor, and gated Shizuku and Mods integrations (details below).
+
+## Lineage and license
+
+VictorLaunch is licensed under the **GNU GPL v3.0** (see [`LICENSE`](LICENSE),
+[`NOTICE`](NOTICE), [`THIRD_PARTY.md`](THIRD_PARTY.md)).
+
+It is a **Lawnchair-lineage** Kotlin launcher: [Lawnchair](https://github.com/LawnchairLauncher/lawnchair)
+(GPL-3.0) is the intended base, built on Android Launcher3 (AOSP, Apache-2.0). Lawnchair and
+Launcher3 source are **not vendored** in this tree; the workspace is a Kotlin implementation of
+Launcher3-style behaviour. The Island work-profile UX is credited to
+[Island](https://github.com/oasisfeng/island) (GPL-3.0); no Island source is included. See
+[`docs/LAWNCHAIR_REBASE.md`](docs/LAWNCHAIR_REBASE.md).
 
 ## Honesty
 
@@ -83,6 +128,8 @@ and is **not** universal. Cell/band lock is not written. Fleet read op:
 ```bash
 ./gradlew assembleDebug
 ```
+
+Needs JDK 17 and the Android SDK (platform 35).
 
 Debug builds sign with a **gitignored** `keystore/victorlaunch-debug.jks`
 (CI: `VL_DEBUG_KEYSTORE_B64` + password secrets). The public cert

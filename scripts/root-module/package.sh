@@ -34,7 +34,8 @@ MOD_ID=$(prop id)
 MOD_VERSION=$(prop version)
 MOD_CODE=$(prop versionCode)
 [ "$MOD_ID" = victorlaunch ] || fail "module.prop id must be victorlaunch (got '$MOD_ID')"
-[ -n "$MOD_VERSION" ] && [ -n "$MOD_CODE" ] || fail "module.prop needs version and versionCode"
+[ -n "$MOD_VERSION" ] || fail "module.prop needs version"
+[ -n "$MOD_CODE" ] || fail "module.prop needs versionCode"
 
 BADGING=$("$AAPT2" dump badging "$APK")
 read -r APK_PKG APK_CODE APK_NAME < <(

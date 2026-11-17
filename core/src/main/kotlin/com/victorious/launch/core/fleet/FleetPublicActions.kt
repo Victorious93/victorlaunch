@@ -51,6 +51,7 @@ object FleetVpnToggles {
     const val MESH_DISCONNECT_SHORTCUT = "mesh_disconnect"
     const val MESH_CONNECT_ACTION = "com.victorious.mesh.action.MESH_CONNECT"
     const val MESH_DISCONNECT_ACTION = "com.victorious.mesh.action.MESH_DISCONNECT"
+    const val MESH_ACTIVITY_CLASS = "com.tailscale.ipn.launch.MeshControlActivity"
 
     const val MANGO_ON_SHORTCUT = "vpn_on"
     const val MANGO_OFF_SHORTCUT = "vpn_off"
@@ -76,10 +77,17 @@ object FleetVpnToggles {
             else -> null
         }
 
+    fun announcedClass(packageName: String): String? =
+        when (packageName) {
+            MESH_PACKAGE -> MESH_ACTIVITY_CLASS
+            MANGO_PACKAGE -> MANGO_ACTIVITY_CLASS
+            else -> null
+        }
+
     fun actionsFor(
         packageName: String,
         capability: PublishedCapability,
-        preferredClass: String? = if (packageName == MANGO_PACKAGE) MANGO_ACTIVITY_CLASS else null,
+        preferredClass: String? = announcedClass(packageName),
     ): List<FleetPublicAction> {
         return when (packageName) {
             MESH_PACKAGE ->
@@ -91,6 +99,7 @@ object FleetVpnToggles {
                         shortcutId = MESH_CONNECT_SHORTCUT,
                         action = MESH_CONNECT_ACTION,
                         capability = capability,
+                        preferredClass = preferredClass,
                     ),
                     resolve(
                         id = "mesh_off",
@@ -99,6 +108,7 @@ object FleetVpnToggles {
                         shortcutId = MESH_DISCONNECT_SHORTCUT,
                         action = MESH_DISCONNECT_ACTION,
                         capability = capability,
+                        preferredClass = preferredClass,
                     ),
                 )
             MANGO_PACKAGE -> {

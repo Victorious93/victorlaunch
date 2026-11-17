@@ -91,3 +91,69 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "Debug latest (${GITHUB_SHA::7})" \
             --notes "Debug build of ${GITHUB_SHA} from main. Private repo: sign in to GitHub to download."
+
+  root-module:
+    name: Package root module
+    needs: assemble
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: victorlaunch-debug-apk
+          path: build/apk
+
+      - name: Shellcheck module and packaging scripts
+        run: |
+          shellcheck --version
+          shellcheck \
+            module/customize.sh \
+            module/uninstall.sh \
+            module/META-INF/com/google/android/update-binary \
+            scripts/root-module/package.sh
+
+      - name: Package root module zip
+        run: |
+          set -euo pipefail
+          APK=$(find build/apk -name '*.apk' -type f | head -n1)
+          test -n "$APK"
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          AAPT2=$(find "$SDK/build-tools" -maxdepth 2 -name aapt2 -type f | sort -V | tail -n1)
+          test -n "$AAPT2"
+          AAPT2="$AAPT2" scripts/root-module/package.sh "$APK" build/root-module
+
+      - name: Verify zip layout
+        run: |
+          set -euo pipefail
+          VERSION=$(sed -n 's/^version=//p' module/module.prop)
+          ZIP="build/root-module/victorlaunch-root-module-${VERSION}.zip"
+          test -f "$ZIP"
+          unzip -l "$ZIP"
+          unzip -Z1 "$ZIP" | sort > /tmp/entries.txt
+          for path in \
+            META-INF/com/google/android/update-binary \
+            META-INF/com/google/android/updater-script \
+            module.prop \
+            customize.sh \
+            uninstall.sh \
+            system/etc/permissions/privapp-permissions-com.victorious.launch.xml \
+            system/priv-app/VictorLaunch/VictorLaunch.apk; do
+            grep -Fxq "$path" /tmp/entries.txt || { echo "missing from zip: $path"; exit 1; }
+          done
+          if grep -Ei '\.(jks|keystore|p12|pem|env)$|(^|/)\.git' /tmp/entries.txt; then
+            echo "zip contains key material or VCS files"
+            exit 1
+          fi
+          unzip -p "$ZIP" META-INF/com/google/android/updater-script | grep -Fxq '#MAGISK'
+          unzip -p "$ZIP" module.prop | grep -Fxq 'id=victorlaunch'
+          unzip -p "$ZIP" system/etc/permissions/privapp-permissions-com.victorious.launch.xml | grep -F '<permission name='
+
+      - name: Upload root module
+        uses: actions/upload-artifact@v4
+        with:
+          name: victorlaunch-root-module
+          path: build/root-module/victorlaunch-root-module-*.zip
+          if-no-files-found: error

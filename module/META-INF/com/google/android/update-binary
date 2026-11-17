@@ -1,0 +1,30 @@
+#!/sbin/sh
+# shellcheck shell=sh
+# Standard Magisk module installer stub. KernelSU and APatch ship their own
+# installer and read customize.sh directly; they do not run this file.
+
+umask 022
+
+ui_print() { echo "$1"; }
+
+require_new_magisk() {
+  ui_print "*******************************"
+  ui_print " Please install Magisk v20.4+! "
+  ui_print "*******************************"
+  exit 1
+}
+
+# shellcheck disable=SC2034
+OUTFD=$2
+# shellcheck disable=SC2034
+ZIPFILE=$3
+
+mount /data 2>/dev/null
+[ -f /data/adb/magisk/util_functions.sh ] || require_new_magisk
+# shellcheck disable=SC1091
+. /data/adb/magisk/util_functions.sh
+# shellcheck disable=SC2154
+[ "$MAGISK_VER_CODE" -lt 20400 ] && require_new_magisk
+
+install_module
+exit 0

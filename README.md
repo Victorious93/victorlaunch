@@ -99,6 +99,7 @@ the APK.
 - `docs/MANUAL.md` — user manual (also the in-app Help screen)
 - `docs/fleet-manifest.md` — local fleet update manifest (schema v1)
 - `docs/external-node.md` — Messenger bridge v1.1
+- `docs/ROOT_MODULE.md` — optional Magisk / KernelSU / APatch module that installs VictorLaunch as a privileged system app (not required)
 - `docs/LAWNCHAIR_REBASE.md` — why Lawnchair is not vendored yet
 - `shizuku-embed/README.md` — Shizuku client fallback + embed plan
 - `mods-embed/README.md` — LSPosed / LSPatch / Geto / MMRL skeletons + plan

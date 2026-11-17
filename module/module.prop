@@ -1,0 +1,6 @@
+id=victorlaunch
+name=VictorLaunch (privileged system app)
+version=0.1.0
+versionCode=1
+author=Victorious93
+description=Optional. Installs VictorLaunch systemlessly as a privileged system app (priv-app) so its optional privileged features work without per-permission grants. The launcher works fully without this module.

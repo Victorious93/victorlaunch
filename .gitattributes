@@ -2,3 +2,5 @@
 *.png binary
 gradlew text eol=lf
 gradlew.bat text eol=crlf
+module/** text eol=lf
+scripts/root-module/** text eol=lf

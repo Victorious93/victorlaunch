@@ -1,0 +1,21 @@
+# android.permission.* names the built APK may request without an entry in
+# module/system/etc/permissions/privapp-permissions-com.victorious.launch.xml.
+# Each one has been reviewed as NOT carrying the "privileged" protection flag
+# (normal, dangerous/runtime, or signature-only app-op permissions).
+# If package.sh reports a new name here, check its protection level in AOSP
+# frameworks/base/core/res/AndroidManifest.xml: add it to the allowlist XML if it
+# is signature|privileged, otherwise add it below. Never guess.
+android.permission.ACCESS_COARSE_LOCATION
+android.permission.ACCESS_FINE_LOCATION
+android.permission.ACCESS_NETWORK_STATE
+android.permission.EXPAND_STATUS_BAR
+android.permission.FOREGROUND_SERVICE
+android.permission.INTERNET
+android.permission.QUERY_ALL_PACKAGES
+android.permission.READ_PHONE_STATE
+android.permission.RECEIVE_BOOT_COMPLETED
+android.permission.REQUEST_DELETE_PACKAGES
+android.permission.REQUEST_INSTALL_PACKAGES
+android.permission.USE_BIOMETRIC
+android.permission.USE_FINGERPRINT
+android.permission.WAKE_LOCK

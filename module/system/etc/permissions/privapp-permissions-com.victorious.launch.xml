@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Privileged-permission allowlist for VictorLaunch (com.victorious.launch).
+
+  Only signature|privileged permissions that app/src/main/AndroidManifest.xml
+  (merged, as built) actually requests are listed. A priv-app that requests a
+  privileged permission missing from this file can fail the boot-time check on
+  Android 9+, so scripts/root-module/package.sh compares this file against the
+  built APK on every CI run. Do not add permissions "just in case".
+-->
+<permissions>
+    <privapp-permissions package="com.victorious.launch">
+        <permission name="android.permission.PACKAGE_USAGE_STATS" />
+        <permission name="android.permission.READ_LOGS" />
+        <permission name="android.permission.WRITE_SECURE_SETTINGS" />
+    </privapp-permissions>
+</permissions>

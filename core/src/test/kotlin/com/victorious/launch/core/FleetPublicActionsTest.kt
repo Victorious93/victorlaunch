@@ -53,6 +53,24 @@ class FleetPublicActionsTest {
     }
 
     @Test
+    fun meshPrefersAnnouncedMeshControlActivity() {
+        assertEquals("com.tailscale.ipn.launch.MeshControlActivity", FleetVpnToggles.MESH_ACTIVITY_CLASS)
+        val cap =
+            PublishedCapability(
+                activities =
+                    mapOf(
+                        FleetVpnToggles.MESH_CONNECT_ACTION to
+                            listOf("com.victorious.mesh.Other", FleetVpnToggles.MESH_ACTIVITY_CLASS),
+                        FleetVpnToggles.MESH_DISCONNECT_ACTION to
+                            listOf("com.victorious.mesh.Other", FleetVpnToggles.MESH_ACTIVITY_CLASS),
+                    ),
+            )
+        val actions = FleetVpnToggles.actionsFor(FleetVpnToggles.MESH_PACKAGE, cap)
+        assertEquals(listOf("mesh_on", "mesh_off"), actions.map { it.id })
+        actions.forEach { assertEquals(FleetVpnToggles.MESH_ACTIVITY_CLASS, it.activityClass) }
+    }
+
+    @Test
     fun hidesUnresolvedDirection() {
         val cap =
             PublishedCapability(

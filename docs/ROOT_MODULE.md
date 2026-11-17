@@ -55,7 +55,7 @@ CI builds it on every push and pull request:
 2. GitHub wraps artifacts in an outer zip. Unzip it once; the flashable file is
    `victorlaunch-root-module-<version>.zip`. Do not unzip that one.
 
-The repository is private, so sign in to GitHub to download it.
+GitHub requires you to be signed in to download Actions artifacts.
 
 To build it yourself from a debug APK you already built (needs `aapt2` from the Android
 build-tools, plus `zip`):

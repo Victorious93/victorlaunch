@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-labelledby="t d">
+  <title id="t">VictorLaunch</title>
+  <desc id="d">The VictorLaunch neon cyan-to-magenta ring with a launcher grid and arrowhead on dark charcoal, next to the VictorLaunch wordmark.</desc>
+  <defs>
+    <linearGradient id="ring" x1="0.15" y1="0.1" x2="0.85" y2="0.9">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="0.5" stop-color="#7A5AFF"/>
+      <stop offset="1" stop-color="#FF2BD6"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="1" stop-color="#FF2BD6"/>
+    </linearGradient>
+    <radialGradient id="bg" cx="0.17" cy="0.5" r="0.75">
+      <stop offset="0" stop-color="#141B30"/>
+      <stop offset="1" stop-color="#0B0F1A"/>
+    </radialGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="320" fill="#0B0F1A"/>
+  <rect width="1280" height="320" fill="url(#bg)"/>
+
+  <g transform="translate(160 160)">
+    <circle r="112" fill="none" stroke="url(#ring)" stroke-width="9" filter="url(#glow)"/>
+    <g fill="#141A2C" stroke="#2A3354" stroke-width="2">
+      <rect x="-74" y="-74" width="44" height="44" rx="9"/>
+      <rect x="-22" y="-74" width="44" height="44" rx="9"/>
+      <rect x="30" y="-74" width="44" height="44" rx="9"/>
+      <rect x="-74" y="-22" width="44" height="44" rx="9"/>
+      <rect x="30" y="-22" width="44" height="44" rx="9"/>
+      <rect x="-74" y="30" width="44" height="44" rx="9"/>
+      <rect x="-22" y="30" width="44" height="44" rx="9"/>
+      <rect x="30" y="30" width="44" height="44" rx="9"/>
+    </g>
+    <path d="M0 -66 L26 36 L0 18 L-26 36 Z" fill="url(#ring)" filter="url(#glow)"/>
+  </g>
+
+  <g font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif">
+    <text x="320" y="170" font-size="96" font-weight="700" fill="url(#word)">VictorLaunch</text>
+    <text x="324" y="218" font-size="30" fill="#A9B4D0">Fleet-native Android home launcher</text>
+    <text x="324" y="262" font-size="22" fill="#6F7B99">Lawnchair lineage · GPLv3 · works standalone</text>
+  </g>
+</svg>

@@ -1,4 +1,3 @@
-<!-- victorious-fleet-readme-refresh:start -->
 <p align="center">
   <img src="docs/assets/banner.svg" alt="VictorLaunch: neon cyan-to-magenta ring on dark charcoal" width="100%">
 </p>
@@ -24,13 +23,6 @@ CI rebuilds and republishes it on every push to `main`. It is a debug-signed bui
 release build.
 
 **Package id:** `com.victorious.launch` · minSdk 26 · targetSdk 35
-
-## Victorious fleet
-
-- Monorepo: [https://github.com/Victorious93/victorious-fleet](https://github.com/Victorious93/victorious-fleet)
-- Fleet site: [https://victorious-framework.pages.dev](https://victorious-framework.pages.dev)
-
-<!-- victorious-fleet-readme-refresh:end -->
 
 ## What it is
 
@@ -65,6 +57,15 @@ step-by-step version.
 Also included: the Island work profile, gesture actions, a drawer with fuzzy search and
 categories, fleet status widgets, share-to-fleet targets, fleet install/update from a local
 manifest, a gated Network Monitor, and gated Shizuku and Mods integrations (details below).
+
+## Victorious fleet
+
+VictorLaunch is part of the [Victorious Framework](https://victorious-framework.pages.dev), a family of Android and PC tools by Don Victor. **It works standalone; fleet integrations are optional.** Related: [droidcommand-AI](https://github.com/Victorious93/droidcommand-AI) (fleet controller), [fleet-manifest](https://github.com/Victorious93/fleet-manifest). The roster is in [victorious-fleet](https://github.com/Victorious93/victorious-fleet) and live status is in [fleet-manifest](https://github.com/Victorious93/fleet-manifest).
+
+## Contributing
+
+Issues and pull requests are welcome. Keep changes focused, match the existing code style, never commit secrets or release keys, and keep fleet integrations optional. Open a PR against the default branch and wait for CI to pass.
+
 
 ## Lineage and license
 
